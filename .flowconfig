@@ -1,0 +1,11 @@
+[ignore]
+.*/build/.*
+.*/.meteor/.*
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
