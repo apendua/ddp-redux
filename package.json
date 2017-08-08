@@ -2,9 +2,11 @@
   "name": "ddp-client",
   "version": "0.0.1",
   "description": "A Meteor-independent DDP protocol client",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "module": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*' 'examples/**/*.test.js'",
     "flow": "flow",
     "build": "babel src/ -d lib/",
     "prepublish": "npm run build"
@@ -30,6 +32,8 @@
     "babel-eslint": "^7.2.3",
     "babel-plugin-syntax-trailing-function-commas": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-stage-3": "^6.24.1",
     "chai": "^4.1.0",
     "eslint": "^4.3.0",
     "eslint-config-airbnb": "^15.1.0",
@@ -44,6 +48,7 @@
     "sinon-chai": "^2.12.0"
   },
   "dependencies": {
+    "base64-js": "^1.2.1",
     "redux": "^3.7.2"
   }
 }
