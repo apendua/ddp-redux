@@ -1,25 +1,65 @@
+/* eslint global-require: "off" */
+import {
+  persistState,
+} from 'redux-devtools';
+import {
+  compose,
+  createStore,
+  applyMiddleware,
+} from 'redux';
 import DDPClient from 'ddp-client';
+import thunk from 'redux-thunk';
 import React from 'react';
 import ReactDOM from 'react-dom';
+// NOTE: It's important that it goes before we load actuall components
 import App from './containers/App';
-import Todo from './common/models/Todo';
-import TodoList from './common/models/TodoList';
-import './index.css';
+import registerServiceWorker from './registerServiceWorker';
+import rootReducer from './store/rootReducer';
 
-// const ddpClient = new DDPClient({
-//   endpoint: 'ws://localhost:4000/websocket',
-//   SocketConstructor: WebSocket,
-//   debug: true,
-// });
+const ddpClient = new DDPClient({
+  endpoint: process.env.REACT_APP_ENDPOINT,
+  SocketConstructor: WebSocket,
+});
 
-const ddpClient = {};
+const enhancer = compose(
+  window.__REDUX_DEVTOOLS_EXTENSION__ ? window.__REDUX_DEVTOOLS_EXTENSION__({}) : x => x,
+  persistState(
+    window.location.href.match(
+      /[?&]debug_session=([^&#]+)\b/,
+    ),
+  ),
+);
 
-// [
-//   Todo,
-//   TodoList,
-// ].forEach(M => DDPClient.registerModel(M, M.collection));
+const store = createStore(
+  rootReducer,
+  {},
+  compose(
+    applyMiddleware(
+      thunk.withExtraArgument({ ddpClient }),
+    ),
+    enhancer,
+  ),
+);
 
 ReactDOM.render(
-  <App ddpClient={ddpClient}/>,
-  document.getElementById('root')
+  <App store={store} ddpClient={ddpClient} />,
+  document.getElementById('root'),
 );
+
+if (process.env.NODE_ENV !== 'production') {
+  if (typeof module !== 'undefined' && module.hot) {
+    module.hot.accept('./containers/App', () => {
+      const NextApp = require('./containers/App').default;
+      ReactDOM.render(
+        <NextApp store={store} ddpClient={ddpClient} />,
+        document.getElementById('root'),
+      );
+    });
+
+    module.hot.accept('./store/rootReducer.js', () =>
+      store.replaceReducer(require('./store/rootReducer.js').default),
+    );
+  }
+}
+
+registerServiceWorker();

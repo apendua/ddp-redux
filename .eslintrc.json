@@ -12,6 +12,7 @@
       "LabeledStatement",
       "WithStatement"
     ],
+    "react/jsx-filename-extension": "off",
     "max-len": ["error", 140],
     "func-names": "off",
     "no-console": "off"

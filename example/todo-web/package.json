@@ -12,6 +12,8 @@
     "react-scripts": "1.0.10",
     "recompose": "^0.24.0",
     "redux": "^3.7.2",
+    "redux-devtools": "^3.4.0",
+    "redux-thunk": "^2.2.0",
     "reselect": "^3.0.1",
     "very-simple-schema": "0.0.8"
   },
