@@ -261,8 +261,8 @@ Tinytest.add('ejson - custom types', test => {
   // Test that difference is detected even if they
   // have similar toJSONValue results:
   const nakedA = {city: 'Montreal', state: 'Quebec'};
-  test.notEqual(nakedA, a);
-  test.notEqual(a, nakedA);
+  test.isFalse(EJSON.equals(nakedA, a));
+  test.isFalse(EJSON.equals(a, nakedA));
   const holder = new EJSONTest.Holder(nakedA);
   test.equal(holder.toJSONValue(), a.toJSONValue()); // sanity check
   test.notEqual(holder, a);
@@ -303,7 +303,7 @@ Tinytest.add('ejson - handle objects with properties named "length"', test => {
   test.isFalse(EJSON.isBinary(widget));
 
   const widget2 = new Widget();
-  test.isTrue(widget, widget2);
+  test.equal(widget, widget2);
 
   const clonedWidget = EJSON.clone(widget);
   test.equal(widget, clonedWidget);
