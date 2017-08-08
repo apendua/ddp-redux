@@ -35,7 +35,8 @@ const store = createStore(
   {},
   compose(
     applyMiddleware(
-      thunk.withExtraArgument({ ddpClient }),
+      ddpClient.middleware(),
+      // thunk.withExtraArgument({ ddpClient }),
     ),
     enhancer,
   ),

@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux';
-import { ddpReducer } from 'ddp-client';
+import DDPClient from 'ddp-client';
 
 const rootReducer = combineReducers({
-  ddp: ddpReducer,
+  ddp: DDPClient.reducer(),
 });
 
 export default rootReducer;
