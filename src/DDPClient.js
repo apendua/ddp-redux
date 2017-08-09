@@ -1,6 +1,8 @@
 import omit from 'lodash.omit';
+import find from 'lodash.find';
 import mapValues from 'lodash.mapvalues';
 import DDPSocket from './DDPSocket';
+import EJSON from './ejson';
 import mutateCollections from './utils';
 
 const DDP_VERSION = '1';
@@ -14,6 +16,12 @@ class DDPClient {
       SocketConstructor,
     });
     this.socket.open(endpoint);
+    this.counter = 0;
+  }
+
+  nextUniqueId() {
+    this.counter += 1;
+    return this.counter.toString();
   }
 
   middleware() {
@@ -34,23 +42,19 @@ class DDPClient {
           return;
         }
         store.dispatch({
-          type: `@DDP/IN/${msg.msg}`,
+          type: `@DDP/IN/${msg.msg.toUpperCase()}`,
           payload: msg,
         });
       });
       return next => (action) => {
-        const state = store.getState();
-        const connectionState =
-          state.connection &&
-          state.connection.state;
         if (!action || typeof action !== 'object') {
           return next(action);
         }
         switch (action.type) {
-          case '@DDP/IN/ping':
+          case '@DDP/IN/PING':
             return ((result) => {
               store.dispatch({
-                type: '@DDP/OUT/pong',
+                type: '@DDP/OUT/PONG',
                 payload: {
                   msg: 'pong',
                   id: action.payload.id,
@@ -58,7 +62,7 @@ class DDPClient {
               });
               return result;
             })(next(action));
-          case '@DDP/IN/connected':
+          case '@DDP/IN/CONNECTED':
             return ((result) => {
               pending.forEach((x) => {
                 this.store.dispatch(x);
@@ -66,22 +70,65 @@ class DDPClient {
               pending = [];
               return result;
             })(next(action));
-          case '@DDP/OUT/connect':
+          case '@DDP/OUT/CONNECT':
             this.socket.send(action.payload);
             return next(action);
-          case '@DDP/OUT/method':
-          case '@DDP/OUT/pong':
-          case '@DDP/OUT/sub':
-            if (connectionState === 'connected') {
-              this.socket.send(action.payload);
-              return next(action);
-            }
-            pending.push(action);
-            break;
+          case '@DDP/API/SUBSCRIBE':
+            return (() => {
+              const state = store.getState();
+              const sub = find(state.subscriptions,
+                s => s.name === action.payload.name &&
+                  EJSON.equals(s.params, action.payload.params));
+              const subId = (sub && sub.id) || this.nextUniqueId();
+              if (!sub) {
+                store.dispatch({
+                  type: '@DDP/OUT/SUB',
+                  payload: {
+                    msg: 'sub',
+                    id: subId,
+                    name: action.payload.name,
+                    params: action.payload.params,
+                  },
+                });
+              }
+              next(action);
+              return subId;
+            })();
+          case '@DDP/API/UNSUBSCRIBE':
+            return (() => {
+              const result = next(action);
+              const state = store.getState();
+              const sub = state.subscriptions[action.payload.id];
+              if (sub && sub.users === 0) {
+                store.dispatch({
+                  type: '@DDP/OUT/UNSUB',
+                  payload: {
+                    msg: 'unsub',
+                    id: sub.id,
+                  },
+                });
+              }
+              return result;
+            })();
+          case '@DDP/OUT/METHOD':
+          case '@DDP/OUT/PONG':
+          case '@DDP/OUT/SUB':
+          case '@DDP/OUT/UNSUB':
+            return (() => {
+              const state = store.getState();
+              const connectionState =
+                state.connection &&
+                state.connection.state;
+              if (connectionState === 'connected') {
+                this.socket.send(action.payload);
+                return next(action);
+              }
+              pending.push(action);
+              return undefined;
+            })();
           default:
             return next(action);
         }
-        return undefined;
       };
     };
   }
@@ -94,7 +141,29 @@ class DDPClient {
       subscriptions: {},
     }, action) => {
       switch (action.type) {
-        case '@DDP/OUT/sub':
+        case '@DDP/API/SUBSCRIBE':
+          return {
+            ...state,
+            subscriptions: {
+              ...state.subscriptions,
+              [action.payload.id]: {
+                ...state.subscriptions[action.payload.id],
+                users: (state.subscriptions[action.payload.id].users || 0) + 1,
+              },
+            },
+          };
+        case '@DDP/API/UNSUBSCRIBE':
+          return {
+            ...state,
+            subscriptions: {
+              ...state.subscriptions,
+              [action.payload.id]: {
+                ...state.subscriptions[action.payload.id],
+                users: (state.subscriptions[action.payload.id].users || 0) - 1,
+              },
+            },
+          };
+        case '@DDP/OUT/SUB':
           return {
             ...state,
             subscriptions: {
@@ -106,7 +175,12 @@ class DDPClient {
               },
             },
           };
-        case '@DDP/IN/connected':
+        case '@DDP/OUT/UNSUB':
+          return {
+            ...state,
+            subscriptions: omit(state.subscriptions, [action.payload.id]),
+          };
+        case '@DDP/IN/CONNECTED':
           return {
             ...state,
             connection: {
@@ -115,19 +189,20 @@ class DDPClient {
             },
           };
         // --- methods ---
-        case '@DDP/OUT/method':
+        case '@DDP/OUT/METHOD':
           return {
             ...state,
             methods: {
               ...state.methods,
               [action.payload.id]: {
                 state: 'pending',
+                id:     action.payload.id,
                 name:   action.payload.method,
                 params: action.payload.params,
               },
             },
           };
-        case '@DDP/IN/result':
+        case '@DDP/IN/RESULT':
           return {
             ...state,
             methods: {
@@ -139,7 +214,7 @@ class DDPClient {
               },
             },
           };
-        case '@DDP/IN/updated':
+        case '@DDP/IN/UPDATED':
           return {
             ...state,
             methods: {
@@ -151,7 +226,7 @@ class DDPClient {
             },
           };
         // --- subscriptions ---
-        case '@DDP/IN/nosub':
+        case '@DDP/IN/NOSUB':
           return {
             ...state,
             subscriptions: {
@@ -163,7 +238,7 @@ class DDPClient {
               },
             },
           };
-        case '@DDP/IN/ready':
+        case '@DDP/IN/READY':
           return {
             ...state,
             subscriptions: mapValues(state.subscriptions, (sub, id) => {
@@ -176,7 +251,7 @@ class DDPClient {
               return sub;
             }),
           };
-        case '@DDP/IN/added':
+        case '@DDP/IN/ADDED':
           return mutateCollections(
             this,
             state,
@@ -187,7 +262,7 @@ class DDPClient {
               ...action.payload.fields,
             }),
           );
-        case '@DDP/IN/changed':
+        case '@DDP/IN/CHANGED':
           return mutateCollections(
             this,
             state,
@@ -198,7 +273,7 @@ class DDPClient {
               ...action.payload.fields,
             }),
           );
-        case '@DDP/IN/removed':
+        case '@DDP/IN/REMOVED':
           return mutateCollections(
             this,
             state,
