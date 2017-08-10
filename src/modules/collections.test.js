@@ -265,7 +265,9 @@ describe('Test module - collections', () => {
     ].forEach((event) => {
       it(`should dispatch FLUSH after ${event}`, function () {
         const store = this.mockStore({
-          collections: {},
+          ddp: {
+            collections: {},
+          },
         });
         const action = {
           type: DDP_ADDED,

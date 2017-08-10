@@ -126,8 +126,10 @@ describe('Test module - connection', () => {
 
     it('should dispatch CONNECTED action', function () {
       const store = this.mockStore({
-        connection: {
-          state: DDP_CONNECTION_STATE__DISCONNECTED,
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__DISCONNECTED,
+          },
         },
       });
       const ddpMessage = {
@@ -143,8 +145,10 @@ describe('Test module - connection', () => {
 
     it('should dispatch CLOSE action', function () {
       const store = this.mockStore({
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__CONNECTED,
+          },
         },
       });
       this.ddpClient.socket.emit('close');
@@ -155,8 +159,10 @@ describe('Test module - connection', () => {
 
     it('should dispatch PONG on ddp ping', function () {
       const store = this.mockStore({
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__CONNECTED,
+          },
         },
       });
       const ping = { msg: 'ping', id: '1234' };
@@ -175,8 +181,10 @@ describe('Test module - connection', () => {
 
     it('should dispatch CONNECT action when socet emits "open"', function () {
       const store = this.mockStore({
-        connection: {
-          state: DDP_CONNECTION_STATE__DISCONNECTED,
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__DISCONNECTED,
+          },
         },
       });
       const ddpMessage = {
@@ -194,9 +202,11 @@ describe('Test module - connection', () => {
 
     it('should enqueue action if not currently connected', function () {
       const store = this.mockStore({
-        connection: {
-          state: DDP_CONNECTION_STATE__DISCONNECTED,
-          queue: [],
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__DISCONNECTED,
+            queue: [],
+          },
         },
       });
       const ddpMessage = {
@@ -226,14 +236,14 @@ describe('Test module - connection', () => {
       const action1 = { type: DDP_METHOD, payload: ddpMessage };
       const action2 = { type: DDP_METHOD, payload: ddpMessage };
 
-      const state = {
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
-          queue: [action1, action2],
+      const store = this.mockStore({
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__CONNECTED,
+            queue: [action1, action2],
+          },
         },
-      };
-
-      const store = this.mockStore(state);
+      });
       store.dispatch({
         type: DDP_CONNECTED,
       });

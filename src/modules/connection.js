@@ -59,7 +59,7 @@ export const createMiddleware = ddpClient => (store) => {
         })(next(action));
       case DDP_CONNECTED:
         return ((result) => {
-          forEach(store.getState().connection.queue, store.dispatch);
+          forEach(store.getState().ddp.connection.queue, store.dispatch);
           return result;
         })(next(action));
       case DDP_CONNECT:
@@ -72,8 +72,8 @@ export const createMiddleware = ddpClient => (store) => {
         return (() => {
           const state = store.getState();
           const connectionState =
-            state.connection &&
-            state.connection.state;
+            state.ddp.connection &&
+            state.ddp.connection.state;
           if (connectionState === DDP_CONNECTION_STATE__CONNECTED) {
             ddpClient.socket.send(action.payload);
             return next(action);
