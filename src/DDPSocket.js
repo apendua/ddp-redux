@@ -1,24 +1,14 @@
-import forEach from 'lodash.foreach';
 import EJSON from './ejson';
+import DDPEmitter from './DDPEmitter';
 
-class DDPScoket {
+class DDPScoket extends DDPEmitter {
   constructor({
     SocketConstructor,
   }) {
+    super();
+
     this.SocketConstructor = SocketConstructor;
     this.rawSocket = null;
-    this.listeners = {};
-  }
-
-  on(name, callback) {
-    if (!this.listeners[name]) {
-      this.listeners[name] = [];
-    }
-    this.listeners[name].push(callback);
-  }
-
-  emit(name, ...args) {
-    forEach(this.listeners[name], callback => callback(...args));
   }
 
   send(obj) {
