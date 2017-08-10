@@ -4,11 +4,14 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import configureStore from 'redux-mock-store';
+import DDPEmitter from '../DDPEmitter';
 import {
   createReducer,
   createMiddleware,
 } from './collections';
 import {
+  DDP_FLUSH,
   DDP_ADDED,
   DDP_CHANGED,
   DDP_REMOVED,
@@ -18,6 +21,9 @@ chai.should();
 chai.use(sinonChai);
 
 class DDPClient {
+  constructor() {
+    this.socket = new DDPEmitter();
+  }
 }
 
 class Model1 {
@@ -42,43 +48,94 @@ describe('Test module - collections', () => {
     beforeEach(function () {
       this.reducer = createReducer(DDPClient);
       this.referenceState1 = {
-        upstream: {
-          col1: {
-            1: new Model1({
-              _id: '1',
-              a: 1,
-              b: 2,
-            }),
+        col1: {
+          nextById: {
+            1: {
+              current: new Model1({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
+          },
+        },
+        col2: {
+          nextById: {
+            1: {
+              current: new Model1({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
           },
         },
       };
       this.referenceState2 = {
-        upstream: {
-          col1: {
-            1: new Model1({
-              _id: '1',
-              a: 1,
-              b: 2,
-            }),
-            2: new Model1({
-              _id: '2',
-              a: 3,
-              b: 4,
-            }),
+        col1: {
+          nextById: {
+            1: {
+              current: new Model1({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
+            2: {
+              current: new Model1({
+                _id: '2',
+                a: 3,
+                b: 4,
+              }),
+            },
+          },
+        },
+        col2: {
+          nextById: {
+            1: {
+              current: new Model2({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
           },
         },
       };
     });
 
     it('should initialize state', function () {
-      this.reducer(undefined, {}).should.deep.equal({
-        upstream: {},
+      this.reducer(undefined, {}).should.deep.equal({});
+    });
+
+    it('should flush recent updates', function () {
+      this.reducer(this.referenceState1, {
+        type: DDP_FLUSH,
+      }).should.deep.equal({
+        col1: {
+          ...this.referenceState1.col1,
+          byId: this.referenceState1.col1.nextById,
+        },
+        col2: {
+          ...this.referenceState1.col2,
+          byId: this.referenceState1.col2.nextById,
+        },
       });
     });
 
-    it('should add an entity to empty state', function () {
+    it('should add an entity to an empty collection', function () {
       const state = this.reducer({
-        upstream: {},
+        col2: {
+          nextById: {
+            1: {
+              current: new Model1({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
+          },
+        },
       }, {
         type: DDP_ADDED,
         payload: {
@@ -88,7 +145,7 @@ describe('Test module - collections', () => {
         },
       });
       state.should.deep.equal(this.referenceState1);
-      state.upstream.col1[1].should.be.instanceOf(Model1);
+      state.col1.nextById[1].current.should.be.instanceOf(Model1);
     });
 
     it('should add another entity', function () {
@@ -101,7 +158,7 @@ describe('Test module - collections', () => {
         },
       });
       state.should.deep.equal(this.referenceState2);
-      state.upstream.col1[2].should.be.instanceOf(Model1);
+      state.col1.nextById[2].current.should.be.instanceOf(Model1);
     });
 
     it('should update existing entity', function () {
@@ -115,21 +172,36 @@ describe('Test module - collections', () => {
         },
       });
       state.should.deep.equal({
-        upstream: {
-          col1: {
-            1: new Model1({
-              _id: '1',
-              a: 3,
-            }),
-            2: new Model1({
-              _id: '2',
-              a: 3,
-              b: 4,
-            }),
+        col1: {
+          nextById: {
+            1: {
+              current: new Model1({
+                _id: '1',
+                a: 3,
+              }),
+            },
+            2: {
+              current: new Model1({
+                _id: '2',
+                a: 3,
+                b: 4,
+              }),
+            },
+          },
+        },
+        col2: {
+          nextById: {
+            1: {
+              current: new Model2({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
           },
         },
       });
-      state.upstream.col1[1].should.be.instanceOf(Model1);
+      state.col1.nextById[1].current.should.be.instanceOf(Model1);
     });
 
     it('should remove an entity', function () {
@@ -141,15 +213,81 @@ describe('Test module - collections', () => {
         },
       });
       state.should.deep.equal({
-        upstream: {
-          col1: {
-            2: new Model1({
-              _id: '2',
-              a: 3,
-              b: 4,
-            }),
+        col1: {
+          nextById: {
+            2: {
+              current: new Model1({
+                _id: '2',
+                a: 3,
+                b: 4,
+              }),
+            },
           },
         },
+        col2: {
+          nextById: {
+            1: {
+              current: new Model2({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
+          },
+        },
+      });
+    });
+  });
+
+  describe('Middleware', () => {
+    beforeEach(function () {
+      this.clock = sinon.useFakeTimers();
+    });
+
+    afterEach(function () {
+      this.clock.restore();
+    });
+
+    beforeEach(function () {
+      this.send = sinon.spy();
+      this.ddpClient = new DDPClient();
+      this.ddpClient.socket.send = this.send;
+      this.middleware = createMiddleware(this.ddpClient);
+      this.mockStore = configureStore([
+        this.middleware,
+      ]);
+    });
+
+    [
+      'added',
+      'changed',
+      'removed',
+    ].forEach((event) => {
+      it(`should dispatch FLUSH after ${event}`, function () {
+        const store = this.mockStore({
+          collections: {},
+        });
+        const action = {
+          type: DDP_ADDED,
+          payload: {
+            msg: event,
+            id: '1',
+            collection: 'col1',
+          },
+        };
+        store.dispatch(action);
+        store.getActions().should.deep.equal([
+          action,
+        ]);
+
+        this.clock.tick(1000);
+
+        store.getActions().should.deep.equal([
+          action,
+          {
+            type: DDP_FLUSH,
+          },
+        ]);
       });
     });
   });

@@ -7,13 +7,14 @@ export const DDP_CONNECTION_STATE__DISCONNECTED = 'disconnected';
 export const DDP_ADDED = '@DDP/IN/ADDED';
 export const DDP_CHANGED = '@DDP/IN/CHANGED';
 export const DDP_REMOVED = '@DDP/IN/REMOVED';
+export const DDP_FLUSH = '@DDP/API/FLUSH';
 
 export const DDP_SUB = '@DDP/OUT/SUB';
 export const DDP_UNSUB = '@DDP/OUT/UNSUB';
 export const DDP_READY = '@DDP/IN/READY';
 export const DDP_NOSUB = '@DDP/IN/NOSUB';
 export const DDP_SUBSCRIBE = '@DDP/API/SUBSCRIBE';
-export const DDP_UNSUBSCRIBE = '@DDP/APIUNSUBSCRIBE';
+export const DDP_UNSUBSCRIBE = '@DDP/API/UNSUBSCRIBE';
 
 export const DDP_PING = '@DDP/IN/PING';
 export const DDP_PONG = '@DDP/OUT/PONG';
