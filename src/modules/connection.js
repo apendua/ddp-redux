@@ -5,6 +5,7 @@ import {
   DDP_CONNECTION_STATE__DISCONNECTED,
 
   DDP_PROTOCOL_VERSION,
+  DDP_CLOSE,
   DDP_PING,
   DDP_PONG,
   DDP_CONNECTED,
@@ -24,6 +25,11 @@ export const createMiddleware = ddpClient => (store) => {
         version: DDP_PROTOCOL_VERSION,
         support: [DDP_PROTOCOL_VERSION],
       },
+    });
+  });
+  ddpClient.socket.on('close', () => {
+    store.dispatch({
+      type: DDP_CLOSE,
     });
   });
   ddpClient.socket.on('message', (msg) => {
@@ -98,6 +104,11 @@ export const createReducer = () => (state = {
       return {
         ...state,
         state: DDP_CONNECTION_STATE__CONNECTED,
+      };
+    case DDP_CLOSE:
+      return {
+        ...state,
+        state: DDP_CONNECTION_STATE__DISCONNECTED,
       };
     case DDP_ENQUEUE:
       return {

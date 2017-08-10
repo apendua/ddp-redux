@@ -21,6 +21,7 @@ import {
   DDP_PING,
   DDP_PONG,
   DDP_ENQUEUE,
+  DDP_CLOSE,
 } from '../constants';
 
 class DDPClient {
@@ -64,6 +65,16 @@ describe('Test module - connection', () => {
         payload: {},
       }).should.deep.equal({
         state: DDP_CONNECTION_STATE__CONNECTED,
+      });
+    });
+
+    it('should change state to disconnected', function () {
+      this.reducer({
+        state: DDP_CONNECTION_STATE__CONNECTED,
+      }, {
+        type: DDP_CLOSE,
+      }).should.deep.equal({
+        state: DDP_CONNECTION_STATE__DISCONNECTED,
       });
     });
 
@@ -128,6 +139,18 @@ describe('Test module - connection', () => {
         payload: ddpMessage,
       }]);
       this.send.should.not.be.called;
+    });
+
+    it('should dispatch CLOSE action', function () {
+      const store = this.mockStore({
+        connection: {
+          state: DDP_CONNECTION_STATE__CONNECTED,
+        },
+      });
+      this.ddpClient.socket.emit('close');
+      store.getActions().should.deep.equal([{
+        type: DDP_CLOSE,
+      }]);
     });
 
     it('should dispatch PONG on ddp ping', function () {
