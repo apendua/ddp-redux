@@ -5,6 +5,8 @@ import {
   DDP_CONNECTION_STATE__DISCONNECTED,
 
   DDP_PROTOCOL_VERSION,
+  DDP_FAILED,
+  DDP_ERROR,
   DDP_CLOSE,
   DDP_PING,
   DDP_PONG,
@@ -15,6 +17,7 @@ import {
   DDP_UNSUB,
   DDP_ENQUEUE,
 } from '../constants';
+import DDPError from '../DDPError';
 
 export const createMiddleware = ddpClient => (store) => {
   ddpClient.socket.on('open', () => {
@@ -46,6 +49,9 @@ export const createMiddleware = ddpClient => (store) => {
       return next(action);
     }
     switch (action.type) {
+      case DDP_ERROR:
+        ddpClient.emit('error', new DDPError('badMessage', action.payload.reason, action.payload.offendingMessage));
+        return next(action);
       case DDP_PING:
         return ((result) => {
           store.dispatch({
@@ -62,6 +68,9 @@ export const createMiddleware = ddpClient => (store) => {
           forEach(store.getState().ddp.connection.queue, store.dispatch);
           return result;
         })(next(action));
+      case DDP_FAILED: // could not negotiate DDP protocol version
+        ddpClient.socket.close();
+        return next(action);
       case DDP_CONNECT:
         ddpClient.socket.send(action.payload);
         return next(action);

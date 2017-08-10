@@ -9,6 +9,9 @@ export const DDP_SUBSCRIPTION_STATE__PENDING = 'pending';
 export const DDP_SUBSCRIPTION_STATE__READY = 'ready';
 export const DDP_SUBSCRIPTION_STATE__ERROR = 'error';
 
+export const DDP_FAILED = '@DDP/IN/FAILED';
+export const DDP_ERROR = '@DDP/IN/ERROR';
+
 export const DDP_ADDED = '@DDP/IN/ADDED';
 export const DDP_CHANGED = '@DDP/IN/CHANGED';
 export const DDP_REMOVED = '@DDP/IN/REMOVED';

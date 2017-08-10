@@ -1,6 +1,7 @@
 import shallowEqual from 'shallowequal';
 import mapValues from 'lodash.mapvalues';
 import DDPSocket from './DDPSocket';
+import DDPEmitter from './DDPEmitter';
 
 import * as collections from './modules/collections';
 import * as connection from './modules/connection';
@@ -18,11 +19,13 @@ const modules = {
   subscriptions,
 };
 
-class DDPClient {
+class DDPClient extends DDPEmitter {
   constructor({
     endpoint,
     SocketConstructor,
   }) {
+    super();
+
     this.socket = new DDPSocket({
       SocketConstructor,
     });

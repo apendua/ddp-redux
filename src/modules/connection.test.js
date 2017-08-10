@@ -15,6 +15,8 @@ import {
   DDP_CONNECTION_STATE__CONNECTING,
   DDP_CONNECTION_STATE__CONNECTED,
 
+  DDP_ERROR,
+  DDP_FAILED,
   DDP_METHOD,
   DDP_CONNECT,
   DDP_CONNECTED,
@@ -23,9 +25,11 @@ import {
   DDP_ENQUEUE,
   DDP_CLOSE,
 } from '../constants';
+import DDPError from '../DDPError';
 
-class DDPClient {
+class DDPClient extends DDPEmitter {
   constructor() {
+    super();
     this.socket = new DDPEmitter();
   }
 }
@@ -116,12 +120,62 @@ describe('Test module - connection', () => {
   describe('Middleware', () => {
     beforeEach(function () {
       this.send = sinon.spy();
+      this.close = sinon.spy();
+      this.onError = sinon.spy();
       this.ddpClient = new DDPClient();
       this.ddpClient.socket.send = this.send;
+      this.ddpClient.socket.close = this.close;
+      this.ddpClient.on('error', this.onError);
       this.middleware = createMiddleware(this.ddpClient);
       this.mockStore = configureStore([
         this.middleware,
       ]);
+    });
+
+    it('should emit DDPError if message was invalid', function () {
+      const store = this.mockStore({
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__CONNECTED,
+          },
+        },
+      });
+      const ddpMessage = {
+        msg: 'error',
+        reason: 'Bad message',
+      };
+      this.ddpClient.socket.emit('message', ddpMessage);
+      store.getActions().should.deep.equal([{
+        type: DDP_ERROR,
+        payload: ddpMessage,
+      }]);
+      this.onError.should.be.called;
+      // NOTE: Comparing errors does not work because error stacks will be different
+      ({
+        ...this.onError.firstCall.args[0],
+      }).should.deep.equal({
+        ...new DDPError('badMessage', 'Bad message'),
+      });
+    });
+
+    it('should close connection if connect failed', function () {
+      const store = this.mockStore({
+        ddp: {
+          connection: {
+            state: DDP_CONNECTION_STATE__CONNECTING,
+          },
+        },
+      });
+      const ddpMessage = {
+        msg: 'failed',
+        version: '2.0', // version of protocol which we are not supporting
+      };
+      this.ddpClient.socket.emit('message', ddpMessage);
+      store.getActions().should.deep.equal([{
+        type: DDP_FAILED,
+        payload: ddpMessage,
+      }]);
+      this.close.should.be.called;
     });
 
     it('should dispatch CONNECTED action', function () {
