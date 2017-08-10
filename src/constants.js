@@ -9,6 +9,10 @@ export const DDP_SUBSCRIPTION_STATE__PENDING = 'pending';
 export const DDP_SUBSCRIPTION_STATE__READY = 'ready';
 export const DDP_SUBSCRIPTION_STATE__ERROR = 'error';
 
+export const DDP_METHOD_STATE__PENDING = 'pending';
+export const DDP_METHOD_STATE__UPDATED = 'updated';
+export const DDP_METHOD_STATE__RETURNED = 'RETURNED';
+
 export const DDP_FAILED = '@DDP/IN/FAILED';
 export const DDP_ERROR = '@DDP/IN/ERROR';
 
@@ -34,6 +38,7 @@ export const DDP_CLOSE = '@DDP/API/CLOSE';
 export const DDP_METHOD = '@DDP/OUT/METHOD';
 export const DDP_RESULT = '@DDP/IN/RESULT';
 export const DDP_UPDATED = '@DDP/IN/UPDATED';
+export const DDP_CANCEL = '@DDP/API/CANCEL';
 
 export const DDP_MUTATE = '@DDP/API/MUTATE';
 
