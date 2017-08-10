@@ -1,8 +1,17 @@
 import omit from 'lodash.omit';
 import find from 'lodash.find';
+import forEach from 'lodash.foreach';
 import mapValues from 'lodash.mapvalues';
 import EJSON from '../ejson';
 import {
+  DDP_SUBSCRIPTION_STATE__PENDING,
+  DDP_SUBSCRIPTION_STATE__READY,
+  DDP_SUBSCRIPTION_STATE__ERROR,
+  DDP_SUBSCRIPTION_STATE__RESTORING,
+
+  DDP_CONNECTION_STATE__DISCONNECTED,
+
+  DDP_CONNECT,
   DDP_SUB,
   DDP_UNSUB,
   DDP_READY,
@@ -15,43 +24,90 @@ export const createMiddleware = ddpClient => store => next => (action) => {
   if (!action || typeof action !== 'object') {
     return next(action);
   }
+  const timeouts = {};
+  const scheduleUnsubscribe = (subId) => {
+    if (timeouts[subId]) {
+      clearTimeout(timeouts[subId]);
+    }
+    timeouts[subId] = setTimeout(() => {
+      store.dispatch({
+        type: '@DDP/OUT/UNSUB',
+        payload: {
+          msg: 'unsub',
+          id: subId,
+        },
+      });
+      delete timeouts[subId];
+    }, 30000);
+  };
+  const cancelUnsubscribe = (subId) => {
+    if (timeouts[subId]) {
+      clearTimeout(timeouts[subId]);
+      delete timeouts[subId];
+    }
+  };
   switch (action.type) {
+    case DDP_CONNECT: // Restore all subscriptions on re-connect
+      return ((result) => {
+        const state = store.getState();
+        forEach(state.ddp.subscriptions, (sub, id) => {
+          store.dispatch({
+            type: DDP_SUB,
+            payload: {
+              msg: 'sub',
+              id,
+              name: sub.name,
+              params: sub.params,
+            },
+          });
+        });
+        return result;
+      })(next(action));
     case DDP_SUBSCRIBE:
       return (() => {
         const state = store.getState();
-        const sub = find(state.subscriptions,
-          s => s.name === action.payload.name &&
-            EJSON.equals(s.params, action.payload.params));
+        const {
+          name,
+          params,
+        } = action.payload;
+        const sub = find(state.ddp.subscriptions,
+          s => s.name === name &&
+            EJSON.equals(s.params, params));
         const subId = (sub && sub.id) || ddpClient.nextUniqueId();
-        if (!sub) {
+        cancelUnsubscribe(subId);
+        if (sub) {
+          cancelUnsubscribe(subId);
+        } else {
           store.dispatch({
             type: '@DDP/OUT/SUB',
             payload: {
+              name,
+              params,
               msg: 'sub',
               id: subId,
-              name: action.payload.name,
-              params: action.payload.params,
             },
           });
         }
-        next(action);
+        next({
+          ...action,
+          payload: {
+            ...action.payload,
+            id: subId,
+          },
+        });
         return subId;
       })();
     case DDP_UNSUBSCRIBE:
       return (() => {
-        const result = next(action);
         const state = store.getState();
-        const sub = state.subscriptions[action.payload.id];
-        if (sub && sub.users === 0) {
-          store.dispatch({
-            type: '@DDP/OUT/UNSUB',
-            payload: {
-              msg: 'unsub',
-              id: sub.id,
-            },
-          });
+        const sub = state.ddp.subscriptions[action.payload.id];
+        // NOTE: The number of users will only be decreased after "next(action)"
+        //       so at this moment it's still taking into account the one which
+        //       is resigning.
+        if (sub && sub.users === 1) {
+          scheduleUnsubscribe(sub.id);
         }
-        return result;
+        return next(action);
       })();
     default:
       return next(action);
@@ -69,18 +125,21 @@ export const createReducer = () => (state = {}, action) => {
         },
       };
     case DDP_UNSUBSCRIBE:
-      return {
-        ...state,
-        [action.payload.id]: {
-          ...state[action.payload.id],
-          users: (state[action.payload.id].users || 0) - 1,
-        },
-      };
+      return state[action.payload.id]
+        ? {
+          ...state,
+          [action.payload.id]: {
+            ...state[action.payload.id],
+            users: (state[action.payload.id].users || 0) - 1,
+          },
+        }
+        : state;
     case DDP_SUB:
       return {
         ...state,
         [action.payload.id]: {
-          state:  'pending',
+          id:     action.payload.id,
+          state:  DDP_SUBSCRIPTION_STATE__PENDING,
           name:   action.payload.name,
           params: action.payload.params,
         },
@@ -88,20 +147,39 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_UNSUB:
       return omit(state, [action.payload.id]);
     case DDP_NOSUB:
-      return {
-        ...state,
-        [action.payload.id]: {
-          ...state[action.payload.id],
-          state: 'error',
-          error: action.payload.error,
-        },
-      };
+      // NOTE: If the subscription was deleted in the meantime, this will
+      //       have completely no effect.
+      return mapValues(state, (sub, id) => {
+        if (action.payload.id === id) {
+          return {
+            ...sub,
+            state: DDP_SUBSCRIPTION_STATE__ERROR,
+            error: action.payload.error,
+          };
+        }
+        return sub;
+      });
     case DDP_READY:
+      // NOTE: If the subscription was deleted in the meantime, this will
+      //       have completely no effect.
       return mapValues(state, (sub, id) => {
         if (action.payload.subs.indexOf(id) >= 0) {
           return {
             ...sub,
-            state: 'ready',
+            state: DDP_SUBSCRIPTION_STATE__READY,
+          };
+        }
+        return sub;
+      });
+    case DDP_CONNECT:
+      return mapValues(state, (sub) => {
+        if (
+          sub.state === DDP_SUBSCRIPTION_STATE__READY ||
+          sub.state === DDP_SUBSCRIPTION_STATE__ERROR
+        ) {
+          return {
+            ...sub,
+            state: DDP_SUBSCRIPTION_STATE__RESTORING,
           };
         }
         return sub;
