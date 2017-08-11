@@ -220,7 +220,7 @@ describe('Test module - connection', () => {
         },
       });
       const ping = { msg: 'ping', id: '1234' };
-      const pong = { msg: 'pong', id: '1234' };
+      const pong = { id: '1234' };
 
       this.ddpClient.socket.emit('message', ping);
       store.getActions().should.deep.equal([{

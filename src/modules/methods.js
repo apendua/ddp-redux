@@ -7,7 +7,6 @@ import {
   DDP_METHOD,
   DDP_RESULT,
   DDP_UPDATED,
-  DDP_CANCEL,
 } from '../constants';
 import DDPError from '../DDPError';
 
@@ -32,14 +31,6 @@ export const createMiddleware = () => (store) => {
             },
           };
         });
-      case DDP_CANCEL:
-        return ((result) => {
-          const promise = promises[action.payload.id];
-          if (promise) {
-            promise.fulfill(new DDPError('canceled'));
-          }
-          return result;
-        })(next(action));
       case DDP_RESULT:
       case DDP_UPDATED:
         return (() => {
@@ -81,8 +72,6 @@ export const createReducer = () => (state = {}, action) => {
           params: action.payload.params,
         },
       };
-    case DDP_CANCEL:
-      return omit(state, id);
     case DDP_RESULT:
       return state[id] && state[id].state === DDP_METHOD_STATE__PENDING
         ? {

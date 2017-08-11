@@ -16,9 +16,13 @@ import {
   DDP_SUB,
   DDP_UNSUB,
   DDP_ENQUEUE,
+
+  MESSAGE_TO_ACTION,
+  ACTION_TO_MESSAGE,
 } from '../constants';
 import DDPError from '../DDPError';
 
+// TODO: Add support for "server_id" message.
 export const createMiddleware = ddpClient => (store) => {
   ddpClient.socket.on('open', () => {
     store.dispatch({
@@ -35,14 +39,14 @@ export const createMiddleware = ddpClient => (store) => {
       type: DDP_CLOSE,
     });
   });
-  ddpClient.socket.on('message', (msg) => {
-    if (!msg.msg) {
-      return;
+  ddpClient.socket.on('message', (payload) => {
+    const type = payload.msg && MESSAGE_TO_ACTION[payload.msg];
+    if (type) {
+      store.dispatch({
+        type,
+        payload,
+      });
     }
-    store.dispatch({
-      type: `@DDP/IN/${msg.msg.toUpperCase()}`,
-      payload: msg,
-    });
   });
   return next => (action) => {
     if (!action || typeof action !== 'object') {
@@ -57,7 +61,6 @@ export const createMiddleware = ddpClient => (store) => {
           store.dispatch({
             type: DDP_PONG,
             payload: {
-              msg: 'pong',
               id: action.payload.id,
             },
           });

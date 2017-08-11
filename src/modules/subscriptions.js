@@ -29,7 +29,7 @@ export const createMiddleware = ddpClient => store => next => (action) => {
     }
     timeouts[subId] = setTimeout(() => {
       store.dispatch({
-        type: '@DDP/OUT/UNSUB',
+        type: DDP_UNSUB,
         payload: {
           msg: 'unsub',
           id: subId,
@@ -77,7 +77,7 @@ export const createMiddleware = ddpClient => store => next => (action) => {
           cancelUnsubscribe(subId);
         } else {
           store.dispatch({
-            type: '@DDP/OUT/SUB',
+            type: DDP_SUB,
             payload: {
               name,
               params,
