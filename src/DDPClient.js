@@ -5,12 +5,14 @@ import DDPEmitter from './DDPEmitter';
 
 import * as collections from './modules/collections';
 import * as connection from './modules/connection';
+import * as messages from './modules/messages';
 import * as methods from './modules/methods';
 import * as mutations from './modules/mutations';
 import * as queries from './modules/queries';
 import * as subscriptions from './modules/subscriptions';
 
 const modules = {
+  messages,
   collections,
   connection,
   methods,
