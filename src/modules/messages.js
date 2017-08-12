@@ -45,7 +45,7 @@ export const createMiddleware = ddpClient => (store) => {
       const queue = state.ddp.messages.queue;
       let i = 0;
       while (i < queue.length && queue[i].priority >= threshold) {
-        store.dispatch(queue[i].payload);
+        store.dispatch(queue[i]);
         i += 1;
       }
       return result;
@@ -55,7 +55,7 @@ export const createMiddleware = ddpClient => (store) => {
       return next(action);
     }
     const priority = ACTION_TO_PRIORITY[action.type] || 0;
-    const enhanced = {
+    const newAction = {
       ...action,
       payload: {
         ...action.payload,
@@ -68,14 +68,17 @@ export const createMiddleware = ddpClient => (store) => {
     };
     const state = store.getState();
     const threshold = getThreshold(state);
-    if (enhanced.meta.priority >= threshold) {
-      ddpClient.socket.send(action.payload);
-      return next(enhanced);
+    if (newAction.meta.priority >= threshold) {
+      ddpClient.socket.send(newAction.payload);
+      return next(newAction);
     }
     store.dispatch({
-      type:    DDP_ENQUEUE,
-      payload: enhanced,
-      meta:    enhanced.meta,
+      type: DDP_ENQUEUE,
+      payload: newAction.payload,
+      meta: {
+        type: newAction.type,
+        ...newAction.meta,
+      },
     });
     return undefined;
   };
@@ -103,12 +106,17 @@ export const createReducer = () => (state = {
           const priority = action.meta.priority || 0;
           const newQueue = [];
           let i = 0;
-          while (i < queue.length && priority <= queue[i].priority) {
+          while (i < queue.length && priority <= queue[i].meta.priority) {
             newQueue.push(queue[i]);
             i += 1;
           }
+          const {
+            type,
+            ...meta
+          } = action.meta;
           newQueue.push({
-            priority,
+            type,
+            meta,
             payload: action.payload,
           });
           while (i < queue.length) {
@@ -126,7 +134,7 @@ export const createReducer = () => (state = {
     case DDP_METHOD:
       return {
         ...state,
-        queue: state.queue.filter(x => x !== action),
+        queue: state.queue.filter(x => x.payload.id !== action.payload.id),
         pending: {
           ...state.pending,
           [action.payload.id]: action.meta.priority,
@@ -142,7 +150,7 @@ export const createReducer = () => (state = {
     case DDP_UNSUB:
       return {
         ...state,
-        queue: state.queue.filter(x => x !== action),
+        queue: state.queue.filter(x => x.payload.id !== action.payload.id),
       };
     default:
       return state;

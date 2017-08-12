@@ -20,6 +20,7 @@ import {
   DDP_ENQUEUE,
   DDP_CLOSE,
 
+  MSG_METHOD,
   MSG_READY,
   MSG_NOSUB,
   MSG_ADDED,
@@ -86,12 +87,16 @@ describe('Test module - messages', () => {
         type: DDP_ENQUEUE,
         payload: {},
         meta: {
+          type: DDP_METHOD,
           priority: 0,
         },
       }).should.deep.equal({
         pending: {},
         queue: [{
-          priority: 0,
+          type: DDP_METHOD,
+          meta: {
+            priority: 0,
+          },
           payload: {},
         }],
       });
@@ -100,24 +105,34 @@ describe('Test module - messages', () => {
     it('should enqueue element at the end of queue if priority is lower', function () {
       this.reducer({
         queue: [{
-          priority: 10,
+          type: DDP_METHOD,
           payload: 1,
+          meta: {
+            priority: 10,
+          },
         }],
         pending: {},
       }, {
         type: DDP_ENQUEUE,
         payload: 2,
         meta: {
+          type: DDP_METHOD,
           priority: 5,
         },
       }).should.deep.equal({
         pending: {},
         queue: [{
-          priority: 10,
+          type: DDP_METHOD,
           payload: 1,
+          meta: {
+            priority: 10,
+          },
         }, {
-          priority: 5,
+          type: DDP_METHOD,
           payload: 2,
+          meta: {
+            priority: 5,
+          },
         }],
       });
     });
@@ -125,7 +140,10 @@ describe('Test module - messages', () => {
     it('should enqueue element at the beginning of queue if priority is higher', function () {
       this.reducer({
         queue: [{
-          priority: 10,
+          type: DDP_METHOD,
+          meta: {
+            priority: 10,
+          },
           payload: 1,
         }],
         pending: {},
@@ -133,15 +151,22 @@ describe('Test module - messages', () => {
         type: DDP_ENQUEUE,
         payload: 2,
         meta: {
+          type: DDP_METHOD,
           priority: 15,
         },
       }).should.deep.equal({
         pending: {},
         queue: [{
-          priority: 15,
+          type: DDP_METHOD,
+          meta: {
+            priority: 15,
+          },
           payload: 2,
         }, {
-          priority: 10,
+          type: DDP_METHOD,
+          meta: {
+            priority: 10,
+          },
           payload: 1,
         }],
       });
@@ -150,10 +175,16 @@ describe('Test module - messages', () => {
     it('should enqueue element in the middle of the queue', function () {
       this.reducer({
         queue: [{
-          priority: 20,
+          type: DDP_METHOD,
+          meta: {
+            priority: 20,
+          },
           payload: 1,
         }, {
-          priority: 10,
+          type: DDP_METHOD,
+          meta: {
+            priority: 10,
+          },
           payload: 2,
         }],
         pending: {},
@@ -161,20 +192,56 @@ describe('Test module - messages', () => {
         type: DDP_ENQUEUE,
         payload: 3,
         meta: {
+          type: DDP_METHOD,
           priority: 15,
         },
       }).should.deep.equal({
         pending: {},
         queue: [{
-          priority: 20,
+          type: DDP_METHOD,
+          meta: {
+            priority: 20,
+          },
           payload: 1,
         }, {
-          priority: 15,
+          type: DDP_METHOD,
+          meta: {
+            priority: 15,
+          },
           payload: 3,
         }, {
-          priority: 10,
+          type: DDP_METHOD,
+          meta: {
+            priority: 10,
+          },
           payload: 2,
         }],
+      });
+    });
+
+    it('should method from queue when method is emited', function () {
+      const action = {
+        type: DDP_METHOD,
+        payload: {
+          id: '1',
+          msg: MSG_METHOD,
+        },
+        meta: {
+          priority: 0,
+        },
+      };
+      this.reducer({
+        queue: [{
+          type: DDP_METHOD,
+          payload: action.payload,
+          meta: action.meta,
+        }],
+        pending: {},
+      }, action).should.deep.equal({
+        pending: {
+          1: 0,
+        },
+        queue: [],
       });
     });
   });
@@ -257,8 +324,7 @@ describe('Test module - messages', () => {
             priority: ACTION_TO_PRIORITY[type],
           },
         }]);
-        // TODO: Find out why this is not working
-        // this.send.should.be.calledWith(ddpMessage);
+        this.send.should.be.calledWith(ddpMessage);
       });
     });
 
@@ -276,6 +342,9 @@ describe('Test module - messages', () => {
       });
       const action = {
         type: DDP_METHOD,
+        payload: {
+          msg: MSG_METHOD,
+        },
         meta: {
           priority: 25,
         },
@@ -283,17 +352,10 @@ describe('Test module - messages', () => {
       store.dispatch(action);
       store.getActions().should.deep.equal([{
         type: DDP_ENQUEUE,
-        payload: {
-          type: DDP_METHOD,
-          payload: {
-            msg: 'method',
-          },
-          meta: {
-            priority: 25,
-          },
-        },
+        payload: action.payload,
         meta: {
-          priority: 25,
+          type: action.type,
+          ...action.meta,
         },
       }]);
     });
