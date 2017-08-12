@@ -39,12 +39,14 @@ export const createMiddleware = ddpClient => (store) => {
       return next(action);
     }
     if (action.type === DDP_CONNECTED || action.type === DDP_RESULT) {
+      // NOTE: We are propagating action first, because
+      //       we want to get an up-to-date threshold.
       const result = next(action);
       const state = store.getState();
       const threshold = getThreshold(state);
       const queue = state.ddp.messages.queue;
       let i = 0;
-      while (i < queue.length && queue[i].priority >= threshold) {
+      while (i < queue.length && threshold <= queue[i].meta.priority) {
         store.dispatch(queue[i]);
         i += 1;
       }

@@ -14,6 +14,7 @@ import {
   DDP_METHOD,
   DDP_CONNECT,
   DDP_CONNECTED,
+  DDP_RESULT,
   DDP_PONG,
   DDP_SUB,
   DDP_UNSUB,
@@ -244,6 +245,43 @@ describe('Test module - messages', () => {
         queue: [],
       });
     });
+
+    it('should remove pending item on method result', function () {
+      const action = {
+        type: DDP_RESULT,
+        payload: {
+          id: '1',
+        },
+      };
+      this.reducer({
+        queue: [],
+        pending: {
+          1: 0,
+          2: 0,
+        },
+      }, action).should.deep.equal({
+        pending: {
+          2: 0,
+        },
+        queue: [],
+      });
+    });
+
+    it('should remove all pending items on connected', function () {
+      const action = {
+        type: DDP_CONNECTED,
+      };
+      this.reducer({
+        queue: [],
+        pending: {
+          1: 0,
+          2: 0,
+        },
+      }, action).should.deep.equal({
+        pending: {},
+        queue: [],
+      });
+    });
   });
 
   describe('Middleware', () => {
@@ -358,6 +396,75 @@ describe('Test module - messages', () => {
           ...action.meta,
         },
       }]);
+    });
+
+    it('should empty queue up to the computed threshold', function () {
+      const store = this.mockStore({
+        ddp: {
+          messages: {
+            pending: {
+              1: 10,
+              2: 0,
+            },
+            queue: [{
+              type: DDP_METHOD,
+              payload: {
+                id: '3',
+                msg: MSG_METHOD,
+              },
+              meta: {
+                priority: 10,
+              },
+            }, {
+              type: DDP_METHOD,
+              payload: {
+                id: '4',
+                msg: MSG_METHOD,
+              },
+              meta: {
+                priority: 10,
+              },
+            }, {
+              type: DDP_METHOD,
+              payload: {
+                id: '5',
+                msg: MSG_METHOD,
+              },
+              meta: {
+                priority: 0,
+              },
+            }],
+          },
+        },
+      });
+      const action = {
+        type: DDP_RESULT,
+        payload: 4,
+      };
+      store.dispatch(action);
+      store.getActions().should.deep.equal([
+        action,
+        {
+          type: DDP_METHOD,
+          payload: {
+            id: '3',
+            msg: MSG_METHOD,
+          },
+          meta: {
+            priority: 10,
+          },
+        },
+        {
+          type: DDP_METHOD,
+          payload: {
+            id: '4',
+            msg: MSG_METHOD,
+          },
+          meta: {
+            priority: 10,
+          },
+        },
+      ]);
     });
   });
 });
