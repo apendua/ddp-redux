@@ -13,6 +13,7 @@ import {
 
   DDP_CONNECT,
   DDP_METHOD,
+  DDP_RESULT,
   DDP_REQUEST,
   DDP_RELEASE,
   DDP_CREATE_QUERY,
@@ -53,13 +54,11 @@ export const createMiddleware = ddpClient => store => next => (action) => {
           store.dispatch({
             type: DDP_METHOD,
             payload: {
-              id,
               params,
               method: name,
-              msg: 'method',
             },
             meta: {
-              queryId: 0,
+              queryId: id,
             },
           });
         });
@@ -73,20 +72,20 @@ export const createMiddleware = ddpClient => store => next => (action) => {
           params,
         } = action.payload;
         const query = find(state.ddp.queries,
-          s => s.name === name &&
-            EJSON.equals(s.params, params));
+          x => x.name === name &&
+            EJSON.equals(x.params, params));
         const id = (query && query.id) || ddpClient.nextUniqueId();
-        cancelCleanup(id);
         if (query) {
           cancelCleanup(id);
         } else {
           store.dispatch({
-            type: '@DDP/OUT/SUB',
+            type: DDP_METHOD,
             payload: {
-              name,
               params,
-              msg: 'query',
-              id,
+              method: name,
+            },
+            meta: {
+              queryId: id,
             },
           });
         }
@@ -99,15 +98,30 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         });
         return id;
       })();
+    case DDP_RESULT:
+      return (() => {
+        const state = store.getState();
+        const queryId = state.ddp.queries.byMethodId[action.payload.id];
+        if (queryId) {
+          return next({
+            ...action,
+            meta: {
+              ...action.meta,
+              queryId,
+            },
+          });
+        }
+        return next(action);
+      })();
     case DDP_RELEASE:
       return (() => {
         const state = store.getState();
-        const sub = state.ddp.queries[action.payload.id];
+        const query = state.ddp.queries[action.payload.id];
         // NOTE: The number of users will only be decreased after "next(action)"
         //       so at this moment it's still taking into account the one which
         //       is resigning.
-        if (sub && sub.users === 1) {
-          scheduleCleanup(sub.id);
+        if (query && query.users === 1) {
+          scheduleCleanup(query.id);
         }
         return next(action);
       })();
@@ -116,7 +130,7 @@ export const createMiddleware = ddpClient => store => next => (action) => {
   }
 };
 
-export const createReducer = () => (state = {}, action) => {
+export const createPrimaryReducer = () => (state = {}, action) => {
   switch (action.type) {
     case DDP_REQUEST:
       return {
@@ -136,43 +150,44 @@ export const createReducer = () => (state = {}, action) => {
           },
         }
         : state;
-    case DDP_SUB:
-      return {
-        ...state,
-        [action.payload.id]: {
-          id:     action.payload.id,
-          state:  DDP_QUERY_STATE__PENDING,
-          name:   action.payload.name,
-          params: action.payload.params,
-        },
-      };
-    case DDP_UNSUB:
-      return omit(state, [action.payload.id]);
-    case DDP_NOSUB:
-      // NOTE: If the subscription was deleted in the meantime, this will
-      //       have completely no effect.
-      return mapValues(state, (sub, id) => {
-        if (action.payload.id === id) {
+    case DDP_METHOD:
+      return (() => {
+        if (action.meta.queryId) {
           return {
-            ...sub,
-            state: DDP_QUERY_STATE__ERROR,
-            error: action.payload.error,
+            ...state,
+            [action.meta.queryId]: {
+              id:     action.meta.queryId,
+              state:  DDP_QUERY_STATE__PENDING,
+              name:   action.payload.method,
+              params: action.payload.params,
+            },
           };
         }
-        return sub;
-      });
-    case DDP_READY:
-      // NOTE: If the subscription was deleted in the meantime, this will
-      //       have completely no effect.
-      return mapValues(state, (sub, id) => {
-        if (action.payload.subs.indexOf(id) >= 0) {
-          return {
-            ...sub,
-            state: DDP_QUERY_STATE__READY,
-          };
+        return state;
+      })();
+    case DDP_RESULT:
+      return (() => {
+        if (action.meta && action.meta.queryId) {
+          return mapValues(state, (query, id) => {
+            if (action.meta.queryId === id) {
+              if (action.payload.error) {
+                return {
+                  ...query,
+                  state: DDP_QUERY_STATE__ERROR,
+                  error: action.payload.error,
+                };
+              }
+              return {
+                ...query,
+                state: DDP_QUERY_STATE__READY,
+                result: action.payload.result,
+              };
+            }
+            return query;
+          });
         }
-        return sub;
-      });
+        return state;
+      })();
     case DDP_CONNECT:
       return mapValues(state, (sub) => {
         if (
@@ -189,5 +204,42 @@ export const createReducer = () => (state = {}, action) => {
     default:
       return state;
   }
+};
+
+export const createSecondaryReducer = () => (state = {}, action) => {
+  switch (action.type) {
+    case DDP_METHOD:
+      return (() => {
+        if (action.meta.queryId) {
+          return {
+            ...state,
+            [action.payload.id]: action.meta.queryId,
+          };
+        }
+        return state;
+      })();
+    case DDP_RESULT:
+      return (() => {
+        if (state[action.payload.id]) {
+          return omit(state, action.payload.id);
+        }
+        return state;
+      })();
+    default:
+      return state;
+  }
+};
+
+export const createReducer = () => (state = {
+  byId: {},
+  byMethodId: {},
+}, action) => {
+  // TODO: Optimize
+  const primary = createPrimaryReducer();
+  const secondary = createSecondaryReducer();
+  return {
+    byId: primary(state.byId, action),
+    byMethodId: secondary(state.byMethodId, action),
+  };
 };
 

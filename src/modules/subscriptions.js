@@ -72,7 +72,6 @@ export const createMiddleware = ddpClient => store => next => (action) => {
           s => s.name === name &&
             EJSON.equals(s.params, params));
         const subId = (sub && sub.id) || ddpClient.nextUniqueId();
-        cancelUnsubscribe(subId);
         if (sub) {
           cancelUnsubscribe(subId);
         } else {
