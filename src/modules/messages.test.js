@@ -44,6 +44,10 @@ class DDPClient extends DDPEmitter {
     super();
     this.socket = new DDPEmitter();
   }
+
+  nextUniqueId() {
+    return '1';
+  }
 }
 
 chai.should();
@@ -354,6 +358,9 @@ describe('Test module - messages', () => {
         });
         const ddpMessage = {
           msg: ACTION_TO_MESSAGE[type],
+          ...(type === DDP_SUB || type === DDP_METHOD) && {
+            id: '1',
+          },
         };
         store.getActions().should.deep.equal([{
           type,
@@ -381,6 +388,7 @@ describe('Test module - messages', () => {
       const action = {
         type: DDP_METHOD,
         payload: {
+          id: '2',
           msg: MSG_METHOD,
         },
         meta: {

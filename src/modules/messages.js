@@ -68,6 +68,10 @@ export const createMiddleware = ddpClient => (store) => {
         ...action.meta,
       },
     };
+    // Ensure that method & sub messages always have valid unique id
+    if (action.type === DDP_METHOD || action.type === DDP_SUB) {
+      newAction.payload.id = newAction.payload.id || ddpClient.nextUniqueId();
+    }
     const state = store.getState();
     const threshold = getThreshold(state);
     if (newAction.meta.priority >= threshold) {
