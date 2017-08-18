@@ -17,12 +17,10 @@ import {
 
   DDP_ERROR,
   DDP_FAILED,
-  DDP_METHOD,
   DDP_CONNECT,
   DDP_CONNECTED,
   DDP_PING,
   DDP_PONG,
-  DDP_ENQUEUE,
   DDP_CLOSE,
 } from '../constants';
 import DDPError from '../DDPError';
@@ -81,40 +79,6 @@ describe('Test module - connection', () => {
         state: DDP_CONNECTION_STATE__DISCONNECTED,
       });
     });
-
-    it('should enqueue an action', function () {
-      const action1 = {
-        type: 'ACTION1',
-      };
-      const action2 = {
-        type: 'ACTION2',
-      };
-      const state = this.reducer({
-        state: DDP_CONNECTION_STATE__DISCONNECTED,
-        queue: [action1],
-      }, {
-        type: DDP_ENQUEUE,
-        payload: action2,
-      });
-      state.should.deep.equal({
-        state: DDP_CONNECTION_STATE__DISCONNECTED,
-        queue: [action1, action2],
-      });
-      state.queue[1].should.equal(action2);
-    });
-
-    it('should remove action from queue', function () {
-      const action1 = { type: DDP_METHOD };
-      const action2 = { type: DDP_METHOD };
-      const state = this.reducer({
-        state: DDP_CONNECTION_STATE__CONNECTED,
-        queue: [action1, action2],
-      }, action1);
-      state.should.deep.equal({
-        state: DDP_CONNECTION_STATE__CONNECTED,
-        queue: [action2],
-      });
-    });
   });
 
   describe('Middleware', () => {
@@ -144,7 +108,10 @@ describe('Test module - connection', () => {
         msg: 'error',
         reason: 'Bad message',
       };
-      this.ddpClient.socket.emit('message', ddpMessage);
+      store.dispatch({
+        type: DDP_ERROR,
+        payload: ddpMessage,
+      });
       store.getActions().should.deep.equal([{
         type: DDP_ERROR,
         payload: ddpMessage,
@@ -170,31 +137,15 @@ describe('Test module - connection', () => {
         msg: 'failed',
         version: '2.0', // version of protocol which we are not supporting
       };
-      this.ddpClient.socket.emit('message', ddpMessage);
+      store.dispatch({
+        type: DDP_FAILED,
+        payload: ddpMessage,
+      });
       store.getActions().should.deep.equal([{
         type: DDP_FAILED,
         payload: ddpMessage,
       }]);
       this.close.should.be.called;
-    });
-
-    it('should dispatch CONNECTED action', function () {
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__DISCONNECTED,
-          },
-        },
-      });
-      const ddpMessage = {
-        msg: 'connected',
-      };
-      this.ddpClient.socket.emit('message', ddpMessage);
-      store.getActions().should.deep.equal([{
-        type: DDP_CONNECTED,
-        payload: ddpMessage,
-      }]);
-      this.send.should.not.be.called;
     });
 
     it('should dispatch CLOSE action', function () {
@@ -222,7 +173,10 @@ describe('Test module - connection', () => {
       const ping = { msg: 'ping', id: '1234' };
       const pong = { id: '1234' };
 
-      this.ddpClient.socket.emit('message', ping);
+      store.dispatch({
+        type: DDP_PING,
+        payload: ping,
+      });
       store.getActions().should.deep.equal([{
         type: DDP_PING,
         payload: ping,
@@ -230,7 +184,6 @@ describe('Test module - connection', () => {
         type: DDP_PONG,
         payload: pong,
       }]);
-      this.send.should.be.calledWith(pong);
     });
 
     it('should dispatch CONNECT action when socet emits "open"', function () {
@@ -251,64 +204,6 @@ describe('Test module - connection', () => {
         type: DDP_CONNECT,
         payload: ddpMessage,
       }]);
-      this.send.should.be.calledWith(ddpMessage);
-    });
-
-    it('should enqueue action if not currently connected', function () {
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__DISCONNECTED,
-            queue: [],
-          },
-        },
-      });
-      const ddpMessage = {
-        msg: 'method',
-        id: '1',
-        method: 'aMethod',
-        params: [1, 2, 3],
-      };
-      const action = {
-        type: DDP_METHOD,
-        payload: ddpMessage,
-      };
-      store.dispatch(action);
-      store.getActions().should.deep.equal([{
-        type: DDP_ENQUEUE,
-        payload: action,
-      }]);
-    });
-
-    it('should clear queue on establishing connection', function () {
-      const ddpMessage = {
-        msg: 'method',
-        id: '1',
-        method: 'aMethod',
-        params: [1, 2, 3],
-      };
-      const action1 = { type: DDP_METHOD, payload: ddpMessage };
-      const action2 = { type: DDP_METHOD, payload: ddpMessage };
-
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__CONNECTED,
-            queue: [action1, action2],
-          },
-        },
-      });
-      store.dispatch({
-        type: DDP_CONNECTED,
-      });
-
-      store.getActions().should.deep.equal([
-        {
-          type: DDP_CONNECTED,
-        },
-        action1,
-        action2,
-      ]);
     });
   });
 });

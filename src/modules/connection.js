@@ -1,4 +1,3 @@
-import forEach from 'lodash.foreach';
 import {
   DDP_CONNECTION_STATE__CONNECTING,
   DDP_CONNECTION_STATE__CONNECTED,
@@ -12,13 +11,6 @@ import {
   DDP_PONG,
   DDP_CONNECTED,
   DDP_CONNECT,
-  DDP_METHOD,
-  DDP_SUB,
-  DDP_UNSUB,
-  DDP_ENQUEUE,
-
-  MESSAGE_TO_ACTION,
-  ACTION_TO_MESSAGE,
 } from '../constants';
 import DDPError from '../DDPError';
 
@@ -39,15 +31,6 @@ export const createMiddleware = ddpClient => (store) => {
       type: DDP_CLOSE,
     });
   });
-  ddpClient.socket.on('message', (payload) => {
-    const type = payload.msg && MESSAGE_TO_ACTION[payload.msg];
-    if (type) {
-      store.dispatch({
-        type,
-        payload,
-      });
-    }
-  });
   return next => (action) => {
     if (!action || typeof action !== 'object') {
       return next(action);
@@ -66,36 +49,9 @@ export const createMiddleware = ddpClient => (store) => {
           });
           return result;
         })(next(action));
-      case DDP_CONNECTED:
-        return ((result) => {
-          forEach(store.getState().ddp.connection.queue, store.dispatch);
-          return result;
-        })(next(action));
       case DDP_FAILED: // could not negotiate DDP protocol version
         ddpClient.socket.close();
         return next(action);
-      case DDP_CONNECT:
-        ddpClient.socket.send(action.payload);
-        return next(action);
-      case DDP_METHOD:
-      case DDP_PONG:
-      case DDP_SUB:
-      case DDP_UNSUB:
-        return (() => {
-          const state = store.getState();
-          const connectionState =
-            state.ddp.connection &&
-            state.ddp.connection.state;
-          if (connectionState === DDP_CONNECTION_STATE__CONNECTED) {
-            ddpClient.socket.send(action.payload);
-            return next(action);
-          }
-          store.dispatch({
-            type: DDP_ENQUEUE,
-            payload: action,
-          });
-          return undefined;
-        })();
       default:
         return next(action);
     }
@@ -121,22 +77,6 @@ export const createReducer = () => (state = {
       return {
         ...state,
         state: DDP_CONNECTION_STATE__DISCONNECTED,
-      };
-    case DDP_ENQUEUE:
-      return {
-        ...state,
-        queue: [
-          ...state.queue,
-          action.payload,
-        ],
-      };
-    case DDP_METHOD:
-    case DDP_PONG:
-    case DDP_SUB:
-    case DDP_UNSUB:
-      return {
-        ...state,
-        queue: state.queue.filter(x => x !== action),
       };
     default:
       return state;
