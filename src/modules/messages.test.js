@@ -8,6 +8,7 @@ import configureStore from 'redux-mock-store';
 import DDPEmitter from '../DDPEmitter';
 import {
   createReducer,
+  createSocketReducer,
   createMiddleware,
 } from './messages';
 import {
@@ -19,7 +20,7 @@ import {
   DDP_SUB,
   DDP_UNSUB,
   DDP_ENQUEUE,
-  DDP_CLOSE,
+  DDP_CLOSED,
 
   MSG_METHOD,
   MSG_READY,
@@ -40,12 +41,11 @@ import {
 } from '../constants';
 
 class DDPClient extends DDPEmitter {
-  constructor() {
-    super();
-    this.socket = new DDPEmitter();
+  nextUniqueId() {
+    return '1';
   }
 
-  nextUniqueId() {
+  getDefaultSocketId() {
     return '1';
   }
 }
@@ -53,10 +53,21 @@ class DDPClient extends DDPEmitter {
 chai.should();
 chai.use(sinonChai);
 
+const createInitialState = (socketId, socketState) => ({
+  ddp: {
+    messages: {
+      sockets: {
+        [socketId]: socketState,
+      },
+    },
+  },
+});
+
+
 describe('Test module - messages', () => {
   describe('Reducer', () => {
     beforeEach(function () {
-      this.reducer = createReducer(DDPClient);
+      this.reducer = createSocketReducer(DDPClient);
     });
 
     it('should initialize state', function () {
@@ -75,7 +86,7 @@ describe('Test module - messages', () => {
           1: 1,
         },
       }, {
-        type: DDP_CLOSE,
+        type: DDP_CLOSED,
       }).should.deep.equal({
         pending: {
           '[connect]': 100,
@@ -224,7 +235,7 @@ describe('Test module - messages', () => {
       });
     });
 
-    it('should method from queue when method is emited', function () {
+    it('should remove method from queue when method is emited', function () {
       const action = {
         type: DDP_METHOD,
         payload: {
@@ -291,12 +302,10 @@ describe('Test module - messages', () => {
   describe('Middleware', () => {
     beforeEach(function () {
       this.send = sinon.spy();
-      this.close = sinon.spy();
       this.onError = sinon.spy();
       this.ddpClient = new DDPClient();
-      this.ddpClient.socket.send = this.send;
-      this.ddpClient.socket.close = this.close;
       this.ddpClient.on('error', this.onError);
+      this.ddpClient.send = this.send;
       this.middleware = createMiddleware(this.ddpClient);
       this.mockStore = configureStore([
         this.middleware,
@@ -320,18 +329,22 @@ describe('Test module - messages', () => {
         const store = this.mockStore({
           ddp: {
             messages: {
-              pending: {},
-              queue: [],
+              sockets: {},
             },
           },
         });
-        this.ddpClient.socket.emit('message', {
+        this.ddpClient.emit('message', {
           msg,
+        }, {
+          socketId: '1',
         });
         store.getActions().should.deep.equal([{
           type: MESSAGE_TO_ACTION[msg],
           payload: {
             msg,
+          },
+          meta: {
+            socketId: '1',
           },
         }]);
       });
@@ -345,14 +358,10 @@ describe('Test module - messages', () => {
       DDP_CONNECT,
     ].forEach((type) => {
       it(`should process action ${type}`, function () {
-        const store = this.mockStore({
-          ddp: {
-            messages: {
-              pending: {},
-              queue: [],
-            },
-          },
-        });
+        const store = this.mockStore(createInitialState('1', {
+          pending: {},
+          queue: [],
+        }));
         store.dispatch({
           type,
         });
@@ -367,6 +376,7 @@ describe('Test module - messages', () => {
           payload: ddpMessage,
           meta: {
             priority: ACTION_TO_PRIORITY[type],
+            socketId: '1',
           },
         }]);
         this.send.should.be.calledWith(ddpMessage);
@@ -374,17 +384,13 @@ describe('Test module - messages', () => {
     });
 
     it('should enqueue action if priority is too low', function () {
-      const store = this.mockStore({
-        ddp: {
-          messages: {
-            pending: {
-              1: 20,
-              2: 30,
-            },
-            queue: [],
-          },
+      const store = this.mockStore(createInitialState('1', {
+        pending: {
+          1: 20,
+          2: 30,
         },
-      });
+        queue: [],
+      }));
       const action = {
         type: DDP_METHOD,
         payload: {
@@ -392,6 +398,7 @@ describe('Test module - messages', () => {
           msg: MSG_METHOD,
         },
         meta: {
+          socketId: '1',
           priority: 25,
         },
       };
@@ -407,47 +414,48 @@ describe('Test module - messages', () => {
     });
 
     it('should empty queue up to the computed threshold', function () {
-      const store = this.mockStore({
-        ddp: {
-          messages: {
-            pending: {
-              1: 10,
-              2: 0,
-            },
-            queue: [{
-              type: DDP_METHOD,
-              payload: {
-                id: '3',
-                msg: MSG_METHOD,
-              },
-              meta: {
-                priority: 10,
-              },
-            }, {
-              type: DDP_METHOD,
-              payload: {
-                id: '4',
-                msg: MSG_METHOD,
-              },
-              meta: {
-                priority: 10,
-              },
-            }, {
-              type: DDP_METHOD,
-              payload: {
-                id: '5',
-                msg: MSG_METHOD,
-              },
-              meta: {
-                priority: 0,
-              },
-            }],
-          },
+      const store = this.mockStore(createInitialState('1', {
+        pending: {
+          1: 10,
+          2: 0,
         },
-      });
+        queue: [{
+          type: DDP_METHOD,
+          payload: {
+            id: '3',
+            msg: MSG_METHOD,
+          },
+          meta: {
+            socketId: '1',
+            priority: 10,
+          },
+        }, {
+          type: DDP_METHOD,
+          payload: {
+            id: '4',
+            msg: MSG_METHOD,
+          },
+          meta: {
+            socketId: '1',
+            priority: 10,
+          },
+        }, {
+          type: DDP_METHOD,
+          payload: {
+            id: '5',
+            msg: MSG_METHOD,
+          },
+          meta: {
+            priority: 0,
+          },
+        }],
+      }));
       const action = {
         type: DDP_RESULT,
         payload: 4,
+        meta: {
+          socketId: '1',
+        },
       };
       store.dispatch(action);
       store.getActions().should.deep.equal([
@@ -459,6 +467,7 @@ describe('Test module - messages', () => {
             msg: MSG_METHOD,
           },
           meta: {
+            socketId: '1',
             priority: 10,
           },
         },
@@ -469,6 +478,7 @@ describe('Test module - messages', () => {
             msg: MSG_METHOD,
           },
           meta: {
+            socketId: '1',
             priority: 10,
           },
         },

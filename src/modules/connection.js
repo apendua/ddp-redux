@@ -1,3 +1,4 @@
+import mapValues from 'lodash.mapvalues';
 import {
   DDP_CONNECTION_STATE__CONNECTING,
   DDP_CONNECTION_STATE__CONNECTED,
@@ -6,7 +7,8 @@ import {
   DDP_PROTOCOL_VERSION,
   DDP_FAILED,
   DDP_ERROR,
-  DDP_CLOSE,
+  DDP_OPEN,
+  DDP_CLOSED,
   DDP_PING,
   DDP_PONG,
   DDP_CONNECTED,
@@ -16,8 +18,9 @@ import DDPError from '../DDPError';
 
 // TODO: Add support for "server_id" message.
 export const createMiddleware = ddpClient => (store) => {
-  ddpClient.socket.on('open', () => {
+  ddpClient.on('open', (meta) => {
     store.dispatch({
+      meta,
       type: DDP_CONNECT,
       payload: {
         msg: 'connect',
@@ -26,9 +29,10 @@ export const createMiddleware = ddpClient => (store) => {
       },
     });
   });
-  ddpClient.socket.on('close', () => {
+  ddpClient.on('close', (meta) => {
     store.dispatch({
-      type: DDP_CLOSE,
+      meta,
+      type: DDP_CLOSED,
     });
   });
   return next => (action) => {
@@ -46,11 +50,12 @@ export const createMiddleware = ddpClient => (store) => {
             payload: {
               id: action.payload.id,
             },
+            meta: action.meta,
           });
           return result;
         })(next(action));
       case DDP_FAILED: // could not negotiate DDP protocol version
-        ddpClient.socket.close();
+        ddpClient.close(action.meta && action.meta.socketId);
         return next(action);
       default:
         return next(action);
@@ -58,9 +63,8 @@ export const createMiddleware = ddpClient => (store) => {
   };
 };
 
-export const createReducer = () => (state = {
+export const createSocketReducer = () => (state = {
   state: DDP_CONNECTION_STATE__DISCONNECTED,
-  queue: [],
 }, action) => {
   switch (action.type) {
     case DDP_CONNECT:
@@ -73,7 +77,7 @@ export const createReducer = () => (state = {
         ...state,
         state: DDP_CONNECTION_STATE__CONNECTED,
       };
-    case DDP_CLOSE:
+    case DDP_CLOSED:
       return {
         ...state,
         state: DDP_CONNECTION_STATE__DISCONNECTED,
@@ -83,3 +87,31 @@ export const createReducer = () => (state = {
   }
 };
 
+export const createReducer = (DDPClient) => {
+  const socketReducer = createSocketReducer(DDPClient);
+  return (state = {
+    sockets: {},
+  }, action) => {
+    switch (action.type) {
+      case DDP_CONNECT:
+      case DDP_CONNECTED:
+      case DDP_CLOSED:
+        return (() => {
+          if (action.meta && action.meta.socketId) {
+            return {
+              ...state,
+              sockets: mapValues(state.sockets, (socket, socketId) => {
+                if (socketId === action.meta.socketId) {
+                  return socketReducer(socket, action);
+                }
+                return socket;
+              }),
+            };
+          }
+          return state;
+        })();
+      default:
+        return state;
+    }
+  };
+};

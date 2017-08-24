@@ -21,16 +21,24 @@ import {
   DDP_CONNECTED,
   DDP_PING,
   DDP_PONG,
-  DDP_CLOSE,
+  DDP_CLOSED,
 } from '../constants';
 import DDPError from '../DDPError';
 
 class DDPClient extends DDPEmitter {
-  constructor() {
-    super();
-    this.socket = new DDPEmitter();
-  }
 }
+
+const createInitialState = (socketId, connectionState) => ({
+  ddp: {
+    connection: {
+      sockets: {
+        [socketId]: {
+          state: connectionState,
+        },
+      },
+    },
+  },
+});
 
 chai.should();
 chai.use(sinonChai);
@@ -43,40 +51,73 @@ describe('Test module - connection', () => {
 
     it('should initialize state', function () {
       this.reducer(undefined, {}).should.deep.equal({
-        state: DDP_CONNECTION_STATE__DISCONNECTED,
-        queue: [],
+        sockets: {},
       });
     });
 
-    it('should change state to connecting', function () {
+    it('should change state to "connecting"', function () {
       this.reducer({
-        state: DDP_CONNECTION_STATE__DISCONNECTED,
+        sockets: {
+          1: {
+            state: DDP_CONNECTION_STATE__DISCONNECTED,
+          },
+        },
       }, {
         type: DDP_CONNECT,
         payload: {},
+        meta: {
+          socketId: '1',
+        },
       }).should.deep.equal({
-        state: DDP_CONNECTION_STATE__CONNECTING,
+        sockets: {
+          1: {
+            state: DDP_CONNECTION_STATE__CONNECTING,
+          },
+        },
       });
     });
 
-    it('should change state to connected', function () {
+    it('should change state to "connected"', function () {
       this.reducer({
-        state: DDP_CONNECTION_STATE__CONNECTING,
+        sockets: {
+          1: {
+            state: DDP_CONNECTION_STATE__CONNECTING,
+          },
+        },
       }, {
         type: DDP_CONNECTED,
         payload: {},
+        meta: {
+          socketId: '1',
+        },
       }).should.deep.equal({
-        state: DDP_CONNECTION_STATE__CONNECTED,
+        sockets: {
+          1: {
+            state: DDP_CONNECTION_STATE__CONNECTED,
+          },
+        },
       });
     });
 
-    it('should change state to disconnected', function () {
+    it('should change state to "disconnected"', function () {
       this.reducer({
-        state: DDP_CONNECTION_STATE__CONNECTED,
+        sockets: {
+          1: {
+            state: DDP_CONNECTION_STATE__CONNECTED,
+          },
+        },
       }, {
-        type: DDP_CLOSE,
+        type: DDP_CLOSED,
+        payload: {},
+        meta: {
+          socketId: '1',
+        },
       }).should.deep.equal({
-        state: DDP_CONNECTION_STATE__DISCONNECTED,
+        sockets: {
+          1: {
+            state: DDP_CONNECTION_STATE__DISCONNECTED,
+          },
+        },
       });
     });
   });
@@ -87,8 +128,8 @@ describe('Test module - connection', () => {
       this.close = sinon.spy();
       this.onError = sinon.spy();
       this.ddpClient = new DDPClient();
-      this.ddpClient.socket.send = this.send;
-      this.ddpClient.socket.close = this.close;
+      this.ddpClient.send = this.send;
+      this.ddpClient.close = this.close;
       this.ddpClient.on('error', this.onError);
       this.middleware = createMiddleware(this.ddpClient);
       this.mockStore = configureStore([
@@ -97,13 +138,7 @@ describe('Test module - connection', () => {
     });
 
     it('should emit DDPError if message was invalid', function () {
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__CONNECTED,
-          },
-        },
-      });
+      const store = this.mockStore(createInitialState('1', DDP_CONNECTION_STATE__CONNECTED));
       const ddpMessage = {
         msg: 'error',
         reason: 'Bad message',
@@ -126,13 +161,7 @@ describe('Test module - connection', () => {
     });
 
     it('should close connection if connect failed', function () {
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__CONNECTING,
-          },
-        },
-      });
+      const store = this.mockStore(createInitialState('1', DDP_CONNECTION_STATE__CONNECTING));
       const ddpMessage = {
         msg: 'failed',
         version: '2.0', // version of protocol which we are not supporting
@@ -149,60 +178,61 @@ describe('Test module - connection', () => {
     });
 
     it('should dispatch CLOSE action', function () {
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__CONNECTED,
-          },
-        },
+      const store = this.mockStore(createInitialState('1', DDP_CONNECTION_STATE__CONNECTED));
+      this.ddpClient.emit('close', {
+        socketId: '1',
       });
-      this.ddpClient.socket.emit('close');
       store.getActions().should.deep.equal([{
-        type: DDP_CLOSE,
+        type: DDP_CLOSED,
+        meta: {
+          socketId: '1',
+        },
       }]);
     });
 
     it('should dispatch PONG on ddp ping', function () {
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__CONNECTED,
-          },
-        },
-      });
+      const store = this.mockStore(createInitialState('1', DDP_CONNECTION_STATE__CONNECTED));
       const ping = { msg: 'ping', id: '1234' };
       const pong = { id: '1234' };
 
       store.dispatch({
         type: DDP_PING,
         payload: ping,
+        meta: {
+          socketId: '1',
+        },
       });
       store.getActions().should.deep.equal([{
         type: DDP_PING,
         payload: ping,
+        meta: {
+          socketId: '1',
+        },
       }, {
         type: DDP_PONG,
         payload: pong,
+        meta: {
+          socketId: '1',
+        },
       }]);
     });
 
     it('should dispatch CONNECT action when socet emits "open"', function () {
-      const store = this.mockStore({
-        ddp: {
-          connection: {
-            state: DDP_CONNECTION_STATE__DISCONNECTED,
-          },
-        },
-      });
+      const store = this.mockStore(createInitialState('1', DDP_CONNECTION_STATE__DISCONNECTED));
       const ddpMessage = {
         msg: 'connect',
         support: ['1.0'],
         version: '1.0',
       };
-      this.ddpClient.socket.emit('open');
+      this.ddpClient.emit('open', {
+        socketId: '1',
+      });
       store.getActions().should.deep.equal([{
         type: DDP_CONNECT,
         payload: ddpMessage,
+        meta: {
+          socketId: '1',
+        },
       }]);
     });
   });

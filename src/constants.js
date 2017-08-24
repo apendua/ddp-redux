@@ -41,7 +41,9 @@ export const DDP_PONG = '@DDP/OUT/PONG';
 export const DDP_CONNECTED = '@DDP/IN/CONNECTED';
 export const DDP_CONNECT = '@DDP/OUT/CONNECT';
 export const DDP_ENQUEUE = '@DDP/API/ENQUEUE';
+export const DDP_OPEN = '@DDP/API/OPEN';
 export const DDP_CLOSE = '@DDP/API/CLOSE';
+export const DDP_CLOSED = '@DDP/API/CLOSED';
 
 export const DDP_METHOD = '@DDP/OUT/METHOD';
 export const DDP_RESULT = '@DDP/IN/RESULT';

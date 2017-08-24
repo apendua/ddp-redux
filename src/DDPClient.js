@@ -27,12 +27,63 @@ class DDPClient extends DDPEmitter {
     SocketConstructor,
   }) {
     super();
-
-    this.socket = new DDPSocket({
-      SocketConstructor,
-    });
-    this.socket.open(endpoint);
+    this.SocketConstructor = SocketConstructor;
+    this.sockets = {};
     this.counter = 0;
+
+    if (endpoint) {
+      this.open(endpoint);
+    }
+  }
+
+  send(msg, {
+    socketId = this.defaultSocketId,
+  } = {}) {
+    const socket = this.sockets[socketId];
+    if (socket) {
+      socket.send(msg);
+    }
+  }
+
+  open(endpoint, socketId = this.nextUniqueId()) {
+    const socket = new DDPSocket({
+      SocketConstructor: this.SocketConstructor,
+    });
+    this.sockets[socketId] = socket;
+    socket.on('message', (msg) => {
+      this.emit('message', msg, {
+        socketId,
+      });
+    });
+    socket.on('open', () => {
+      this.emit('open', socketId);
+    });
+    socket.on('close', () => {
+      this.emit('close', socketId);
+      setTimeout(() => {
+        this.open(endpoint, socketId);
+      }, 10000);
+    });
+    socket.open(endpoint);
+    if (!this.defaultSocketId) {
+      this.defaultSocketId = socketId;
+    }
+    return socketId;
+  }
+
+  close(socketId = this.defaultSocketId) {
+    const socket = this.sockets[socketId];
+    if (socket) {
+      delete this.sockets[socketId];
+      if (socketId === this.defaultSocketId) {
+        delete this.defaultSocketId;
+      }
+      socket.close();
+    }
+  }
+
+  getDefaultSocketId() {
+    return this.defaultSocketId;
   }
 
   nextUniqueId() {
@@ -42,6 +93,7 @@ class DDPClient extends DDPEmitter {
 
   middleware() {
     const middlewares = [
+      'messages',
       'collections',
       'connection',
       'methods',

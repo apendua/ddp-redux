@@ -1,8 +1,9 @@
 import omit from 'lodash.omit';
 import max from 'lodash.max';
 import values from 'lodash.values';
+import mapValues from 'lodash.mapvalues';
 import {
-  DDP_CLOSE,
+  DDP_CLOSED,
   DDP_PONG,
   DDP_RESULT,
   DDP_CONNECTED,
@@ -18,19 +19,21 @@ import {
 } from '../constants';
 
 export const createMiddleware = ddpClient => (store) => {
-  const getThreshold = (state) => {
-    const priorities = values(state.ddp.messages.pending);
+  const getThreshold = (state, socketId) => {
+    const priorities = values(state.ddp.messages.sockets[socketId] &&
+                              state.ddp.messages.sockets[socketId].pending);
     if (priorities.length === 0) {
       return -Infinity;
     }
     return max(priorities);
   };
-  ddpClient.socket.on('message', (payload) => {
+  ddpClient.on('message', (payload, meta) => {
     const type = payload.msg && MESSAGE_TO_ACTION[payload.msg];
     if (type) {
       store.dispatch({
         type,
         payload,
+        meta,
       });
     }
   });
@@ -38,17 +41,21 @@ export const createMiddleware = ddpClient => (store) => {
     if (!action || typeof action !== 'object') {
       return next(action);
     }
+    const socketId = (action.meta && action.meta.socketId) || ddpClient.getDefaultSocketId();
     if (action.type === DDP_CONNECTED || action.type === DDP_RESULT) {
       // NOTE: We are propagating action first, because
       //       we want to get an up-to-date threshold.
       const result = next(action);
       const state = store.getState();
-      const threshold = getThreshold(state);
-      const queue = state.ddp.messages.queue;
-      let i = 0;
-      while (i < queue.length && threshold <= queue[i].meta.priority) {
-        store.dispatch(queue[i]);
-        i += 1;
+      const queue = state.ddp.messages.sockets[socketId] &&
+                    state.ddp.messages.sockets[socketId].queue;
+      if (queue) {
+        const threshold = getThreshold(state, socketId);
+        let i = 0;
+        while (i < queue.length && threshold <= queue[i].meta.priority) {
+          store.dispatch(queue[i]);
+          i += 1;
+        }
       }
       return result;
     }
@@ -64,7 +71,8 @@ export const createMiddleware = ddpClient => (store) => {
         msg,
       },
       meta: {
-        priority, // message action may overwrite it's priority
+        priority, // action may overwrite it's priority
+        socketId, // action may overwrite it's socketId
         ...action.meta,
       },
     };
@@ -73,9 +81,9 @@ export const createMiddleware = ddpClient => (store) => {
       newAction.payload.id = newAction.payload.id || ddpClient.nextUniqueId();
     }
     const state = store.getState();
-    const threshold = getThreshold(state);
+    const threshold = getThreshold(state, socketId);
     if (newAction.meta.priority >= threshold) {
-      ddpClient.socket.send(newAction.payload);
+      ddpClient.send(newAction.payload, newAction.meta);
       return next(newAction);
     }
     store.dispatch({
@@ -94,12 +102,12 @@ const initialPending = {
   '[connect]': ACTION_TO_PRIORITY[DDP_CONNECT],
 };
 
-export const createReducer = () => (state = {
+export const createSocketReducer = () => (state = {
   queue:   [],
   pending: initialPending,
 }, action) => {
   switch (action.type) {
-    case DDP_CLOSE:
+    case DDP_CLOSED:
       return {
         ...state,
         pending: initialPending,
@@ -163,3 +171,36 @@ export const createReducer = () => (state = {
   }
 };
 
+export const createReducer = (DDPClient) => {
+  const socketReducer = createSocketReducer(DDPClient);
+  return (state = {
+    sockets: {},
+  }, action) => {
+    switch (action.type) {
+      case DDP_CLOSED:
+      case DDP_ENQUEUE:
+      case DDP_CONNECTED:
+      case DDP_METHOD:
+      case DDP_RESULT:
+      case DDP_PONG:
+      case DDP_SUB:
+      case DDP_UNSUB:
+        return (() => {
+          if (action.meta && action.meta.socketId) {
+            return {
+              ...state,
+              sockets: mapValues(state.sockets, (socket, socketId) => {
+                if (socketId === action.meta.socketId) {
+                  return socketReducer(socket, action);
+                }
+                return socket;
+              }),
+            };
+          }
+          return state;
+        })();
+      default:
+        return state;
+    }
+  };
+};
