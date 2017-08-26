@@ -12,7 +12,7 @@ import {
   DDP_FLUSH,
 } from '../constants';
 
-export const mutateCollections = (DDPClient, state, collection, id, mutateOne) => {
+export const mutateCollections = (DDPClient, state, collection, id, socketId, mutateOne) => {
   const Model = DDPClient.models[collection] || DDPClient.UnknownModel;
   const stateCollection = state[collection] || {};
   const stateCollectionById = stateCollection.nextById || {};
@@ -21,7 +21,14 @@ export const mutateCollections = (DDPClient, state, collection, id, mutateOne) =
     ...other
   } = stateCollectionById[id] || {};
   const shouldRemove = !mutateOne;
-  const shouldRemoveCompltely = shouldRemove && isEmpty(other);
+  const newCurrent = shouldRemove
+    ? omit(current, socketId)
+    : {
+      ...current,
+      [socketId]: new Model(mutateOne(current && current[socketId])),
+    };
+  const shouldRemoveCurrent = isEmpty(newCurrent);
+  const shouldRemoveCompltely = shouldRemoveCurrent && isEmpty(other);
   return {
     ...state,
     [collection]: {
@@ -30,11 +37,11 @@ export const mutateCollections = (DDPClient, state, collection, id, mutateOne) =
         ? omit(stateCollectionById, id)
         : {
           ...stateCollectionById,
-          [id]: shouldRemove
+          [id]: shouldRemoveCurrent
             ? omit(stateCollectionById[id], 'current')
             : {
               ...stateCollectionById[id],
-              current: new Model(mutateOne(current)),
+              current: newCurrent,
             },
         },
     },
@@ -85,6 +92,7 @@ export const createReducer = DDPClient => (state = {}, action) => {
         state,
         action.payload.collection,
         action.payload.id,
+        action.meta && action.meta.socketId,
         () => ({
           _id: action.payload.id,
           ...action.payload.fields,
@@ -96,8 +104,9 @@ export const createReducer = DDPClient => (state = {}, action) => {
         state,
         action.payload.collection,
         action.payload.id,
-        current => ({
-          ...omit(current, action.payload.cleared),
+        action.meta && action.meta.socketId,
+        entity => ({
+          ...omit(entity, action.payload.cleared),
           ...action.payload.fields,
         }),
       );
@@ -107,13 +116,19 @@ export const createReducer = DDPClient => (state = {}, action) => {
         state,
         action.payload.collection,
         action.payload.id,
+        action.meta && action.meta.socketId,
         null,
       );
     case DDP_FLUSH:
-      return mapValues(state, collection => ({
-        ...collection,
-        byId: collection.nextById,
-      }));
+      return mapValues(state, (collection) => {
+        if (collection.nextById !== collection.byId) {
+          return {
+            ...collection,
+            byId: collection.nextById,
+          };
+        }
+        return collection;
+      });
     default:
       return state;
   }

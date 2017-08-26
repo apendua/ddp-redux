@@ -51,22 +51,26 @@ describe('Test module - collections', () => {
         col1: {
           nextById: {
             1: {
-              current: new Model1({
-                _id: '1',
-                a: 1,
-                b: 2,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                }),
+              },
             },
           },
         },
         col2: {
           nextById: {
             1: {
-              current: new Model1({
-                _id: '1',
-                a: 1,
-                b: 2,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                }),
+              },
             },
           },
         },
@@ -75,29 +79,35 @@ describe('Test module - collections', () => {
         col1: {
           nextById: {
             1: {
-              current: new Model1({
-                _id: '1',
-                a: 1,
-                b: 2,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                }),
+              },
             },
             2: {
-              current: new Model1({
-                _id: '2',
-                a: 3,
-                b: 4,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '2',
+                  a: 3,
+                  b: 4,
+                }),
+              },
             },
           },
         },
         col2: {
           nextById: {
             1: {
-              current: new Model2({
-                _id: '1',
-                a: 1,
-                b: 2,
-              }),
+              current: {
+                'socket/1': new Model2({
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                }),
+              },
             },
           },
         },
@@ -128,11 +138,13 @@ describe('Test module - collections', () => {
         col2: {
           nextById: {
             1: {
-              current: new Model1({
-                _id: '1',
-                a: 1,
-                b: 2,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                }),
+              },
             },
           },
         },
@@ -143,9 +155,12 @@ describe('Test module - collections', () => {
           fields: { a: 1, b: 2 },
           collection: 'col1',
         },
+        meta: {
+          socketId: 'socket/1',
+        },
       });
       state.should.deep.equal(this.referenceState1);
-      state.col1.nextById[1].current.should.be.instanceOf(Model1);
+      state.col1.nextById[1].current['socket/1'].should.be.instanceOf(Model1);
     });
 
     it('should add another entity', function () {
@@ -156,9 +171,12 @@ describe('Test module - collections', () => {
           fields: { a: 3, b: 4 },
           collection: 'col1',
         },
+        meta: {
+          socketId: 'socket/1',
+        },
       });
       state.should.deep.equal(this.referenceState2);
-      state.col1.nextById[2].current.should.be.instanceOf(Model1);
+      state.col1.nextById[2].current['socket/1'].should.be.instanceOf(Model1);
     });
 
     it('should update existing entity', function () {
@@ -170,38 +188,47 @@ describe('Test module - collections', () => {
           cleared: ['b'],
           collection: 'col1',
         },
+        meta: {
+          socketId: 'socket/1',
+        },
       });
       state.should.deep.equal({
         col1: {
           nextById: {
             1: {
-              current: new Model1({
-                _id: '1',
-                a: 3,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '1',
+                  a: 3,
+                }),
+              },
             },
             2: {
-              current: new Model1({
-                _id: '2',
-                a: 3,
-                b: 4,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '2',
+                  a: 3,
+                  b: 4,
+                }),
+              },
             },
           },
         },
         col2: {
           nextById: {
             1: {
-              current: new Model2({
-                _id: '1',
-                a: 1,
-                b: 2,
-              }),
+              current: {
+                'socket/1': new Model2({
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                }),
+              },
             },
           },
         },
       });
-      state.col1.nextById[1].current.should.be.instanceOf(Model1);
+      state.col1.nextById[1].current['socket/1'].should.be.instanceOf(Model1);
     });
 
     it('should remove an entity', function () {
@@ -211,27 +238,34 @@ describe('Test module - collections', () => {
           id: '1',
           collection: 'col1',
         },
+        meta: {
+          socketId: 'socket/1',
+        },
       });
       state.should.deep.equal({
         col1: {
           nextById: {
             2: {
-              current: new Model1({
-                _id: '2',
-                a: 3,
-                b: 4,
-              }),
+              current: {
+                'socket/1': new Model1({
+                  _id: '2',
+                  a: 3,
+                  b: 4,
+                }),
+              },
             },
           },
         },
         col2: {
           nextById: {
             1: {
-              current: new Model2({
-                _id: '1',
-                a: 1,
-                b: 2,
-              }),
+              current: {
+                'socket/1': new Model2({
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                }),
+              },
             },
           },
         },
@@ -275,6 +309,9 @@ describe('Test module - collections', () => {
             msg: event,
             id: '1',
             collection: 'col1',
+          },
+          meta: {
+            socketId: 'socket/1',
           },
         };
         store.dispatch(action);
