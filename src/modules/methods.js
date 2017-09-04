@@ -1,4 +1,5 @@
 import omit from 'lodash.omit';
+import forEach from 'lodash.foreach';
 import {
   DDP_METHOD_STATE__PENDING,
   DDP_METHOD_STATE__UPDATED,
@@ -8,10 +9,22 @@ import {
   DDP_RESULT,
   DDP_UPDATED,
 } from '../constants';
+import decentlyMapValues from '../utils/decentlyMapValues';
 import DDPError from '../DDPError';
 
 export const createMiddleware = () => (store) => {
   const promises = {};
+  const fulfill = (id, method) => {
+    const promise = promises[id];
+    if (promise) {
+      promise.fulfill(
+        method.error
+          ? new DDPError(method.error.error, method.error.reason, method.error.details)
+          : null,
+        method.result,
+      );
+    }
+  };
   return next => (action) => {
     if (!action || typeof action !== 'object') {
       return next(action);
@@ -32,27 +45,26 @@ export const createMiddleware = () => (store) => {
           };
         });
       case DDP_RESULT:
-      case DDP_UPDATED:
-        return (() => {
+        return ((result) => {
           const state = store.getState(); // snapshot before action is applied
           const id = action.payload.id;
           const method = state.ddp.methods[id];
-          const promise = promises[id];
-          if (promise && method) {
-            // NOTE: We only allow action propagation, if method exists.
-            const result = next(action);
-            if (method.state !== DDP_METHOD_STATE__PENDING) {
-              promise.fulfill(
-                method.error
-                  ? new DDPError(method.error.error, method.error.reason, method.error.details)
-                  : null,
-                method.result,
-              );
-            }
-            return result;
+          if (method && method.state === DDP_METHOD_STATE__UPDATED) {
+            fulfill(id, action.payload);
           }
-          return undefined;
-        })();
+          return result;
+        })(next(action));
+      case DDP_UPDATED:
+        return ((result) => {
+          const state = store.getState(); // snapshot before action is applied
+          forEach(action.payload.methods, (id) => {
+            const method = state.ddp.methods[id];
+            if (method && method.state === DDP_METHOD_STATE__RETURNED) {
+              fulfill(id, method);
+            }
+          });
+          return result;
+        })(next(action));
       default:
         return next(action);
     }
@@ -85,15 +97,18 @@ export const createReducer = () => (state = {}, action) => {
         }
         : omit(state, id);
     case DDP_UPDATED:
-      return state[id] && state[id].state === DDP_METHOD_STATE__PENDING
-        ? {
-          ...state,
-          [id]: {
-            ...state.methods[id],
-            state: DDP_METHOD_STATE__UPDATED,
-          },
+      return decentlyMapValues(state, (method, methodId, remove) => {
+        if (action.payload.methods.indexOf(methodId) < 0) {
+          return method;
         }
-        : omit(state, id);
+        if (method.state === DDP_METHOD_STATE__RETURNED) {
+          return remove(methodId);
+        }
+        return {
+          ...method,
+          state: DDP_METHOD_STATE__UPDATED,
+        };
+      });
     default:
       return state;
   }
