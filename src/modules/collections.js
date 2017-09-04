@@ -19,8 +19,7 @@ import {
   DDP_UPDATED,
 } from '../constants';
 
-export const mutateCollections = (DDPClient, state, collection, id, socketId, mutateOne) => {
-  const Model = DDPClient.models[collection] || DDPClient.UnknownModel;
+export const mutateCollections = (state, collection, id, socketId, mutateOne) => {
   const stateCollection = state[collection] || {};
   const stateCollectionById = stateCollection.nextById || {};
   const {
@@ -32,7 +31,7 @@ export const mutateCollections = (DDPClient, state, collection, id, socketId, mu
     ? omit(current, socketId)
     : {
       ...current,
-      [socketId]: new Model(mutateOne(current && current[socketId])),
+      [socketId]: mutateOne(current && current[socketId]),
     };
   const shouldRemoveCurrent = isEmpty(newCurrent);
   const shouldRemoveCompltely = shouldRemoveCurrent && isEmpty(other);
@@ -122,7 +121,6 @@ export const createReducer = DDPClient => (state = {}, action) => {
   switch (action.type) {
     case DDP_ADDED:
       return mutateCollections(
-        DDPClient,
         state,
         action.payload.collection,
         action.payload.id,
@@ -134,7 +132,6 @@ export const createReducer = DDPClient => (state = {}, action) => {
       );
     case DDP_CHANGED:
       return mutateCollections(
-        DDPClient,
         state,
         action.payload.collection,
         action.payload.id,
@@ -146,7 +143,6 @@ export const createReducer = DDPClient => (state = {}, action) => {
       );
     case DDP_REMOVED:
       return mutateCollections(
-        DDPClient,
         state,
         action.payload.collection,
         action.payload.id,

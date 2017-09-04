@@ -170,7 +170,6 @@ describe('Test module - collections', () => {
         },
       });
       state.should.deep.equal(this.referenceState1);
-      state.col1.nextById[1].current['socket/1'].should.be.instanceOf(Model1);
     });
 
     it('should add another entity', function () {
@@ -186,7 +185,6 @@ describe('Test module - collections', () => {
         },
       });
       state.should.deep.equal(this.referenceState2);
-      state.col1.nextById[2].current['socket/1'].should.be.instanceOf(Model1);
     });
 
     it('should update existing entity', function () {
@@ -238,7 +236,6 @@ describe('Test module - collections', () => {
           },
         },
       });
-      state.col1.nextById[1].current['socket/1'].should.be.instanceOf(Model1);
     });
 
     it('should remove an entity', function () {
