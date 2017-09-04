@@ -15,6 +15,8 @@ import {
   DDP_CHANGED,
   DDP_REMOVED,
   DDP_FLUSH,
+  DDP_OPTIMISTIC,
+  DDP_UPDATED,
 } from '../constants';
 
 export const mutateCollections = (DDPClient, state, collection, id, socketId, mutateOne) => {
@@ -49,6 +51,33 @@ export const mutateCollections = (DDPClient, state, collection, id, socketId, mu
               current: newCurrent,
             },
         },
+    },
+  };
+};
+
+export const addOptmisticMutation = (state, collection, id, methodId, fields) => {
+  const stateCollection = state[collection] || {};
+  const stateCollectionById = stateCollection.nextById || {};
+  const {
+    methods = [],
+  } = stateCollectionById[id] || {};
+  return {
+    ...state,
+    [collection]: {
+      ...stateCollection,
+      nextById: {
+        ...stateCollectionById,
+        [id]: {
+          ...stateCollectionById[id],
+          methods: [
+            ...methods,
+            {
+              id,
+              fields,
+            },
+          ],
+        },
+      },
     },
   };
 };
@@ -134,6 +163,14 @@ export const createReducer = DDPClient => (state = {}, action) => {
         }
         return collection;
       });
+    case DDP_OPTIMISTIC:
+      return addOptmisticMutation(
+        state,
+        action.payload.collection,
+        action.payload.id,
+        action.meta && action.meta.methodId,
+        action.payload.fields,
+      );
     default:
       return state;
   }

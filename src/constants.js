@@ -48,6 +48,7 @@ export const DDP_CLOSED = '@DDP/API/CLOSED';
 export const DDP_METHOD = '@DDP/OUT/METHOD';
 export const DDP_RESULT = '@DDP/IN/RESULT';
 export const DDP_UPDATED = '@DDP/IN/UPDATED';
+export const DDP_OPTIMISTIC = '@DDP/API/OPTIMISTIC';
 
 export const DDP_MUTATE = '@DDP/API/MUTATE';
 
