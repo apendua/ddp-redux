@@ -5,11 +5,10 @@ import mapValues from 'lodash.mapvalues';
 import values from 'lodash.values';
 import merge from 'lodash.merge';
 import forEach from 'lodash.foreach';
-import shallowEqual from 'shallowequal';
 import {
-  defaultMemoize,
   createSelector,
 } from 'reselect';
+import createValuesMappingSelector from '../utils/createValuesMappingSelector';
 import {
   DDP_ADDED,
   DDP_CHANGED,
@@ -139,94 +138,66 @@ export const createReducer = DDPClient => (state = {}, action) => {
   }
 };
 
-const defaultIsEqual = (a, b) => a === b;
-
-const memoizeValuesMapping = (mapOneValue, isEqual) => {
-  let lastArg = null;
-  let lastResult = null;
-  return (arg) => {
-    if (shallowEqual(arg, lastArg)) {
-      return lastResult;
-    }
-    const result = mapValues(arg, (value, key) => {
-      if (lastArg && lastArg[key] === value) {
-        return lastResult && lastResult[key];
-      }
-      const newValue = mapOneValue(value);
-      if (!isEqual(newValue, lastResult && lastResult[key])) {
-        return newValue;
-      }
-      return lastResult[key];
-    });
-    lastArg = arg;
-    if (!shallowEqual(result, lastResult)) {
-      lastResult = result;
-    }
-    return lastResult;
-  };
-};
-
-export const createValuesMappingSelector = (selectObject, mapOneValue, isEqual = defaultIsEqual) => {
-  let recomputations = 0;
-  const memoizedMapValues = memoizeValuesMapping((...args) => {
-    recomputations += 1;
-    return mapOneValue(...args);
-  }, isEqual);
-  const selector = defaultMemoize((...args) => memoizedMapValues(selectObject(...args)));
-  selector.recomputations = () => recomputations;
-  selector.resetRecomputations = () => {
-    recomputations = 0;
-  };
-  return selector;
-};
+const identity = x => x;
 
 export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, collection) => {
   const selectCollectionById = state =>
     state.ddp.collections[collection] &&
     state.ddp.collections[collection].byId;
 
-  const selectDocuments = createValuesMappingSelector(
+  const selectAll = createValuesMappingSelector(
     selectCollectionById,
     ({ current }) => {
       const rawObject = merge({}, ...values(current));
       return new Model(rawObject);
     },
   );
-  return {
-    selectDocuments,
-    selectOne: selectId => createSelector(
-      selectId,
-      selectDocuments,
-      (id, documents) => documents[id],
-    ),
-    find: (predicate, ...optionsSelectors) => {
-      const selectPredicateValues = createSelector(
-        createSelector(
-          ...optionsSelectors,
-          (...options) => {
-            const selector = createValuesMappingSelector(
-              selectDocuments,
-              doc => predicate(doc, ...options),
-            );
-            return selector;
-          },
-        ),
-        valuesSelector => valuesSelector(),
-      );
-      return createSelector(
-        selectDocuments,
-        selectPredicateValues,
-        (documents, predicateValues) => {
-          const results = [];
-          forEach(predicateValues, (accepted, id) => {
-            if (accepted) {
-              results.push(documents[id]);
-            }
-          });
-          return results;
+
+  const selectOne = selectId => createSelector(
+    selectId,
+    selectAll,
+    (id, entities) => entities[id],
+  );
+
+  const find = (selectPredicate) => {
+    const selectPredicateValues = createSelector(
+      createSelector(
+        selectPredicate,
+        (predicate) => {
+          const selector = createValuesMappingSelector(
+            selectAll,
+            doc => predicate(doc),
+          );
+          return selector;
         },
-      );
-    },
+      ),
+      identity,
+      (valuesSelector, state) => valuesSelector(state),
+    );
+    return createSelector(
+      selectAll,
+      selectPredicateValues,
+      (entities, predicateValues) => {
+        const results = [];
+        forEach(predicateValues, (accepted, id) => {
+          if (accepted) {
+            results.push(entities[id]);
+          }
+        });
+        return results;
+      },
+    );
+  };
+
+  const findOne = selectPredicate => createSelector(
+    find(selectPredicate),
+    entities => (entities.length > 0 ? entities[0] : null),
+  );
+
+  return {
+    selectAll,
+    selectOne,
+    find,
+    findOne,
   };
 });
-
