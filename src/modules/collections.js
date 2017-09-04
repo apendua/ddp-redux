@@ -8,6 +8,7 @@ import forEach from 'lodash.foreach';
 import {
   createSelector,
 } from 'reselect';
+import decentlyMapValues from '../utils/decentlyMapValues';
 import createValuesMappingSelector from '../utils/createValuesMappingSelector';
 import {
   DDP_ADDED,
@@ -124,7 +125,7 @@ export const createReducer = DDPClient => (state = {}, action) => {
         null,
       );
     case DDP_FLUSH:
-      return mapValues(state, (collection) => {
+      return decentlyMapValues(state, (collection) => {
         if (collection.nextById !== collection.byId) {
           return {
             ...collection,

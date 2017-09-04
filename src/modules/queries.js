@@ -2,8 +2,8 @@
 import omit from 'lodash.omit';
 import find from 'lodash.find';
 import forEach from 'lodash.foreach';
-import mapValues from 'lodash.mapvalues';
 import EJSON from '../ejson';
+import decentlyMapValues from '../utils/decentlyMapValues';
 import {
   DDP_QUERY_STATE__PENDING,
   DDP_QUERY_STATE__READY,
@@ -168,7 +168,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_RESULT:
       return (() => {
         if (action.meta && action.meta.queryId) {
-          return mapValues(state, (query, id) => {
+          return decentlyMapValues(state, (query, id) => {
             if (action.meta.queryId === id) {
               if (action.payload.error) {
                 return {
@@ -189,7 +189,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
         return state;
       })();
     case DDP_CONNECT:
-      return mapValues(state, (sub) => {
+      return decentlyMapValues(state, (sub) => {
         if (
           sub.state === DDP_QUERY_STATE__READY ||
           sub.state === DDP_QUERY_STATE__ERROR

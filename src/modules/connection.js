@@ -1,4 +1,3 @@
-import mapValues from 'lodash.mapvalues';
 import {
   DDP_CONNECTION_STATE__CONNECTING,
   DDP_CONNECTION_STATE__CONNECTED,
@@ -15,6 +14,7 @@ import {
   DDP_CONNECT,
 } from '../constants';
 import DDPError from '../DDPError';
+import decentlyMapValues from '../utils/decentlyMapValues';
 
 // TODO: Add support for "server_id" message.
 export const createMiddleware = ddpClient => (store) => {
@@ -100,7 +100,7 @@ export const createReducer = (DDPClient) => {
           if (action.meta && action.meta.socketId) {
             return {
               ...state,
-              sockets: mapValues(state.sockets, (socket, socketId) => {
+              sockets: decentlyMapValues(state.sockets, (socket, socketId) => {
                 if (socketId === action.meta.socketId) {
                   return socketReducer(socket, action);
                 }

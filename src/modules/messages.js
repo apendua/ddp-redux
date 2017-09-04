@@ -1,7 +1,6 @@
 import omit from 'lodash.omit';
 import max from 'lodash.max';
 import values from 'lodash.values';
-import mapValues from 'lodash.mapvalues';
 import {
   DDP_CLOSED,
   DDP_PONG,
@@ -17,6 +16,7 @@ import {
   ACTION_TO_MESSAGE,
   ACTION_TO_PRIORITY,
 } from '../constants';
+import decentlyMapValues from '../utils/decentlyMapValues';
 
 export const createMiddleware = ddpClient => (store) => {
   const getThreshold = (state, socketId) => {
@@ -189,7 +189,7 @@ export const createReducer = (DDPClient) => {
           if (action.meta && action.meta.socketId) {
             return {
               ...state,
-              sockets: mapValues(state.sockets, (socket, socketId) => {
+              sockets: decentlyMapValues(state.sockets, (socket, socketId) => {
                 if (socketId === action.meta.socketId) {
                   return socketReducer(socket, action);
                 }

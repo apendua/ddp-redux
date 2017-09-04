@@ -1,8 +1,8 @@
 import omit from 'lodash.omit';
 import find from 'lodash.find';
 import forEach from 'lodash.foreach';
-import mapValues from 'lodash.mapvalues';
 import EJSON from '../ejson';
+import decentlyMapValues from '../utils/decentlyMapValues';
 import {
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_SUBSCRIPTION_STATE__READY,
@@ -146,7 +146,7 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_NOSUB:
       // NOTE: If the subscription was deleted in the meantime, this will
       //       have completely no effect.
-      return mapValues(state, (sub, id) => {
+      return decentlyMapValues(state, (sub, id) => {
         if (action.payload.id === id) {
           return {
             ...sub,
@@ -159,7 +159,7 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_READY:
       // NOTE: If the subscription was deleted in the meantime, this will
       //       have completely no effect.
-      return mapValues(state, (sub, id) => {
+      return decentlyMapValues(state, (sub, id) => {
         if (action.payload.subs.indexOf(id) >= 0) {
           return {
             ...sub,
@@ -169,7 +169,7 @@ export const createReducer = () => (state = {}, action) => {
         return sub;
       });
     case DDP_CONNECT:
-      return mapValues(state, (sub) => {
+      return decentlyMapValues(state, (sub) => {
         if (
           sub.state === DDP_SUBSCRIPTION_STATE__READY ||
           sub.state === DDP_SUBSCRIPTION_STATE__ERROR

@@ -1,5 +1,5 @@
-import mapValues from 'lodash.mapvalues';
 import shallowEqual from 'shallowequal';
+import decentlyMapValues from './decentlyMapValues';
 
 const defaultIsEqual = (a, b) => a === b;
 
@@ -10,20 +10,13 @@ const memoizeValuesMapping = (mapOneValue, isEqual = defaultIsEqual) => {
     if (!lastResult) {
       lastResult = input;
     }
-    if (shallowEqual(input, lastInput)) {
-      return lastResult;
-    }
-    const result = mapValues(input, (value, key) => {
+    const result = decentlyMapValues(input, (value, key) => {
       const lastValue = lastResult && lastResult[key];
       if (lastInput && lastInput[key] === value) {
         return lastValue;
       }
-      const newValue = mapOneValue(value);
-      if (!isEqual(newValue, lastValue)) {
-        return newValue;
-      }
-      return lastValue;
-    });
+      return mapOneValue(value, key);
+    }, isEqual);
     lastInput = input;
     if (!shallowEqual(result, lastResult)) {
       lastResult = result;
