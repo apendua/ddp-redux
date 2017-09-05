@@ -16,6 +16,10 @@ import {
   DDP_ADDED,
   DDP_CHANGED,
   DDP_REMOVED,
+
+  MSG_ADDED,
+  MSG_CHANGED,
+  MSG_REMOVED,
 } from '../constants';
 
 chai.should();
@@ -456,10 +460,22 @@ describe('Test module - collections', () => {
       ]);
     });
 
+    it('should pass through an unknown action', function () {
+      const store = this.mockStore();
+      const action = {
+        type: 'unknown',
+        payload: {},
+      };
+      store.dispatch(action);
+      store.getActions().should.have.members([
+        action,
+      ]);
+    });
+
     [
-      'added',
-      'changed',
-      'removed',
+      MSG_ADDED,
+      MSG_CHANGED,
+      MSG_REMOVED,
     ].forEach((event) => {
       it(`should dispatch FLUSH after ${event}`, function () {
         const store = this.mockStore({

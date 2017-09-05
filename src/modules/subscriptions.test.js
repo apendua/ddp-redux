@@ -285,6 +285,18 @@ describe('Test module - subscriptions', () => {
       ]);
     });
 
+    it('should pass through an unknown action', function () {
+      const store = this.mockStore();
+      const action = {
+        type: 'unknown',
+        payload: {},
+      };
+      store.dispatch(action);
+      store.getActions().should.have.members([
+        action,
+      ]);
+    });
+
     it('should not dispatch SUB if not yet subscribed', function () {
       const store = this.mockStore({
         ddp: {

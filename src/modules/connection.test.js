@@ -137,6 +137,18 @@ describe('Test module - connection', () => {
       ]);
     });
 
+    it('should pass through an unknown action', function () {
+      const store = this.mockStore();
+      const action = {
+        type: 'unknown',
+        payload: {},
+      };
+      store.dispatch(action);
+      store.getActions().should.have.members([
+        action,
+      ]);
+    });
+
     it('should emit DDPError if message was invalid', function () {
       const store = this.mockStore(createInitialState('1', DDP_CONNECTION_STATE__CONNECTED));
       const ddpMessage = {

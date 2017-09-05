@@ -312,6 +312,18 @@ describe('Test module - messages', () => {
       ]);
     });
 
+    it('should pass through an unknown action', function () {
+      const store = this.mockStore();
+      const action = {
+        type: 'unknown',
+        payload: {},
+      };
+      store.dispatch(action);
+      store.getActions().should.have.members([
+        action,
+      ]);
+    });
+
     [
       MSG_READY,
       MSG_NOSUB,
