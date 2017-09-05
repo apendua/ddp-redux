@@ -5,7 +5,7 @@ import memoizeValuesMapping from './memoizeValuesMapping';
 const constant = x => () => x;
 const identity = x => x;
 
-describe('Test memoizeValuesMapping', () => {
+describe('Test utility - memoizeValuesMapping', () => {
   beforeEach(function () {
     this.object = {};
     this.identity = memoizeValuesMapping(identity);

@@ -6,7 +6,7 @@ import createValuesMappingSelector from './createValuesMappingSelector';
 const constant = x => () => x;
 const identity = x => x;
 
-describe('Test createValuesMappingSelector', () => {
+describe('Test utility - createValuesMappingSelector', () => {
   beforeEach(function () {
     this.object = {};
     this.identity = createValuesMappingSelector(identity, identity);

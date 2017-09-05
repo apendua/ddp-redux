@@ -7,7 +7,6 @@ import * as collections from './modules/collections';
 import * as connection from './modules/connection';
 import * as messages from './modules/messages';
 import * as methods from './modules/methods';
-import * as mutations from './modules/mutations';
 import * as queries from './modules/queries';
 import * as subscriptions from './modules/subscriptions';
 
@@ -16,7 +15,6 @@ const modules = {
   collections,
   connection,
   methods,
-  mutations,
   queries,
   subscriptions,
 };
@@ -25,7 +23,7 @@ class DDPClient extends DDPEmitter {
   constructor({
     endpoint,
     SocketConstructor,
-  }) {
+  } = {}) {
     super();
     this.SocketConstructor = SocketConstructor;
     this.sockets = {};
@@ -97,7 +95,6 @@ class DDPClient extends DDPEmitter {
       'collections',
       'connection',
       'methods',
-      'mutations',
       'queries',
       'subscriptions',
     ].map(name => modules[name].createMiddleware(this));
