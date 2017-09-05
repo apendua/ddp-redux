@@ -65,8 +65,9 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_QUERY_DELETE:
       return decentlyMapValues(state, (query, id, remove) => {
         if (id === action.payload.id) {
-          remove(id);
+          return remove(id);
         }
+        return query;
       });
     case DDP_QUERY_CREATE:
       return {
@@ -76,6 +77,9 @@ export const createPrimaryReducer = () => (state = {}, action) => {
           state:   DDP_QUERY_STATE__PENDING,
           name:    action.payload.name,
           params:  action.payload.params,
+          ...action.meta && action.meta.socketId && {
+            socketId: action.meta.socketId,
+          },
         },
       };
     case DDP_QUERY_UPDATE:
@@ -89,24 +93,17 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_RESULT:
       return (() => {
         if (action.meta && action.meta.queryId) {
-          const methodId = action.payload.id;
           return decentlyMapValues(state, (query, id) => {
             if (action.meta.queryId === id) {
               if (action.payload.error) {
                 return {
                   ...query,
-                  errors: {
-                    ...query.errors,
-                    [methodId]: action.payload.error,
-                  },
+                  error: action.payload.error,
                 };
               }
               return {
                 ...query,
-                results: {
-                  ...query.results,
-                  [methodId]: action.payload.result,
-                },
+                result: action.payload.result,
               };
             }
             return query;
@@ -115,15 +112,19 @@ export const createPrimaryReducer = () => (state = {}, action) => {
         return state;
       })();
     case DDP_CONNECT:
-      return decentlyMapValues(state, (query) => {
-        if (query.state === DDP_QUERY_STATE__READY) {
-          return {
-            ...query,
-            state: DDP_QUERY_STATE__RESTORING,
-          };
-        }
-        return query;
-      });
+      return (() => {
+        const socketId = action.meta && action.meta.socketId;
+        return decentlyMapValues(state, (query) => {
+          // NOTE: If the state was pending, it should remain pending
+          if (query.socketId === socketId && query.state === DDP_QUERY_STATE__READY) {
+            return {
+              ...query,
+              state: DDP_QUERY_STATE__RESTORING,
+            };
+          }
+          return query;
+        });
+      })();
     default:
       return state;
   }
@@ -150,27 +151,18 @@ export const createSecondaryReducer = () => (state = {}, action) => {
       })();
     case DDP_QUERY_REFETCH:
       // NOTE: This is only useful if user triggers "refetch" while query is still pending.
-      return (() => {
-        const methodIds = [];
-        forEach(state, (queryId, methodId) => {
-          if (queryId === action.payload.id) {
-            methodIds.push(methodId);
-          }
-        });
-        if (methodIds.length > 0) {
-          return omit(state, methodIds);
+      return decentlyMapValues(state, (queryId, methodId, remove) => {
+        if (queryId === action.payload.id) {
+          return remove(methodId);
         }
-        return state;
-      })();
+        return queryId;
+      });
     default:
       return state;
   }
 };
 
-export const createReducer = () => (state = {
-  byId: {},
-  byMethodId: {},
-}, action) => {
+export const createReducer = () => (state = {}, action) => {
   // TODO: Optimize
   const primary = createPrimaryReducer();
   const secondary = createSecondaryReducer();

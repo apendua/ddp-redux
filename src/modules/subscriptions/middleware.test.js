@@ -76,6 +76,9 @@ describe('Test module - subscriptions - middleware', () => {
         name: 'aSubscription',
         params: [1, 2, 3],
       },
+      meta: {
+        socketId: 1,
+      },
     };
     store.dispatch(action);
     store.getActions().should.deep.equal([
@@ -85,6 +88,9 @@ describe('Test module - subscriptions - middleware', () => {
           id: '1',
           name: 'aSubscription',
           params: [1, 2, 3],
+        },
+        meta: {
+          socketId: '1',
         },
       },
       {
@@ -110,6 +116,7 @@ describe('Test module - subscriptions - middleware', () => {
             name: 'aSubscription',
             params: [1, 2, 3],
             users: 1,
+            socketId: '1',
           },
         },
       },

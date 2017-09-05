@@ -5,6 +5,10 @@ export class DDPClient extends DDPEmitter {
     return this.constructor.getQueryCleanupTimeout();
   }
 
+  getDefaultSocketId() {
+    return '1';
+  }
+
   static getQueryCleanupTimeout() {
     return 1000;
   }

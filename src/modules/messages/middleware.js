@@ -18,7 +18,7 @@ import {
  * @param {string} socketId
  * @returns {number}
  */
-const getThreshold = (state, socketId) => {
+const getMessageTreshold = (state, socketId) => {
   const priorities = values(state.ddp.messages.sockets[socketId] &&
                             state.ddp.messages.sockets[socketId].pending);
   if (priorities.length === 0) {
@@ -55,7 +55,7 @@ export const createMiddleware = ddpClient => (store) => {
       const queue = state.ddp.messages.sockets[socketId] &&
                     state.ddp.messages.sockets[socketId].queue;
       if (queue) {
-        const threshold = getThreshold(state, socketId);
+        const threshold = getMessageTreshold(state, socketId);
         let i = 0;
         while (i < queue.length && threshold <= queue[i].meta.priority) {
           store.dispatch(queue[i]);
@@ -86,7 +86,7 @@ export const createMiddleware = ddpClient => (store) => {
       newAction.payload.id = newAction.payload.id || ddpClient.nextUniqueId();
     }
     const state = store.getState();
-    const threshold = getThreshold(state, socketId);
+    const threshold = getMessageTreshold(state, socketId);
     if (newAction.meta.priority >= threshold) {
       ddpClient.send(newAction.payload, newAction.meta);
       return next(newAction);

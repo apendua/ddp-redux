@@ -81,5 +81,6 @@ class DDPError extends Error {
 }
 
 DDPError.ERROR_CONNECTION = 'ErrorConnection';
+DDPError.ERROR_BAD_MESSAGE = 'ErrorBadMessage'
 
 export default DDPError;

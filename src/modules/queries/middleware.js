@@ -82,11 +82,17 @@ export const createMiddleware = ddpClient => store => next => (action) => {
     }
   };
   switch (action.type) {
-    case DDP_CONNECT: // Restore all queries on re-connect
+    case DDP_CONNECT: // restore all queries on re-connect
       return ((result) => {
+        const socketId = action.meta && action.meta.socketId;
         const state = store.getState();
-        forEach(state.ddp.queries, ({ name, params }, queryId) => {
-          store.dispatch(callMethod(name, params, { queryId }));
+        forEach(state.ddp.queries, (query, queryId) => {
+          if (query.socketId === socketId) {
+            store.dispatch(callMethod(query.name, query.params, {
+              queryId,
+              socketId,
+            }));
+          }
         });
         return result;
       })(next(action));
@@ -96,8 +102,9 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         const {
           name,
           params,
+          socketId = ddpClient.getDefaultSocketId(),
         } = action.payload;
-        const query = find(state.ddp.queries, x => x.name === name && EJSON.equals(x.params, params));
+        const query = find(state.ddp.queries, x => x.socketId === socketId && x.name === name && EJSON.equals(x.params, params));
         const id = (query && query.id) || ddpClient.nextUniqueId();
         if (query) {
           cancelCleanup(id);
@@ -108,10 +115,14 @@ export const createMiddleware = ddpClient => store => next => (action) => {
               id,
               name,
               params,
+              socketId,
             },
           });
           // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
-          store.dispatch(callMethod(name, params, { queryId: id }));
+          store.dispatch(callMethod(name, params, {
+            socketId,
+            queryId: id,
+          }));
         }
         next({
           ...action,
@@ -128,7 +139,11 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         const state = store.getState();
         const query = state.ddp.queries[queryId];
         if (query && query.users) {
-          store.dispatch(callMethod(query.name, query.params, { queryId }));
+          const socketId = query.socketId;
+          store.dispatch(callMethod(query.name, query.params, {
+            queryId,
+            socketId,
+          }));
         }
         return next(action);
       })();

@@ -86,7 +86,7 @@ describe('Test module - connection - middleware', () => {
     ({
       ...this.onError.firstCall.args[0],
     }).should.deep.equal({
-      ...new DDPError('badMessage', 'Bad message'),
+      ...new DDPError(DDPError.ERROR_BAD_MESSAGE, 'Bad message'),
     });
   });
 

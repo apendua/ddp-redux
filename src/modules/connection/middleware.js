@@ -38,7 +38,7 @@ export const createMiddleware = ddpClient => (store) => {
     }
     switch (action.type) {
       case DDP_ERROR:
-        ddpClient.emit('error', new DDPError('badMessage', action.payload.reason, action.payload.offendingMessage));
+        ddpClient.emit('error', new DDPError(DDPError.ERROR_BAD_MESSAGE, action.payload.reason, action.payload.offendingMessage));
         return next(action);
       case DDP_PING:
         return ((result) => {

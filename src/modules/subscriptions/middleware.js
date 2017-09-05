@@ -87,8 +87,9 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         const {
           name,
           params,
+          socketId = ddpClient.getDefaultSocketId(),
         } = action.payload;
-        const sub = find(state.ddp.subscriptions, s => s.name === name && EJSON.equals(s.params, params));
+        const sub = find(state.ddp.subscriptions, s => s.socketId === socketId && s.name === name && EJSON.equals(s.params, params));
         const subId = (sub && sub.id) || ddpClient.nextUniqueId();
         if (sub) {
           cancelCleanup(subId);
@@ -99,6 +100,9 @@ export const createMiddleware = ddpClient => store => next => (action) => {
               name,
               params,
               id: subId,
+            },
+            meta: {
+              socketId,
             },
           });
         }
