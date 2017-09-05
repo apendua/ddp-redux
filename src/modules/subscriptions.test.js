@@ -57,12 +57,16 @@ describe('Test module - subscriptions', () => {
           name: 'aSubscription',
           params: [1, 2, 3],
         },
+        meta: {
+          socketId: 'socket/1',
+        },
       }).should.deep.equal({
         1: {
           id: '1',
           state: DDP_SUBSCRIPTION_STATE__PENDING,
           name: 'aSubscription',
           params: [1, 2, 3],
+          socketId: 'socket/1',
         },
       });
     });
@@ -481,6 +485,15 @@ describe('Test module - subscriptions', () => {
               name: 'aSubscription',
               params: [1, 2, 3],
               users: 1,
+              socketId: 'socket/1',
+            },
+            2: {
+              id: '1',
+              state: DDP_SUBSCRIPTION_STATE__READY,
+              name: 'aSubscription',
+              params: [1, 2, 3],
+              users: 1,
+              socketId: 'socket/2',
             },
           },
         },
@@ -488,6 +501,9 @@ describe('Test module - subscriptions', () => {
       const action = {
         type: DDP_CONNECT,
         payload: {},
+        meta: {
+          socketId: 'socket/1',
+        },
       };
       store.dispatch(action);
       store.getActions().should.deep.equal([
@@ -499,6 +515,9 @@ describe('Test module - subscriptions', () => {
             id: '1',
             name: 'aSubscription',
             params: [1, 2, 3],
+          },
+          meta: {
+            socketId: 'socket/1',
           },
         },
       ]);

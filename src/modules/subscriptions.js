@@ -45,19 +45,27 @@ export const createMiddleware = ddpClient => store => next => (action) => {
     }
   };
   switch (action.type) {
-    case DDP_CONNECT: // Restore all subscriptions on re-connect
+    // TODO: Explain why we are using DDP_CONNECT instead of DDP_CONNECTED?
+    //
+    case DDP_CONNECT: // restore all subscriptions on the given socketId on re-connect
       return ((result) => {
         const state = store.getState();
+        const socketId = action.meta && action.meta.socketId;
         forEach(state.ddp.subscriptions, (sub, id) => {
-          store.dispatch({
-            type: DDP_SUB,
-            payload: {
-              msg: 'sub',
-              id,
-              name: sub.name,
-              params: sub.params,
-            },
-          });
+          if (sub.socketId === socketId) {
+            store.dispatch({
+              type: DDP_SUB,
+              payload: {
+                msg: 'sub',
+                id,
+                name: sub.name,
+                params: sub.params,
+              },
+              meta: {
+                socketId,
+              },
+            });
+          }
         });
         return result;
       })(next(action));
@@ -139,6 +147,9 @@ export const createReducer = () => (state = {}, action) => {
           state:  DDP_SUBSCRIPTION_STATE__PENDING,
           name:   action.payload.name,
           params: action.payload.params,
+          ...action.meta && action.meta.socketId && {
+            socketId: action.meta.socketId,
+          },
         },
       };
     case DDP_UNSUB:
@@ -169,18 +180,18 @@ export const createReducer = () => (state = {}, action) => {
         return sub;
       });
     case DDP_CONNECT:
-      return decentlyMapValues(state, (sub) => {
-        if (
-          sub.state === DDP_SUBSCRIPTION_STATE__READY ||
-          sub.state === DDP_SUBSCRIPTION_STATE__ERROR
-        ) {
-          return {
-            ...sub,
-            state: DDP_SUBSCRIPTION_STATE__RESTORING,
-          };
-        }
-        return sub;
-      });
+      return (() => {
+        const socketId = action.meta && action.meta.socketId;
+        return decentlyMapValues(state, (sub) => {
+          if (sub.socketId === socketId && (sub.state === DDP_SUBSCRIPTION_STATE__READY || sub.state === DDP_SUBSCRIPTION_STATE__ERROR)) {
+            return {
+              ...sub,
+              state: DDP_SUBSCRIPTION_STATE__RESTORING,
+            };
+          }
+          return sub;
+        });
+      })();
     default:
       return state;
   }
