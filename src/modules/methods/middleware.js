@@ -13,6 +13,11 @@ import {
 } from '../../constants';
 import DDPError from '../../DDPError';
 
+/**
+ * Convert error into a DDPError object.
+ * @param {string|object|DDPError} error
+ * @returns {DDPError}
+ */
 const cleanError = (error) => {
   if (!error) {
     return null;
@@ -29,6 +34,10 @@ const cleanError = (error) => {
   return new DDPError();
 };
 
+/**
+ * Create middleware for the given ddpClient.
+ * @param {DDPClient} ddpClient
+ */
 export const createMiddleware = () => (store) => {
   const promises = {};
   const fulfill = (id, method) => {

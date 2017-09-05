@@ -1,4 +1,3 @@
-import debounce from 'lodash.debounce';
 import {
   DDP_ADDED,
   DDP_CHANGED,
@@ -6,24 +5,23 @@ import {
   DDP_FLUSH,
 } from '../../constants';
 
-export const createMiddleware = () => (store) => {
-  // let flushTimeout = null;
-  // const flush = () => {
-  //   if (flushTimeout) {
-  //     clearTimeout(flushTimeout);
-  //   }
-  //   flushTimeout = setTimeout(() => {
-  //     store.dispatch({
-  //       type: DDP_FLUSH,
-  //     });
-  //     flushTimeout = null;
-  //   }, 200);
-  // };
-  const flush = debounce(() => {
-    store.dispatch({
-      type: DDP_FLUSH,
-    });
-  }, 200);
+/**
+ * Create middleware for the given ddpClient.
+ * @param {DDPClient} ddpClient
+ */
+export const createMiddleware = ddpClient => (store) => {
+  let flushTimeout = null;
+  const flush = () => {
+    if (flushTimeout) {
+      clearTimeout(flushTimeout);
+    }
+    flushTimeout = setTimeout(() => {
+      store.dispatch({
+        type: DDP_FLUSH,
+      });
+      flushTimeout = null;
+    }, ddpClient.getFlushTimeout());
+  };
   return next => (action) => {
     if (!action || typeof action !== 'object') {
       return next(action);

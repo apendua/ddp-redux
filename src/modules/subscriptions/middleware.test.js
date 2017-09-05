@@ -82,7 +82,6 @@ describe('Test module - subscriptions - middleware', () => {
       {
         type: DDP_SUB,
         payload: {
-          msg: 'sub',
           id: '1',
           name: 'aSubscription',
           params: [1, 2, 3],
@@ -190,7 +189,6 @@ describe('Test module - subscriptions - middleware', () => {
       {
         type: DDP_UNSUB,
         payload: {
-          msg: 'unsub',
           id: '1',
         },
       },
@@ -270,7 +268,6 @@ describe('Test module - subscriptions - middleware', () => {
       {
         type: DDP_SUB,
         payload: {
-          msg: 'sub',
           id: '1',
           name: 'aSubscription',
           params: [1, 2, 3],

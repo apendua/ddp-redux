@@ -4,6 +4,14 @@ export class DDPClient {
   constructor() {
     this.socket = new DDPEmitter();
   }
+
+  getFlushTimeout() {
+    return this.constructor.getFlushTimeout();
+  }
+
+  static getFlushTimeout() {
+    return 200;
+  }
 }
 
 export class Model1 {

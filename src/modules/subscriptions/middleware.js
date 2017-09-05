@@ -9,12 +9,20 @@ import {
   DDP_UNSUBSCRIBE,
 } from '../../constants';
 
+/**
+ * Create middleware for the given ddpClient.
+ * @param {DDPClient} ddpClient
+ */
 export const createMiddleware = ddpClient => store => next => (action) => {
   if (!action || typeof action !== 'object') {
     return next(action);
   }
   const timeouts = {};
-  const scheduleUnsubscribe = (subId) => {
+  /**
+   * Scheudle cleanup for the given query.
+   * @param {string} id
+   */
+  const scheduleCleanup = (subId) => {
     if (timeouts[subId]) {
       clearTimeout(timeouts[subId]);
     }
@@ -22,14 +30,17 @@ export const createMiddleware = ddpClient => store => next => (action) => {
       store.dispatch({
         type: DDP_UNSUB,
         payload: {
-          msg: 'unsub',
           id: subId,
         },
       });
       delete timeouts[subId];
-    }, 30000);
+    }, ddpClient.getSubscriptionCleanupTimeout());
   };
-  const cancelUnsubscribe = (subId) => {
+  /**
+   * Cancel cleanup timeout for the given query.
+   * @param {string} id
+   */
+  const cancelCleanup = (subId) => {
     if (timeouts[subId]) {
       clearTimeout(timeouts[subId]);
       delete timeouts[subId];
@@ -37,7 +48,6 @@ export const createMiddleware = ddpClient => store => next => (action) => {
   };
   switch (action.type) {
     // TODO: Explain why we are using DDP_CONNECT instead of DDP_CONNECTED?
-    //
     case DDP_CONNECT: // restore all subscriptions on the given socketId on re-connect
       return ((result) => {
         const state = store.getState();
@@ -47,7 +57,6 @@ export const createMiddleware = ddpClient => store => next => (action) => {
             store.dispatch({
               type: DDP_SUB,
               payload: {
-                msg: 'sub',
                 id,
                 name: sub.name,
                 params: sub.params,
@@ -60,6 +69,18 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         });
         return result;
       })(next(action));
+    case DDP_UNSUBSCRIBE:
+      return (() => {
+        const state = store.getState();
+        const sub = state.ddp.subscriptions[action.payload.id];
+        // NOTE: The number of users will only be decreased after "next(action)"
+        //       so at this moment it's still taking into account the one which
+        //       is resigning.
+        if (sub && sub.users === 1) {
+          scheduleCleanup(sub.id);
+        }
+        return next(action);
+      })();
     case DDP_SUBSCRIBE:
       return (() => {
         const state = store.getState();
@@ -67,19 +88,16 @@ export const createMiddleware = ddpClient => store => next => (action) => {
           name,
           params,
         } = action.payload;
-        const sub = find(state.ddp.subscriptions,
-          s => s.name === name &&
-            EJSON.equals(s.params, params));
+        const sub = find(state.ddp.subscriptions, s => s.name === name && EJSON.equals(s.params, params));
         const subId = (sub && sub.id) || ddpClient.nextUniqueId();
         if (sub) {
-          cancelUnsubscribe(subId);
+          cancelCleanup(subId);
         } else {
           store.dispatch({
             type: DDP_SUB,
             payload: {
               name,
               params,
-              msg: 'sub',
               id: subId,
             },
           });
@@ -92,18 +110,6 @@ export const createMiddleware = ddpClient => store => next => (action) => {
           },
         });
         return subId;
-      })();
-    case DDP_UNSUBSCRIBE:
-      return (() => {
-        const state = store.getState();
-        const sub = state.ddp.subscriptions[action.payload.id];
-        // NOTE: The number of users will only be decreased after "next(action)"
-        //       so at this moment it's still taking into account the one which
-        //       is resigning.
-        if (sub && sub.users === 1) {
-          scheduleUnsubscribe(sub.id);
-        }
-        return next(action);
       })();
     default:
       return next(action);

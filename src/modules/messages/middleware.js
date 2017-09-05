@@ -12,15 +12,26 @@ import {
   ACTION_TO_PRIORITY,
 } from '../../constants';
 
+/**
+ * Return the maximal priority of the current pending messages.
+ * @param {object} state
+ * @param {string} socketId
+ * @returns {number}
+ */
+const getThreshold = (state, socketId) => {
+  const priorities = values(state.ddp.messages.sockets[socketId] &&
+                            state.ddp.messages.sockets[socketId].pending);
+  if (priorities.length === 0) {
+    return -Infinity;
+  }
+  return max(priorities);
+};
+
+/**
+ * Create middleware for the given ddpClient.
+ * @param {DDPClient} ddpClient
+ */
 export const createMiddleware = ddpClient => (store) => {
-  const getThreshold = (state, socketId) => {
-    const priorities = values(state.ddp.messages.sockets[socketId] &&
-                              state.ddp.messages.sockets[socketId].pending);
-    if (priorities.length === 0) {
-      return -Infinity;
-    }
-    return max(priorities);
-  };
   ddpClient.on('message', (payload, meta) => {
     const type = payload.msg && MESSAGE_TO_ACTION[payload.msg];
     if (type) {

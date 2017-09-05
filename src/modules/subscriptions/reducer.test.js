@@ -41,7 +41,6 @@ describe('Test module - subscriptions - reducer', () => {
     this.reducer({}, {
       type: DDP_SUB,
       payload: {
-        msg: 'sub',
         id: '1',
         name: 'aSubscription',
         params: [1, 2, 3],
@@ -204,7 +203,6 @@ describe('Test module - subscriptions - reducer', () => {
     }, {
       type: DDP_UNSUB,
       payload: {
-        msg: 'unsub',
         id: '2',
       },
     }).should.deep.equal({

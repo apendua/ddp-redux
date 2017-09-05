@@ -9,8 +9,12 @@ import {
 } from '../../constants';
 import DDPError from '../../DDPError';
 
-// TODO: Add support for "server_id" message.
+/**
+ * Create middleware for the given ddpClient.
+ * @param {DDPClient} ddpClient
+ */
 export const createMiddleware = ddpClient => (store) => {
+  // TODO: Add support for "server_id" message.
   ddpClient.on('open', (meta) => {
     store.dispatch({
       meta,

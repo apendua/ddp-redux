@@ -3,7 +3,6 @@ import forEach from 'lodash.foreach';
 import EJSON from '../../ejson';
 import {
   DDP_CONNECT,
-  DDP_METHOD,
   DDP_RESULT,
 
   DDP_QUERY_REQUEST,
@@ -14,6 +13,9 @@ import {
   DDP_QUERY_DELETE,
   DDP_QUERY_UPDATE,
 } from '../../constants';
+import {
+  callMethod,
+} from '../../actions';
 
 // const withCollections = (state) => {
 //   if (state.result && state.result.$collections) {
@@ -35,18 +37,26 @@ const getMethodIds = (state, id) => {
   return methodIds;
 };
 
+/**
+ * Create middleware for the given ddpClient.
+ * @param {DDPClient} ddpClient
+ */
 export const createMiddleware = ddpClient => store => next => (action) => {
   if (!action || typeof action !== 'object') {
     return next(action);
   }
   const timeouts = {};
+  /**
+   * Scheudle cleanup for the given query.
+   * @param {string} id
+   */
   const scheduleCleanup = (id) => {
     if (timeouts[id]) {
       clearTimeout(timeouts[id]);
     }
     timeouts[id] = setTimeout(() => {
       const state = store.getState();
-      const collections = state.ddp.queries[id].collection;
+      const collections = state.ddp.queries[id].collections;
       store.dispatch({
         type: DDP_QUERY_DELETE,
         payload: {
@@ -59,8 +69,12 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         },
       });
       delete timeouts[id];
-    }, 30000);
+    }, ddpClient.getQueryCleanupTimeout());
   };
+  /**
+   * Cancel cleanup timeout for the given query.
+   * @param {string} id
+   */
   const cancelCleanup = (id) => {
     if (timeouts[id]) {
       clearTimeout(timeouts[id]);
@@ -71,17 +85,8 @@ export const createMiddleware = ddpClient => store => next => (action) => {
     case DDP_CONNECT: // Restore all queries on re-connect
       return ((result) => {
         const state = store.getState();
-        forEach(state.ddp.queries, ({ name, params }, id) => {
-          store.dispatch({
-            type: DDP_METHOD,
-            payload: {
-              params,
-              method: name,
-            },
-            meta: {
-              queryId: id,
-            },
-          });
+        forEach(state.ddp.queries, ({ name, params }, queryId) => {
+          store.dispatch(callMethod(name, params, { queryId }));
         });
         return result;
       })(next(action));
@@ -106,16 +111,7 @@ export const createMiddleware = ddpClient => store => next => (action) => {
             },
           });
           // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
-          store.dispatch({
-            type: DDP_METHOD,
-            payload: {
-              params,
-              method: name,
-            },
-            meta: {
-              queryId: id,
-            },
-          });
+          store.dispatch(callMethod(name, params, { queryId: id }));
         }
         next({
           ...action,
@@ -128,20 +124,11 @@ export const createMiddleware = ddpClient => store => next => (action) => {
       })();
     case DDP_QUERY_REFETCH:
       return (() => {
-        const id = action.payload.id;
+        const queryId = action.payload.id;
         const state = store.getState();
-        const query = state.ddp.queries[id];
+        const query = state.ddp.queries[queryId];
         if (query && query.users) {
-          store.dispatch({
-            type: DDP_METHOD,
-            payload: {
-              method: query.name,
-              params: query.params,
-            },
-            meta: {
-              queryId: id,
-            },
-          });
+          store.dispatch(callMethod(query.name, query.params, { queryId }));
         }
         return next(action);
       })();

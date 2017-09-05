@@ -84,6 +84,18 @@ class DDPClient extends DDPEmitter {
     return this.defaultSocketId;
   }
 
+  getFlushTimeout() {
+    return this.constructor.getFlushTimeout();
+  }
+
+  getQueryCleanupTimeout() {
+    return this.constructor.getQueryCleanupTimeout();
+  }
+
+  getSubscriptionCleanupTimeout() {
+    return this.constructor.geSubscriptionCleanupTimeout();
+  }
+
   nextUniqueId() {
     this.counter += 1;
     return this.counter.toString();
@@ -118,6 +130,18 @@ class DDPClient extends DDPEmitter {
   static registerModel(Model, collection) {
     this.models[collection] = Model;
   }
+
+  static getFlushTimeout() {
+    return this.defaultFlushTimeout();
+  }
+
+  static getQueryCleanupTimeout() {
+    return this.defaultQueryCleanupTimeout;
+  }
+
+  static getSubscriptionCleanupTimeout() {
+    return this.defaultSubscriptionCleanupTimeout;
+  }
 }
 
 DDPClient.models = {};
@@ -126,5 +150,9 @@ DDPClient.UnknownModel = class UnknownModel {
     Object.assign(this, doc);
   }
 };
+
+DDPClient.defaultFlushTimeout = 200;
+DDPClient.defaultQueryCleanupTimeout = 30000;
+DDPClient.defaultSubscriptionCleanupTimeout = 30000;
 
 export default DDPClient;
