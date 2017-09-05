@@ -2,24 +2,46 @@
 import omit from 'lodash.omit';
 import find from 'lodash.find';
 import forEach from 'lodash.foreach';
+import mapValues from 'lodash.mapvalues';
 import EJSON from '../ejson';
 import decentlyMapValues from '../utils/decentlyMapValues';
 import {
   DDP_QUERY_STATE__PENDING,
   DDP_QUERY_STATE__READY,
-  DDP_QUERY_STATE__ERROR,
   DDP_QUERY_STATE__RESTORING,
-  DDP_QUERY_STATE__UPDATING,
 
   DDP_CONNECT,
   DDP_METHOD,
   DDP_RESULT,
-  DDP_REQUEST,
-  DDP_RELEASE,
-  DDP_CREATE_QUERY,
-  DDP_DELETE_QUERY,
-  DDP_UPDATE_QUERY,
+
+  DDP_QUERY_REQUEST,
+  DDP_QUERY_RELEASE,
+  DDP_QUERY_REFETCH,
+
+  DDP_QUERY_CREATE,
+  DDP_QUERY_DELETE,
+  DDP_QUERY_UPDATE,
 } from '../constants';
+
+// const withCollections = (state) => {
+//   if (state.result && state.result.$collections) {
+//     return {
+//       ...state,
+//       collections: mapValues(state.result.$collections, documents => Object.keys(documents)),
+//     };
+//   }
+//   return state;
+// };
+
+const getMethodIds = (state, id) => {
+  const methodIds = [];
+  forEach(state, (queryId, methodId) => {
+    if (queryId === id) {
+      methodIds.push(methodId);
+    }
+  });
+  return methodIds;
+};
 
 export const createMiddleware = ddpClient => store => next => (action) => {
   if (!action || typeof action !== 'object') {
@@ -31,10 +53,17 @@ export const createMiddleware = ddpClient => store => next => (action) => {
       clearTimeout(timeouts[id]);
     }
     timeouts[id] = setTimeout(() => {
+      const state = store.getState();
+      const collections = state.ddp.queries[id].collection;
       store.dispatch({
-        type: DDP_DELETE_QUERY,
+        type: DDP_QUERY_DELETE,
         payload: {
           id,
+        },
+        ...collections && {
+          meta: {
+            collections,
+          },
         },
       });
       delete timeouts[id];
@@ -64,20 +93,27 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         });
         return result;
       })(next(action));
-    case DDP_REQUEST:
+    case DDP_QUERY_REQUEST:
       return (() => {
         const state = store.getState();
         const {
           name,
           params,
         } = action.payload;
-        const query = find(state.ddp.queries,
-          x => x.name === name &&
-            EJSON.equals(x.params, params));
+        const query = find(state.ddp.queries, x => x.name === name && EJSON.equals(x.params, params));
         const id = (query && query.id) || ddpClient.nextUniqueId();
         if (query) {
           cancelCleanup(id);
         } else {
+          store.dispatch({
+            type: DDP_QUERY_CREATE,
+            payload: {
+              id,
+              name,
+              params,
+            },
+          });
+          // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
           store.dispatch({
             type: DDP_METHOD,
             payload: {
@@ -98,22 +134,51 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         });
         return id;
       })();
+    case DDP_QUERY_REFETCH:
+      return (() => {
+        const id = action.payload.id;
+        const state = store.getState();
+        const query = state.ddp.queries[id];
+        if (query && query.users) {
+          store.dispatch({
+            type: DDP_METHOD,
+            payload: {
+              method: query.name,
+              params: query.params,
+            },
+            meta: {
+              queryId: id,
+            },
+          });
+        }
+        return next(action);
+      })();
     case DDP_RESULT:
       return (() => {
         const state = store.getState();
         const queryId = state.ddp.queries.byMethodId[action.payload.id];
         if (queryId) {
-          return next({
+          const methodIds = getMethodIds(state, queryId);
+          const result = next({
             ...action,
             meta: {
               ...action.meta,
               queryId,
             },
           });
+          if (methodIds.length === 1) { // this is the last pending method
+            store.dispatch({
+              type: DDP_QUERY_UPDATE,
+              payload: {
+                id: queryId,
+              },
+            });
+          }
+          return result;
         }
         return next(action);
       })();
-    case DDP_RELEASE:
+    case DDP_QUERY_RELEASE:
       return (() => {
         const state = store.getState();
         const query = state.ddp.queries[action.payload.id];
@@ -132,7 +197,7 @@ export const createMiddleware = ddpClient => store => next => (action) => {
 
 export const createPrimaryReducer = () => (state = {}, action) => {
   switch (action.type) {
-    case DDP_REQUEST:
+    case DDP_QUERY_REQUEST:
       return {
         ...state,
         [action.payload.id]: {
@@ -140,7 +205,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
           users: (state[action.payload.id].users || 0) + 1,
         },
       };
-    case DDP_RELEASE:
+    case DDP_QUERY_RELEASE:
       return state[action.payload.id]
         ? {
           ...state,
@@ -150,37 +215,64 @@ export const createPrimaryReducer = () => (state = {}, action) => {
           },
         }
         : state;
-    case DDP_METHOD:
+    case DDP_QUERY_REFETCH:
       return (() => {
-        if (action.meta.queryId) {
+        if (action.payload.id) {
           return {
             ...state,
-            [action.meta.queryId]: {
-              id:     action.meta.queryId,
-              state:  DDP_QUERY_STATE__PENDING,
-              name:   action.payload.method,
-              params: action.payload.params,
+            [action.payload.id]: {
+              ...state[action.payload.id],
+              state: DDP_QUERY_STATE__RESTORING,
             },
           };
         }
         return state;
       })();
+    case DDP_QUERY_DELETE:
+      return decentlyMapValues(state, (query, id, remove) => {
+        if (id === action.payload.id) {
+          remove(id);
+        }
+      });
+    case DDP_QUERY_CREATE:
+      return {
+        ...state,
+        [action.payload.id]: {
+          id:      action.payload.id,
+          state:   DDP_QUERY_STATE__PENDING,
+          name:    action.payload.name,
+          params:  action.payload.params,
+        },
+      };
+    case DDP_QUERY_UPDATE:
+      return {
+        ...state,
+        [action.payload.id]: {
+          ...state[action.payload.id],
+          state: DDP_QUERY_STATE__READY,
+        },
+      };
     case DDP_RESULT:
       return (() => {
         if (action.meta && action.meta.queryId) {
+          const methodId = action.payload.id;
           return decentlyMapValues(state, (query, id) => {
             if (action.meta.queryId === id) {
               if (action.payload.error) {
                 return {
                   ...query,
-                  state: DDP_QUERY_STATE__ERROR,
-                  error: action.payload.error,
+                  errors: {
+                    ...query.errors,
+                    [methodId]: action.payload.error,
+                  },
                 };
               }
               return {
                 ...query,
-                state: DDP_QUERY_STATE__READY,
-                result: action.payload.result,
+                results: {
+                  ...query.results,
+                  [methodId]: action.payload.result,
+                },
               };
             }
             return query;
@@ -189,17 +281,14 @@ export const createPrimaryReducer = () => (state = {}, action) => {
         return state;
       })();
     case DDP_CONNECT:
-      return decentlyMapValues(state, (sub) => {
-        if (
-          sub.state === DDP_QUERY_STATE__READY ||
-          sub.state === DDP_QUERY_STATE__ERROR
-        ) {
+      return decentlyMapValues(state, (query) => {
+        if (query.state === DDP_QUERY_STATE__READY) {
           return {
-            ...sub,
+            ...query,
             state: DDP_QUERY_STATE__RESTORING,
           };
         }
-        return sub;
+        return query;
       });
     default:
       return state;
@@ -222,6 +311,20 @@ export const createSecondaryReducer = () => (state = {}, action) => {
       return (() => {
         if (state[action.payload.id]) {
           return omit(state, action.payload.id);
+        }
+        return state;
+      })();
+    case DDP_QUERY_REFETCH:
+      // NOTE: This is only useful if user triggers "refetch" while query is still pending.
+      return (() => {
+        const methodIds = [];
+        forEach(state, (queryId, methodId) => {
+          if (queryId === action.payload.id) {
+            methodIds.push(methodId);
+          }
+        });
+        if (methodIds.length > 0) {
+          return omit(state, methodIds);
         }
         return state;
       })();

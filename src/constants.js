@@ -46,18 +46,20 @@ export const DDP_CLOSE = '@DDP/API/CLOSE';
 export const DDP_CLOSED = '@DDP/API/CLOSED';
 
 export const DDP_METHOD = '@DDP/OUT/METHOD';
+export const DDP_CANCEL = '@DDP/API/CANCEL';
 export const DDP_RESULT = '@DDP/IN/RESULT';
 export const DDP_UPDATED = '@DDP/IN/UPDATED';
 export const DDP_OPTIMISTIC = '@DDP/API/OPTIMISTIC';
 
 export const DDP_MUTATE = '@DDP/API/MUTATE';
 
-export const DDP_CREATE_QUERY = '@DDP/API/CREATE_QUERY';
-export const DDP_DELETE_QUERY = '@DDP/API/DELETE_QUERY';
-export const DDP_UPDATE_QUERY = '@DDP/API/UPDATE_QUERY';
+export const DDP_QUERY_CREATE = '@DDP/QUERY/CREATE';
+export const DDP_QUERY_DELETE = '@DDP/QUERY/DELETE';
+export const DDP_QUERY_UPDATE = '@DDP/QUERY/UPDATE';
 
-export const DDP_REQUEST = '@DDP/API/REQUEST';
-export const DDP_RELEASE = '@DDP/API/RELEASE';
+export const DDP_QUERY_REQUEST = '@DDP/QUERY/REQUEST';
+export const DDP_QUERY_RELEASE = '@DDP/QUERY/RELEASE';
+export const DDP_QUERY_REFETCH = '@DDP/QUERY/REFETCH';
 
 // DDP messages
 
