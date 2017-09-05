@@ -80,4 +80,6 @@ class DDPError extends Error {
   }
 }
 
+DDPError.ERROR_CONNECTION = 'ErrorConnection';
+
 export default DDPError;
