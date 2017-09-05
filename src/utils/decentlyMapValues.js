@@ -17,7 +17,7 @@ const decentlyMapValues = (object, mapValue, isEqual = defaultIsEqual) => {
     modified = true;
     return newValue;
   });
-  if (remove.length > 0) {
+  if (toRemove.length > 0) {
     return omit(object, toRemove);
   }
   if (!modified) {
