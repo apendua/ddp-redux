@@ -1,6 +1,8 @@
 import max from 'lodash.max';
 import values from 'lodash.values';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_RESULT,
   DDP_CONNECTED,
   DDP_METHOD,
@@ -46,7 +48,7 @@ export const createMiddleware = ddpClient => (store) => {
     if (!action || typeof action !== 'object') {
       return next(action);
     }
-    const socketId = (action.meta && action.meta.socketId) || ddpClient.getDefaultSocketId();
+    const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
     if (action.type === DDP_CONNECTED || action.type === DDP_RESULT) {
       // NOTE: We are propagating action first, because
       //       we want to get an up-to-date threshold.

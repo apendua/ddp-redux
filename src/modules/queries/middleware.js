@@ -2,6 +2,8 @@ import find from 'lodash.find';
 import forEach from 'lodash.foreach';
 import EJSON from '../../ejson';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_CONNECT,
   DDP_RESULT,
 
@@ -102,8 +104,8 @@ export const createMiddleware = ddpClient => store => next => (action) => {
         const {
           name,
           params,
-          socketId = ddpClient.getDefaultSocketId(),
         } = action.payload;
+        const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
         const query = find(state.ddp.queries, x => x.socketId === socketId && x.name === name && EJSON.equals(x.params, params));
         const id = (query && query.id) || ddpClient.nextUniqueId();
         if (query) {

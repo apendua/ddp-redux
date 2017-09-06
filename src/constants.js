@@ -1,5 +1,7 @@
 export const DDP_PROTOCOL_VERSION = '1.0';
 
+export const DEFAULT_SOCKET_ID = 'default';
+
 export const DDP_CONNECTION_STATE__CONNECTING = 'connecting';
 export const DDP_CONNECTION_STATE__CONNECTED = 'connected';
 export const DDP_CONNECTION_STATE__DISCONNECTED = 'disconnected';

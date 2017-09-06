@@ -9,10 +9,9 @@ import {
   createMiddleware,
 } from './middleware';
 import {
-  DDP_SUBSCRIPTION_STATE__READY,
+  DEFAULT_SOCKET_ID,
 
-  DDP_CONNECTION_STATE__CONNECTED,
-  DDP_CONNECTION_STATE__DISCONNECTED,
+  DDP_SUBSCRIPTION_STATE__READY,
 
   DDP_SUBSCRIBE,
   DDP_UNSUBSCRIBE,
@@ -63,9 +62,6 @@ describe('Test module - subscriptions - middleware', () => {
   it('should not dispatch SUB if not yet subscribed', function () {
     const store = this.mockStore({
       ddp: {
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
-        },
         subscriptions: {
         },
       },
@@ -77,7 +73,7 @@ describe('Test module - subscriptions - middleware', () => {
         params: [1, 2, 3],
       },
       meta: {
-        socketId: 1,
+        socketId: 'socket/1',
       },
     };
     store.dispatch(action);
@@ -90,7 +86,7 @@ describe('Test module - subscriptions - middleware', () => {
           params: [1, 2, 3],
         },
         meta: {
-          socketId: '1',
+          socketId: 'socket/1',
         },
       },
       {
@@ -106,9 +102,6 @@ describe('Test module - subscriptions - middleware', () => {
   it('should not dispatch SUB if already subscribed', function () {
     const store = this.mockStore({
       ddp: {
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
-        },
         subscriptions: {
           1: {
             id: '1',
@@ -116,7 +109,7 @@ describe('Test module - subscriptions - middleware', () => {
             name: 'aSubscription',
             params: [1, 2, 3],
             users: 1,
-            socketId: '1',
+            socketId: DEFAULT_SOCKET_ID,
           },
         },
       },
@@ -143,9 +136,6 @@ describe('Test module - subscriptions - middleware', () => {
   it('should do nothing if unsubscribe on unknown id', function () {
     const store = this.mockStore({
       ddp: {
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
-        },
         subscriptions: {
         },
       },
@@ -165,9 +155,6 @@ describe('Test module - subscriptions - middleware', () => {
   it('should dispatch UNSUB on unsubscribe', function () {
     const store = this.mockStore({
       ddp: {
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
-        },
         subscriptions: {
           1: {
             id: '1',
@@ -205,9 +192,6 @@ describe('Test module - subscriptions - middleware', () => {
   it('should not dispatch UNSUB if there are many users', function () {
     const store = this.mockStore({
       ddp: {
-        connection: {
-          state: DDP_CONNECTION_STATE__CONNECTED,
-        },
         subscriptions: {
           1: {
             id: '1',
@@ -239,9 +223,6 @@ describe('Test module - subscriptions - middleware', () => {
   it('should re-subscribe on re-connect', function () {
     const store = this.mockStore({
       ddp: {
-        connection: {
-          state: DDP_CONNECTION_STATE__DISCONNECTED,
-        },
         subscriptions: {
           1: {
             id: '1',

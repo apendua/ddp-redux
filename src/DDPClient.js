@@ -3,6 +3,10 @@ import mapValues from 'lodash.mapvalues';
 import DDPSocket from './DDPSocket';
 import DDPEmitter from './DDPEmitter';
 
+import {
+  DEFAULT_SOCKET_ID,
+} from './constants';
+
 import * as collections from './modules/collections';
 import * as connection from './modules/connection';
 import * as messages from './modules/messages';
@@ -34,16 +38,17 @@ class DDPClient extends DDPEmitter {
     }
   }
 
-  send(msg, {
-    socketId = this.defaultSocketId,
-  } = {}) {
+  send(msg, { socketId = DEFAULT_SOCKET_ID } = {}) {
     const socket = this.sockets[socketId];
     if (socket) {
       socket.send(msg);
     }
   }
 
-  open(endpoint, socketId = this.nextUniqueId()) {
+  open(endpoint, socketId = DEFAULT_SOCKET_ID) {
+    if (this.sockets[socketId]) {
+      throw new Error('Already opened, you need to close connection first.');
+    }
     const socket = new DDPSocket({
       SocketConstructor: this.SocketConstructor,
     });
@@ -63,25 +68,15 @@ class DDPClient extends DDPEmitter {
       }, 10000);
     });
     socket.open(endpoint);
-    if (!this.defaultSocketId) {
-      this.defaultSocketId = socketId;
-    }
     return socketId;
   }
 
-  close(socketId = this.defaultSocketId) {
+  close(socketId = DEFAULT_SOCKET_ID) {
     const socket = this.sockets[socketId];
     if (socket) {
       delete this.sockets[socketId];
-      if (socketId === this.defaultSocketId) {
-        delete this.defaultSocketId;
-      }
       socket.close();
     }
-  }
-
-  getDefaultSocketId() {
-    return this.defaultSocketId;
   }
 
   getFlushTimeout() {

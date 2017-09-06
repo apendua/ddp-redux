@@ -9,6 +9,8 @@ import {
   createMiddleware,
 } from './middleware';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_METHOD,
   DDP_CONNECT,
   DDP_RESULT,
@@ -103,7 +105,7 @@ describe('Test module - messages - middleware', () => {
       this.ddpClient.emit('message', {
         msg,
       }, {
-        socketId: '1',
+        socketId: 'socket/1',
       });
       store.getActions().should.deep.equal([{
         type: MESSAGE_TO_ACTION[msg],
@@ -111,7 +113,7 @@ describe('Test module - messages - middleware', () => {
           msg,
         },
         meta: {
-          socketId: '1',
+          socketId: 'socket/1',
         },
       }]);
     });
@@ -143,7 +145,7 @@ describe('Test module - messages - middleware', () => {
         payload: ddpMessage,
         meta: {
           priority: ACTION_TO_PRIORITY[type],
-          socketId: '1',
+          socketId: DEFAULT_SOCKET_ID,
         },
       }]);
       this.send.should.be.calledWith(ddpMessage);
