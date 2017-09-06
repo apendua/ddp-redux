@@ -45,6 +45,9 @@ export const DDP_CONNECT = '@DDP.OUT.CONNECT';
 export const DDP_ENQUEUE = '@DDP.SOCKET.ENQUEUE';
 export const DDP_OPEN = '@DDP.SOCKET.OPEN';
 export const DDP_CLOSE = '@DDP.SOCKET.CLOSE';
+// TODO: We could use this one to allow cleaning up given connection
+//       and potentially connecting to a new server.
+// export const DDP_REOPEN = '@DDP.SOCKET.REOPEN';
 export const DDP_DISCONNECTED = '@DDP.SOCKET.DISCONNECTED';
 
 export const DDP_METHOD = '@DDP.OUT.METHOD';

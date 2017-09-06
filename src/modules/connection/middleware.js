@@ -1,3 +1,4 @@
+import find from 'lodash.find';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -60,7 +61,8 @@ export const createMiddleware = ddpClient => (store) => {
           return result;
         })(next(action));
       case DDP_FAILED: // could not negotiate DDP protocol version
-        ddpClient.close(action.meta && action.meta.socketId);
+        ddpClient.close(action.meta);
+        // NOTE: ddpClient.close() will emit "close" event and it will dispatch the DDP_DISCONNECTED
         return next(action);
       case DDP_OPEN:
         return (() => {
@@ -70,7 +72,14 @@ export const createMiddleware = ddpClient => (store) => {
             params,
           } = action.payload;
           const socket = find(state.ddp.connection.sockets, x => x.endpoint === endpoint && EJSON.equals(x.params, params));
-          const socketId = (socket && socket.id) || ddpClient.nextUniqueId();
+          let socketId = socket && socket.id;
+          if (!socketId) {
+            if (!state.ddp.connection.sockets[DEFAULT_SOCKET_ID]) {
+              socketId = DEFAULT_SOCKET_ID;
+            } else {
+              socketId = ddpClient.nextUniqueId();
+            }
+          }
           if (socket) {
             scheduleCleanup.cancel(socketId);
           } else {

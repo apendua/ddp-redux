@@ -8,13 +8,20 @@ export class DDPClient extends DDPEmitter {
     super();
     this.sockets = {};
   }
-  open(endpoint, socketId = DEFAULT_SOCKET_ID) {
+
+  nextUniqueId() {
+    return this.constructor.defaultUniqueId;
+  }
+
+  open(endpoint, { socketId = DEFAULT_SOCKET_ID } = {}) {
     this.sockets[socketId] = {
       endpoint,
     };
   }
 
-  close(socketId = DEFAULT_SOCKET_ID) {
+  close({ socketId = DEFAULT_SOCKET_ID } = {}) {
     delete this.sockets[socketId];
   }
 }
+
+DDPClient.defaultUniqueId = '1';
