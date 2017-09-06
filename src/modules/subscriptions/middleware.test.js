@@ -189,6 +189,52 @@ describe('Test module - subscriptions - middleware', () => {
     ]);
   });
 
+  it('should not dispatch UNSUB on unsubscribe then subscribe again', function () {
+    const store = this.mockStore({
+      ddp: {
+        subscriptions: {
+          1: {
+            id: '1',
+            state: DDP_SUBSCRIPTION_STATE__READY,
+            name: 'aSubscription',
+            params: [1, 2, 3],
+            users: 1,
+            socketId: DEFAULT_SOCKET_ID,
+          },
+        },
+      },
+    });
+    const action1 = {
+      type: DDP_UNSUBSCRIBE,
+      payload: {
+        id: '1',
+      },
+    };
+    const action2 = {
+      type: DDP_SUBSCRIBE,
+      payload: {
+        id: '1',
+        name: 'aSubscription',
+        params: [1, 2, 3],
+      },
+      meta: {
+        socketId: DEFAULT_SOCKET_ID,
+      },
+    };
+    store.dispatch(action1);
+    store.dispatch(action2);
+    store.getActions().should.deep.equal([
+      action1,
+      action2,
+    ]);
+
+    this.clock.tick(30000);
+    store.getActions().should.deep.equal([
+      action1,
+      action2,
+    ]);
+  });
+
   it('should not dispatch UNSUB if there are many users', function () {
     const store = this.mockStore({
       ddp: {
