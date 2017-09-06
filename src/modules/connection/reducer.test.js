@@ -14,6 +14,8 @@ import {
   DDP_CONNECT,
   DDP_CONNECTED,
   DDP_CLOSED,
+  DDP_OPEN,
+  DDP_CLOSE,
 } from '../../constants';
 import {
   DDPClient,
@@ -82,6 +84,7 @@ describe('Test module - connection - reducer', () => {
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 1,
         },
       },
     }, {
@@ -94,6 +97,91 @@ describe('Test module - connection - reducer', () => {
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__DISCONNECTED,
+          users: 1,
+        },
+      },
+    });
+  });
+
+  it('should remove socket completely if there are no users', function () {
+    this.reducer({
+      sockets: {
+        1: {
+          state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 0,
+        },
+        2: {
+          state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 1,
+        },
+      },
+    }, {
+      type: DDP_CLOSED,
+      payload: {},
+      meta: {
+        socketId: '1',
+      },
+    }).should.deep.equal({
+      sockets: {
+        2: {
+          state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 1,
+        },
+      },
+    });
+  });
+
+  it('should increase the number of users', function () {
+    this.reducer({
+      sockets: {
+        1: {
+          endpoint: 'http://example.com',
+          params: [],
+          state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 1,
+        },
+      },
+    }, {
+      type: DDP_OPEN,
+      payload: {
+        endpoint: 'http://example.com',
+        params: [],
+      },
+      meta: {
+        socketId: '1',
+      },
+    }).should.deep.equal({
+      sockets: {
+        1: {
+          endpoint: 'http://example.com',
+          params: [],
+          state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 2,
+        },
+      },
+    });
+  });
+
+  it('should decrease the number of users', function () {
+    this.reducer({
+      sockets: {
+        1: {
+          state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 1,
+        },
+      },
+    }, {
+      type: DDP_CLOSE,
+      payload: {
+      },
+      meta: {
+        socketId: '1',
+      },
+    }).should.deep.equal({
+      sockets: {
+        1: {
+          state: DDP_CONNECTION_STATE__CONNECTED,
+          users: 0,
         },
       },
     });

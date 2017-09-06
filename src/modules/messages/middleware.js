@@ -90,6 +90,9 @@ export const createMiddleware = ddpClient => (store) => {
     const state = store.getState();
     const threshold = getMessageTreshold(state, socketId);
     if (newAction.meta.priority >= threshold) {
+      // NOTE: Initially (before "connected" message is received), the threshold will be set
+      //       to "connect" action priority which is the highest possible. As a result, nothing
+      //       will be sent untill the connection is established.
       ddpClient.send(newAction.payload, newAction.meta);
       return next(newAction);
     }

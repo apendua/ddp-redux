@@ -1,13 +1,19 @@
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_PROTOCOL_VERSION,
   DDP_FAILED,
   DDP_ERROR,
+  DDP_OPEN,
+  DDP_CLOSE,
   DDP_CLOSED,
   DDP_PING,
   DDP_PONG,
   DDP_CONNECT,
 } from '../../constants';
 import DDPError from '../../DDPError';
+import EJSON from '../../ejson';
+import createDelayedTask from '../../utils/createDelayedTask';
 
 /**
  * Create middleware for the given ddpClient.
@@ -20,7 +26,6 @@ export const createMiddleware = ddpClient => (store) => {
       meta,
       type: DDP_CONNECT,
       payload: {
-        msg: 'connect',
         version: DDP_PROTOCOL_VERSION,
         support: [DDP_PROTOCOL_VERSION],
       },
@@ -31,6 +36,9 @@ export const createMiddleware = ddpClient => (store) => {
       meta,
       type: DDP_CLOSED,
     });
+  });
+  const scheduleCleanup = createDelayedTask((socketId) => {
+    ddpClient.close({ socketId });
   });
   return next => (action) => {
     if (!action || typeof action !== 'object') {
@@ -54,6 +62,44 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_FAILED: // could not negotiate DDP protocol version
         ddpClient.close(action.meta && action.meta.socketId);
         return next(action);
+      case DDP_OPEN:
+        return (() => {
+          const state = store.getState();
+          const {
+            endpoint,
+            params,
+          } = action.payload;
+          const socket = find(state.ddp.connection.sockets, x => x.endpoint === endpoint && EJSON.equals(x.params, params));
+          const socketId = (socket && socket.id) || ddpClient.nextUniqueId();
+          if (socket) {
+            scheduleCleanup.cancel(socketId);
+          } else {
+            ddpClient.open(endpoint, { socketId });
+          }
+          next({
+            ...action,
+            payload: {
+              ...action.payload,
+            },
+            meta: {
+              ...action.meta,
+              socketId,
+            },
+          });
+          return socketId;
+        })();
+      case DDP_CLOSE:
+        return (() => {
+          const state = store.getState();
+          const socket = state.ddp.connection.sockets[action.meta.socketId];
+          // NOTE: The number of users will only be decreased after "next(action)"
+          //       so at this moment it's still taking into account the one which
+          //       is resigning.
+          if (socket && socket.users === 1) {
+            scheduleCleanup(socket.id);
+          }
+          return next(action);
+        })();
       default:
         return next(action);
     }

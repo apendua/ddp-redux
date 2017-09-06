@@ -45,7 +45,7 @@ class DDPClient extends DDPEmitter {
     }
   }
 
-  open(endpoint, socketId = DEFAULT_SOCKET_ID) {
+  open(endpoint, { socketId = DEFAULT_SOCKET_ID } = {}) {
     if (this.sockets[socketId]) {
       throw new Error('Already opened, you need to close connection first.');
     }
@@ -59,19 +59,24 @@ class DDPClient extends DDPEmitter {
       });
     });
     socket.on('open', () => {
-      this.emit('open', socketId);
+      this.emit('open', { socketId });
     });
     socket.on('close', () => {
-      this.emit('close', socketId);
+      this.emit('close', { socketId });
       setTimeout(() => {
-        this.open(endpoint, socketId);
+        if (!this.sockets[socketId]) {
+          // NOTE: This means, socket was not closed intentionally, so we try to reconnect after 10 seconds.
+          //       Before we do it, we need to delete it, because otherwise a "duplicate" error will be thrown.
+          delete this.sockets[socketId];
+          this.open(endpoint, socketId);
+        }
       }, 10000);
     });
     socket.open(endpoint);
     return socketId;
   }
 
-  close(socketId = DEFAULT_SOCKET_ID) {
+  close({ socketId = DEFAULT_SOCKET_ID } = {}) {
     const socket = this.sockets[socketId];
     if (socket) {
       delete this.sockets[socketId];
@@ -98,9 +103,9 @@ class DDPClient extends DDPEmitter {
 
   middleware() {
     const middlewares = [
+      'connection',
       'messages',
       'collections',
-      'connection',
       'methods',
       'queries',
       'subscriptions',

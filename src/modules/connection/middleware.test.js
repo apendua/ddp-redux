@@ -19,6 +19,9 @@ import {
   DDP_PING,
   DDP_PONG,
   DDP_CLOSED,
+  DDP_OPEN,
+  DDP_CLOSE,
+  DDP_DISCONNECT,
 } from '../../constants';
 import DDPError from '../../DDPError';
 import {
@@ -150,7 +153,6 @@ describe('Test module - connection - middleware', () => {
   it('should dispatch CONNECT action when socet emits "open"', function () {
     const store = this.mockStore(createInitialState('1', DDP_CONNECTION_STATE__DISCONNECTED));
     const ddpMessage = {
-      msg: 'connect',
       support: ['1.0'],
       version: '1.0',
     };
