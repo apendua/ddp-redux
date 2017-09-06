@@ -11,7 +11,7 @@ import {
   DDP_CONNECTED,
   DDP_RESULT,
   DDP_ENQUEUE,
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
 
   MSG_METHOD,
 } from '../../constants';
@@ -43,7 +43,7 @@ describe('Test module - messages - reducer', () => {
         1: 1,
       },
     }, {
-      type: DDP_CLOSED,
+      type: DDP_DISCONNECTED,
     }).should.deep.equal({
       pending: {
         '[connect]': 100,

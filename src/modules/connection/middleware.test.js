@@ -18,7 +18,7 @@ import {
   DDP_CONNECT,
   DDP_PING,
   DDP_PONG,
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
   DDP_OPEN,
   DDP_CLOSE,
   DDP_DISCONNECT,
@@ -116,7 +116,7 @@ describe('Test module - connection - middleware', () => {
       socketId: '1',
     });
     store.getActions().should.deep.equal([{
-      type: DDP_CLOSED,
+      type: DDP_DISCONNECTED,
       meta: {
         socketId: '1',
       },

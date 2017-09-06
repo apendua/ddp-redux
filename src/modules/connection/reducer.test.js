@@ -13,7 +13,7 @@ import {
 
   DDP_CONNECT,
   DDP_CONNECTED,
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
   DDP_OPEN,
   DDP_CLOSE,
 } from '../../constants';
@@ -88,7 +88,7 @@ describe('Test module - connection - reducer', () => {
         },
       },
     }, {
-      type: DDP_CLOSED,
+      type: DDP_DISCONNECTED,
       payload: {},
       meta: {
         socketId: '1',
@@ -116,7 +116,7 @@ describe('Test module - connection - reducer', () => {
         },
       },
     }, {
-      type: DDP_CLOSED,
+      type: DDP_DISCONNECTED,
       payload: {},
       meta: {
         socketId: '1',

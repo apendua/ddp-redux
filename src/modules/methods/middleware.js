@@ -4,7 +4,7 @@ import {
   DDP_METHOD_STATE__UPDATED,
   DDP_METHOD_STATE__RETURNED,
 
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
   DDP_CANCEL,
   DDP_CONNECTED,
   DDP_METHOD,
@@ -105,7 +105,7 @@ export const createMiddleware = () => (store) => {
           });
           return result;
         })(next(action));
-      case DDP_CLOSED:
+      case DDP_DISCONNECTED:
         return ((result) => {
           const state = store.getState();
           const socketId = action.meta && action.meta.socketId;

@@ -1,6 +1,6 @@
 import omit from 'lodash.omit';
 import {
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
   DDP_PONG,
   DDP_RESULT,
   DDP_CONNECTED,
@@ -23,7 +23,7 @@ export const createSocketReducer = () => (state = {
   pending: initialPending,
 }, action) => {
   switch (action.type) {
-    case DDP_CLOSED:
+    case DDP_DISCONNECTED:
       return {
         ...state,
         pending: initialPending,
@@ -93,7 +93,7 @@ export const createReducer = (DDPClient) => {
     sockets: {},
   }, action) => {
     switch (action.type) {
-      case DDP_CLOSED:
+      case DDP_DISCONNECTED:
       case DDP_ENQUEUE:
       case DDP_CONNECTED:
       case DDP_METHOD:

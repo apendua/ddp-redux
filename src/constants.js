@@ -45,7 +45,7 @@ export const DDP_CONNECT = '@DDP.OUT.CONNECT';
 export const DDP_ENQUEUE = '@DDP.SOCKET.ENQUEUE';
 export const DDP_OPEN = '@DDP.SOCKET.OPEN';
 export const DDP_CLOSE = '@DDP.SOCKET.CLOSE';
-export const DDP_CLOSED = '@DDP.SOCKET.CLOSED';
+export const DDP_DISCONNECTED = '@DDP.SOCKET.DISCONNECTED';
 
 export const DDP_METHOD = '@DDP.OUT.METHOD';
 export const DDP_CANCEL = '@DDP.METHOD.CANCEL';

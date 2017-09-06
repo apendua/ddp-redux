@@ -15,7 +15,7 @@ import {
   DDP_UPDATED,
   DDP_CONNECTED,
   DDP_RESULT,
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
   DDP_CANCEL,
 
   DDP_METHOD_STATE__PENDING,
@@ -206,7 +206,7 @@ describe('Test module - methods - middleware', () => {
       socketId: '1',
     }));
     const action = {
-      type: DDP_CLOSED,
+      type: DDP_DISCONNECTED,
       payload: {
       },
       meta: {
@@ -244,7 +244,7 @@ describe('Test module - methods - middleware', () => {
       retry: true,
     }));
     const action = {
-      type: DDP_CLOSED,
+      type: DDP_DISCONNECTED,
       payload: {
       },
       meta: {

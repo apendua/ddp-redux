@@ -6,7 +6,7 @@ import {
   DDP_ERROR,
   DDP_OPEN,
   DDP_CLOSE,
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
   DDP_PING,
   DDP_PONG,
   DDP_CONNECT,
@@ -34,7 +34,7 @@ export const createMiddleware = ddpClient => (store) => {
   ddpClient.on('close', (meta) => {
     store.dispatch({
       meta,
-      type: DDP_CLOSED,
+      type: DDP_DISCONNECTED,
     });
   });
   const scheduleCleanup = createDelayedTask((socketId) => {

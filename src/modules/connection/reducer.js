@@ -7,7 +7,7 @@ import {
 
   DDP_OPEN,
   DDP_CLOSE,
-  DDP_CLOSED,
+  DDP_DISCONNECTED,
   DDP_CONNECTED,
   DDP_CONNECT,
 } from '../../constants';
@@ -27,7 +27,7 @@ export const createSocketReducer = () => (state = {
         ...state,
         state: DDP_CONNECTION_STATE__CONNECTED,
       };
-    case DDP_CLOSED:
+    case DDP_DISCONNECTED:
       return {
         ...state,
         state: DDP_CONNECTION_STATE__DISCONNECTED,
@@ -75,7 +75,7 @@ export const createReducer = (DDPClient) => {
         })();
       case DDP_CONNECT:
       case DDP_CONNECTED:
-      case DDP_CLOSED:
+      case DDP_DISCONNECTED:
         return (() => {
           const actionSocketId = action.meta && action.meta.socketId;
           // NOTE: If socket is not yet there, it will be created.
@@ -84,7 +84,7 @@ export const createReducer = (DDPClient) => {
               ...state,
               sockets: decentlyMapValues(state.sockets, (socket, socketId, remove) => {
                 if (actionSocketId === socketId) {
-                  if (action.type === DDP_CLOSED && !socket.users) {
+                  if (action.type === DDP_DISCONNECTED && !socket.users) {
                     return remove(socketId);
                   }
                   return socketReducer(socket, action);
