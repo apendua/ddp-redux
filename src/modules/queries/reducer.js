@@ -34,28 +34,28 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_QUERY_REQUEST:
       return {
         ...state,
-        [action.payload.id]: {
-          ...state[action.payload.id],
-          users: (state[action.payload.id].users || 0) + 1,
+        [action.meta.queryId]: {
+          ...state[action.meta.queryId],
+          users: (state[action.meta.queryId].users || 0) + 1,
         },
       };
     case DDP_QUERY_RELEASE:
-      return state[action.payload.id]
+      return state[action.meta.queryId]
         ? {
           ...state,
-          [action.payload.id]: {
-            ...state[action.payload.id],
-            users: (state[action.payload.id].users || 0) - 1,
+          [action.meta.queryId]: {
+            ...state[action.meta.queryId],
+            users: (state[action.meta.queryId].users || 0) - 1,
           },
         }
         : state;
     case DDP_QUERY_REFETCH:
       return (() => {
-        if (action.payload.id) {
+        if (action.meta.queryId) {
           return {
             ...state,
-            [action.payload.id]: {
-              ...state[action.payload.id],
+            [action.meta.queryId]: {
+              ...state[action.meta.queryId],
               state: DDP_QUERY_STATE__RESTORING,
             },
           };
@@ -64,7 +64,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
       })();
     case DDP_QUERY_DELETE:
       return decentlyMapValues(state, (query, id, remove) => {
-        if (id === action.payload.id) {
+        if (id === action.meta.queryId) {
           return remove(id);
         }
         return query;
@@ -72,8 +72,8 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_QUERY_CREATE:
       return {
         ...state,
-        [action.payload.id]: {
-          id:      action.payload.id,
+        [action.meta.queryId]: {
+          id:      action.meta.queryId,
           state:   DDP_QUERY_STATE__PENDING,
           name:    action.payload.name,
           params:  action.payload.params,
@@ -85,9 +85,10 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_QUERY_UPDATE:
       return {
         ...state,
-        [action.payload.id]: {
-          ...state[action.payload.id],
+        [action.meta.queryId]: {
+          ...state[action.meta.queryId],
           state: DDP_QUERY_STATE__READY,
+          entities: action.payload.entities,
         },
       };
     case DDP_RESULT:
@@ -152,7 +153,7 @@ export const createSecondaryReducer = () => (state = {}, action) => {
     case DDP_QUERY_REFETCH:
       // NOTE: This is only useful if user triggers "refetch" while query is still pending.
       return decentlyMapValues(state, (queryId, methodId, remove) => {
-        if (queryId === action.payload.id) {
+        if (queryId === action.meta.queryId) {
           return remove(methodId);
         }
         return queryId;

@@ -116,6 +116,10 @@ class DDPClient extends DDPEmitter {
     };
   }
 
+  extractEntities(result, options) {
+    return this.constructor.defaultExtractEntities(result, options);
+  }
+
   static reducer() {
     const reducers = mapValues(modules, module => module.createReducer(this));
     return (state = {}, action) => {
@@ -141,6 +145,10 @@ class DDPClient extends DDPEmitter {
 
   static getSubscriptionCleanupTimeout() {
     return this.defaultSubscriptionCleanupTimeout;
+  }
+
+  static defaultExtractEntities(result) {
+    return result.entities;
   }
 }
 

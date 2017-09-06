@@ -54,8 +54,8 @@ describe('Test module - queries - reducer', () => {
       byMethodId: {},
     }, {
       type: DDP_QUERY_REQUEST,
-      payload: {
-        id: '1',
+      meta: {
+        queryId: '1',
       },
     }).should.deep.equal({
       byId: {
@@ -79,8 +79,8 @@ describe('Test module - queries - reducer', () => {
       byMethodId: {},
     }, {
       type: DDP_QUERY_RELEASE,
-      payload: {
-        id: '1',
+      meta: {
+        queryId: '1',
       },
     }).should.deep.equal({
       byId: {
@@ -103,8 +103,8 @@ describe('Test module - queries - reducer', () => {
       byMethodId: {},
     }, {
       type: DDP_QUERY_REFETCH,
-      payload: {
-        id: '1',
+      meta: {
+        queryId: '1',
       },
     }).should.deep.equal({
       byId: {
@@ -130,8 +130,8 @@ describe('Test module - queries - reducer', () => {
       byMethodId: {},
     }, {
       type: DDP_QUERY_DELETE,
-      payload: {
-        id: '2',
+      meta: {
+        queryId: '2',
       },
     }).should.deep.equal({
       byId: {
@@ -154,11 +154,11 @@ describe('Test module - queries - reducer', () => {
     }, {
       type: DDP_QUERY_CREATE,
       payload: {
-        id: '2',
         name: 'B',
         params: 1,
       },
       meta: {
+        queryId: '2',
         socketId: 'socket/1',
       },
     }).should.deep.equal({
@@ -189,13 +189,27 @@ describe('Test module - queries - reducer', () => {
     }, {
       type: DDP_QUERY_UPDATE,
       payload: {
-        id: '1',
+        entities: {
+          col1: {
+            1: { id: '1' },
+            2: { id: '2' },
+          },
+        },
+      },
+      meta: {
+        queryId: '1',
       },
     }).should.deep.equal({
       byId: {
         1: {
           name: 'A',
           state: DDP_QUERY_STATE__READY,
+          entities: {
+            col1: {
+              1: { id: '1' },
+              2: { id: '2' },
+            },
+          },
         },
       },
       byMethodId: {},
@@ -338,8 +352,8 @@ describe('Test module - queries - reducer', () => {
       },
     }, {
       type: DDP_QUERY_REFETCH,
-      payload: {
-        id: '3',
+      meta: {
+        queryId: '3',
       },
     }).should.deep.equal({
       byId: {

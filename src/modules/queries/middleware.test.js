@@ -12,6 +12,14 @@ import {
 import {
   DDPClient,
 } from './common.test';
+import {
+  DDP_METHOD,
+  DDP_QUERY_CREATE,
+  // DDP_QUERY_DELETE,
+  // DDP_QUERY_UPDATE,
+
+  DDP_QUERY_REQUEST,
+} from '../../constants';
 
 chai.should();
 chai.use(sinonChai);
@@ -39,6 +47,58 @@ describe('Test module - queries - middleware', () => {
     store.dispatch(action);
     store.getActions().should.have.members([
       action,
+    ]);
+  });
+
+  it('should not dispatch METHOD if query does not yet exist', function () {
+    const store = this.mockStore({
+      ddp: {
+        subscriptions: {
+        },
+      },
+    });
+    const action = {
+      type: DDP_QUERY_REQUEST,
+      payload: {
+        name: 'aQuery',
+        params: [1, 2, 3],
+      },
+      meta: {
+        socketId: 'socket/1',
+      },
+    };
+    const queryId = store.dispatch(action);
+    queryId.should.equal(DDPClient.defaultUniqueId);
+    store.getActions().should.deep.equal([
+      {
+        type: DDP_QUERY_CREATE,
+        payload: {
+          name: 'aQuery',
+          params: [1, 2, 3],
+          socketId: 'socket/1',
+        },
+        meta: {
+          queryId: '1',
+        },
+      },
+      {
+        type: DDP_METHOD,
+        payload: {
+          method: 'aQuery',
+          params: [1, 2, 3],
+        },
+        meta: {
+          queryId: '1',
+          socketId: 'socket/1',
+        },
+      },
+      {
+        ...action,
+        meta: {
+          ...action.meta,
+          queryId,
+        },
+      },
     ]);
   });
 });

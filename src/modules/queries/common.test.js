@@ -5,7 +5,13 @@ export class DDPClient extends DDPEmitter {
     return this.constructor.getQueryCleanupTimeout();
   }
 
+  nextUniqueId() {
+    return this.constructor.defaultUniqueId;
+  }
+
   static getQueryCleanupTimeout() {
     return 1000;
   }
 }
+
+DDPClient.defaultUniqueId = '1';

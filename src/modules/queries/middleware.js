@@ -20,43 +20,21 @@ import {
 } from '../../actions';
 import createDelayedTask from '../../utils/createDelayedTask';
 
-// const withCollections = (state) => {
-//   if (state.result && state.result.$collections) {
-//     return {
-//       ...state,
-//       collections: mapValues(state.result.$collections, documents => Object.keys(documents)),
-//     };
-//   }
-//   return state;
-// };
-
-const getMethodIds = (state, id) => {
-  const methodIds = [];
-  forEach(state, (queryId, methodId) => {
-    if (queryId === id) {
-      methodIds.push(methodId);
-    }
-  });
-  return methodIds;
-};
-
 /**
  * Create middleware for the given ddpClient.
  * @param {DDPClient} ddpClient
  */
 export const createMiddleware = ddpClient => (store) => {
-  const scheduleCleanup = createDelayedTask((id) => {
+  const scheduleCleanup = createDelayedTask((queryId) => {
     const state = store.getState();
-    const collections = state.ddp.queries[id].collections;
+    const query = state.ddp.queries[queryId];
     store.dispatch({
       type: DDP_QUERY_DELETE,
       payload: {
-        id,
+        entities: query.entities,
       },
-      ...collections && {
-        meta: {
-          collections,
-        },
+      meta: {
+        queryId,
       },
     });
   }, {
@@ -73,10 +51,7 @@ export const createMiddleware = ddpClient => (store) => {
           const state = store.getState();
           forEach(state.ddp.queries, (query, queryId) => {
             if (query.socketId === socketId) {
-              store.dispatch(callMethod(query.name, query.params, {
-                queryId,
-                socketId,
-              }));
+              store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
             }
           });
           return result;
@@ -90,45 +65,41 @@ export const createMiddleware = ddpClient => (store) => {
           } = action.payload;
           const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
           const query = find(state.ddp.queries, x => x.socketId === socketId && x.name === name && EJSON.equals(x.params, params));
-          const id = (query && query.id) || ddpClient.nextUniqueId();
+          const queryId = (query && query.id) || ddpClient.nextUniqueId();
           if (query) {
-            scheduleCleanup.cancel(id);
+            scheduleCleanup.cancel(queryId);
           } else {
             store.dispatch({
               type: DDP_QUERY_CREATE,
               payload: {
-                id,
                 name,
                 params,
                 socketId,
               },
+              meta: {
+                queryId,
+              },
             });
             // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
-            store.dispatch(callMethod(name, params, {
-              socketId,
-              queryId: id,
-            }));
+            store.dispatch(callMethod(name, params, { socketId, queryId }));
           }
           next({
             ...action,
-            payload: {
-              ...action.payload,
-              id,
+            meta: {
+              ...action.meta,
+              queryId,
             },
           });
-          return id;
+          return queryId;
         })();
       case DDP_QUERY_REFETCH:
         return (() => {
-          const queryId = action.payload.id;
+          const queryId = action.meta.queryId;
           const state = store.getState();
           const query = state.ddp.queries[queryId];
           if (query && query.users) {
             const socketId = query.socketId;
-            store.dispatch(callMethod(query.name, query.params, {
-              queryId,
-              socketId,
-            }));
+            store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
           }
           return next(action);
         })();
@@ -137,7 +108,7 @@ export const createMiddleware = ddpClient => (store) => {
           const state = store.getState();
           const queryId = state.ddp.queries.byMethodId[action.payload.id];
           if (queryId) {
-            const methodIds = getMethodIds(state, queryId);
+            const query = state.ddp.queries.byId[queryId];
             const result = next({
               ...action,
               meta: {
@@ -145,14 +116,27 @@ export const createMiddleware = ddpClient => (store) => {
                 queryId,
               },
             });
-            if (methodIds.length === 1) { // this is the last pending method
-              store.dispatch({
-                type: DDP_QUERY_UPDATE,
-                payload: {
-                  id: queryId,
+            const update = {
+              type: DDP_QUERY_UPDATE,
+              payload: {
+
+              },
+              meta: {
+                queryId,
+              },
+            };
+            if (!action.payload.error && action.payload.result && typeof action.payload.result === 'object') {
+              update.payload.entities = ddpClient.extractEntities(
+                action.payload.result,
+                {
+                  name: query.name,
                 },
-              });
+              );
             }
+            if (query && query.entities) {
+              update.payload.oldEntities = query.entities;
+            }
+            store.dispatch(update);
             return result;
           }
           return next(action);

@@ -9,7 +9,14 @@ export class DDPClient {
     return this.constructor.getSubscriptionCleanupTimeout();
   }
 
+  nextUniqueId() {
+    return this.constructor.defaultUniqueId;
+  }
+
   static getSubscriptionCleanupTimeout() {
     return 1000;
   }
 }
+
+DDPClient.defaultUniqueId = '1';
+
