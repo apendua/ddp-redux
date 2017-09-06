@@ -6,60 +6,58 @@ export const DDP_CONNECTION_STATE__DISCONNECTED = 'disconnected';
 
 export const DDP_SUBSCRIPTION_STATE__PENDING = 'pending';
 export const DDP_SUBSCRIPTION_STATE__READY = 'ready';
-export const DDP_SUBSCRIPTION_STATE__ERROR = 'error';
 export const DDP_SUBSCRIPTION_STATE__RESTORING = 'restoring';
 
 export const DDP_METHOD_STATE__PENDING = 'pending';
+// NOTE: Methods do not have "ready" state, because they're usually removed from store
+//       as soon as they're completed, i.e. both "result" and "updated" messages are received.
+// export const DDP_METHOD_STATE__READY = 'ready';
 export const DDP_METHOD_STATE__UPDATED = 'updated';
 export const DDP_METHOD_STATE__RETURNED = 'returned';
 
 export const DDP_QUERY_STATE__PENDING = 'pending';
 export const DDP_QUERY_STATE__READY = 'ready';
-export const DDP_QUERY_STATE__ERROR = 'error';
 export const DDP_QUERY_STATE__RESTORING = 'restoring';
-export const DDP_QUERY_STATE__UPDATING = 'updating';
 
-export const DDP_FAILED = '@DDP/IN/FAILED';
-export const DDP_ERROR = '@DDP/IN/ERROR';
+export const DDP_FAILED = '@DDP.IN.FAILED';
+export const DDP_ERROR = '@DDP.IN.ERROR';
 
-export const DDP_ADDED = '@DDP/IN/ADDED';
-export const DDP_CHANGED = '@DDP/IN/CHANGED';
-export const DDP_REMOVED = '@DDP/IN/REMOVED';
-export const DDP_ADDED_BEFORE = '@DDP/IN/ADDED_BEFORE';
-export const DDP_MOVED_BEFORE = '@DDP/IN/MOVED_BEFORE';
-export const DDP_FLUSH = '@DDP/API/FLUSH';
+export const DDP_ADDED = '@DDP.IN.ADDED';
+export const DDP_CHANGED = '@DDP.IN.CHANGED';
+export const DDP_REMOVED = '@DDP.IN.REMOVED';
+export const DDP_ADDED_BEFORE = '@DDP.IN.ADDED_BEFORE';
+export const DDP_MOVED_BEFORE = '@DDP.IN.MOVED_BEFORE';
+export const DDP_FLUSH = '@DDP.COLLECTIONS.FLUSH';
 
-export const DDP_SUB = '@DDP/OUT/SUB';
-export const DDP_UNSUB = '@DDP/OUT/UNSUB';
-export const DDP_READY = '@DDP/IN/READY';
-export const DDP_NOSUB = '@DDP/IN/NOSUB';
-export const DDP_SUBSCRIBE = '@DDP/API/SUBSCRIBE';
-export const DDP_UNSUBSCRIBE = '@DDP/API/UNSUBSCRIBE';
+export const DDP_SUB = '@DDP.OUT.SUB';
+export const DDP_UNSUB = '@DDP.OUT.UNSUB';
+export const DDP_READY = '@DDP.IN.READY';
+export const DDP_NOSUB = '@DDP.IN.NOSUB';
+export const DDP_SUBSCRIBE = '@DDP.SUB.SUBSCRIBE';
+export const DDP_UNSUBSCRIBE = '@DDP.SUB.UNSUBSCRIBE';
 
-export const DDP_PING = '@DDP/IN/PING';
-export const DDP_PONG = '@DDP/OUT/PONG';
-export const DDP_CONNECTED = '@DDP/IN/CONNECTED';
-export const DDP_CONNECT = '@DDP/OUT/CONNECT';
-export const DDP_ENQUEUE = '@DDP/API/ENQUEUE';
-export const DDP_OPEN = '@DDP/API/OPEN';
-export const DDP_CLOSE = '@DDP/API/CLOSE';
-export const DDP_CLOSED = '@DDP/API/CLOSED';
+export const DDP_PING = '@DDP.IN.PING';
+export const DDP_PONG = '@DDP.OUT.PONG';
+export const DDP_CONNECTED = '@DDP.IN.CONNECTED';
+export const DDP_CONNECT = '@DDP.OUT.CONNECT';
+export const DDP_ENQUEUE = '@DDP.SOCKET.ENQUEUE';
+export const DDP_OPEN = '@DDP.SOCKET.OPEN';
+export const DDP_CLOSE = '@DDP.SOCKET.CLOSE';
+export const DDP_CLOSED = '@DDP.SOCKET.CLOSED';
 
-export const DDP_METHOD = '@DDP/OUT/METHOD';
-export const DDP_CANCEL = '@DDP/API/CANCEL';
-export const DDP_RESULT = '@DDP/IN/RESULT';
-export const DDP_UPDATED = '@DDP/IN/UPDATED';
-export const DDP_OPTIMISTIC = '@DDP/API/OPTIMISTIC';
+export const DDP_METHOD = '@DDP.OUT.METHOD';
+export const DDP_CANCEL = '@DDP.METHOD.CANCEL';
+export const DDP_RESULT = '@DDP.IN.RESULT';
+export const DDP_UPDATED = '@DDP.IN.UPDATED';
+export const DDP_OPTIMISTIC = '@DDP.METHOD.OPTIMISTIC';
 
-export const DDP_MUTATE = '@DDP/API/MUTATE';
+export const DDP_QUERY_CREATE = '@DDP.QUERY.CREATE';
+export const DDP_QUERY_DELETE = '@DDP.QUERY.DELETE';
+export const DDP_QUERY_UPDATE = '@DDP.QUERY.UPDATE';
 
-export const DDP_QUERY_CREATE = '@DDP/QUERY/CREATE';
-export const DDP_QUERY_DELETE = '@DDP/QUERY/DELETE';
-export const DDP_QUERY_UPDATE = '@DDP/QUERY/UPDATE';
-
-export const DDP_QUERY_REQUEST = '@DDP/QUERY/REQUEST';
-export const DDP_QUERY_RELEASE = '@DDP/QUERY/RELEASE';
-export const DDP_QUERY_REFETCH = '@DDP/QUERY/REFETCH';
+export const DDP_QUERY_REQUEST = '@DDP.QUERY.REQUEST';
+export const DDP_QUERY_RELEASE = '@DDP.QUERY.RELEASE';
+export const DDP_QUERY_REFETCH = '@DDP.QUERY.REFETCH';
 
 // DDP messages
 
@@ -88,9 +86,13 @@ export const MESSAGE_TO_ACTION = {
   [MSG_ADDED]:        DDP_ADDED,
   [MSG_REMOVED]:      DDP_REMOVED,
   [MSG_CHANGED]:      DDP_CHANGED,
-  // these two are not supported at the moment
+  // NOTE: These two are not supported at the moment;
+  //       as a fallback, we interpret "added before"
+  //       as "added", so ordering will be ignored
+  //       but the element will still end up in the collection.
   // [MSG_ADDED_BEFORE]: DDP_ADDED_BEFORE,
   // [MSG_MOVED_BEFORE]: DDP_MOVED_BEFORE,
+  [MSG_ADDED_BEFORE]: DDP_ADDED,
   [MSG_UPDATED]:      DDP_UPDATED,
   [MSG_RESULT]:       DDP_RESULT,
   [MSG_PING]:         DDP_PING,

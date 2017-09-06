@@ -9,6 +9,7 @@ import {
 import {
   DDP_FLUSH,
   DDP_ADDED,
+  DDP_ADDED_BEFORE,
   DDP_CHANGED,
   DDP_REMOVED,
 } from '../../constants';
@@ -127,6 +128,35 @@ describe('Test module - collections - reducer', () => {
       },
     }, {
       type: DDP_ADDED,
+      payload: {
+        id: '1',
+        fields: { a: 1, b: 2 },
+        collection: 'col1',
+      },
+      meta: {
+        socketId: 'socket/1',
+      },
+    });
+    state.should.deep.equal(this.referenceState1);
+  });
+
+  it('should add an entity to an empty collection (using added before)', function () {
+    const state = this.reducer({
+      col2: {
+        nextById: {
+          1: {
+            current: {
+              'socket/1': new Model1({
+                _id: '1',
+                a: 1,
+                b: 2,
+              }),
+            },
+          },
+        },
+      },
+    }, {
+      type: DDP_ADDED_BEFORE,
       payload: {
         id: '1',
         fields: { a: 1, b: 2 },

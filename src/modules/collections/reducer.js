@@ -2,6 +2,7 @@ import omit from 'lodash.omit';
 import isEmpty from 'lodash.isempty';
 import {
   DDP_ADDED,
+  DDP_ADDED_BEFORE,
   DDP_CHANGED,
   DDP_REMOVED,
   DDP_FLUSH,
@@ -74,6 +75,7 @@ export const addOptmisticMutation = (state, collection, id, methodId, fields) =>
 export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
     case DDP_ADDED:
+    case DDP_ADDED_BEFORE:
       return mutateCollections(
         state,
         action.payload.collection,

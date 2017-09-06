@@ -10,7 +10,6 @@ import {
   DDP_SUBSCRIPTION_STATE__RESTORING,
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_SUBSCRIPTION_STATE__READY,
-  DDP_SUBSCRIPTION_STATE__ERROR,
 
   DDP_SUBSCRIBE,
   DDP_UNSUBSCRIBE,
@@ -113,7 +112,7 @@ describe('Test module - subscriptions - reducer', () => {
     }).should.deep.equal({
       1: {
         id: '1',
-        state: DDP_SUBSCRIPTION_STATE__ERROR,
+        state: DDP_SUBSCRIPTION_STATE__READY,
         error: {
           errorType: 'Meteor.Error',
         },

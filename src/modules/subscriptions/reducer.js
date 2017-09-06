@@ -3,7 +3,6 @@ import decentlyMapValues from '../../utils/decentlyMapValues';
 import {
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_SUBSCRIPTION_STATE__READY,
-  DDP_SUBSCRIPTION_STATE__ERROR,
   DDP_SUBSCRIPTION_STATE__RESTORING,
 
   DDP_CONNECT,
@@ -57,7 +56,7 @@ export const createReducer = () => (state = {}, action) => {
         if (action.payload.id === id) {
           return {
             ...sub,
-            state: DDP_SUBSCRIPTION_STATE__ERROR,
+            state: DDP_SUBSCRIPTION_STATE__READY,
             error: action.payload.error,
           };
         }
@@ -79,7 +78,7 @@ export const createReducer = () => (state = {}, action) => {
       return (() => {
         const socketId = action.meta && action.meta.socketId;
         return decentlyMapValues(state, (sub) => {
-          if (sub.socketId === socketId && (sub.state === DDP_SUBSCRIPTION_STATE__READY || sub.state === DDP_SUBSCRIPTION_STATE__ERROR)) {
+          if (sub.socketId === socketId && sub.state === DDP_SUBSCRIPTION_STATE__READY) {
             return {
               ...sub,
               state: DDP_SUBSCRIPTION_STATE__RESTORING,
