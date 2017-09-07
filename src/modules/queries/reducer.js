@@ -73,6 +73,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
       return {
         ...state,
         [action.meta.queryId]: {
+          ...state[action.meta.queryId],
           id:      action.meta.queryId,
           state:   DDP_QUERY_STATE__PENDING,
           name:    action.payload.name,

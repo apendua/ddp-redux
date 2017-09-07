@@ -9,8 +9,16 @@ export class DDPClient extends DDPEmitter {
     return this.constructor.defaultUniqueId;
   }
 
+  extractEntities(result) {
+    return this.constructor.extractEntities(result);
+  }
+
   static getQueryCleanupTimeout() {
     return 1000;
+  }
+
+  static extractEntities(result) {
+    return result.entities;
   }
 }
 
