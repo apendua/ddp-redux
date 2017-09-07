@@ -42,9 +42,7 @@ export const createReducer = () => (state = {}, action) => {
           state:  DDP_SUBSCRIPTION_STATE__PENDING,
           name:   action.payload.name,
           params: action.payload.params,
-          ...action.meta && action.meta.socketId && {
-            socketId: action.meta.socketId,
-          },
+          ...action.meta && { meta: action.meta },
         },
       };
     case DDP_UNSUB:
@@ -78,7 +76,7 @@ export const createReducer = () => (state = {}, action) => {
       return (() => {
         const socketId = action.meta && action.meta.socketId;
         return carefullyMapValues(state, (sub) => {
-          if (sub.socketId === socketId && sub.state === DDP_SUBSCRIPTION_STATE__READY) {
+          if (sub.meta && sub.meta.socketId === socketId && sub.state === DDP_SUBSCRIPTION_STATE__READY) {
             return {
               ...sub,
               state: DDP_SUBSCRIPTION_STATE__RESTORING,

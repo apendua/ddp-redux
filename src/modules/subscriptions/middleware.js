@@ -57,7 +57,7 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_UNSUBSCRIBE:
         return (() => {
           const state = store.getState();
-          const sub = state.ddp.subscriptions[action.payload.id];
+          const sub = state.ddp.subscriptions[action.meta.subId];
           // NOTE: The number of users will only be decreased after "next(action)"
           //       so at this moment it's still taking into account the one which
           //       is resigning.
@@ -87,6 +87,7 @@ export const createMiddleware = ddpClient => (store) => {
                 id: subId,
               },
               meta: {
+                subId,
                 socketId,
               },
             });

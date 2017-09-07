@@ -86,6 +86,7 @@ describe('Test module - subscriptions - middleware', () => {
           params: [1, 2, 3],
         },
         meta: {
+          subId: '1',
           socketId: 'socket/1',
         },
       },
@@ -142,8 +143,8 @@ describe('Test module - subscriptions - middleware', () => {
     });
     const action = {
       type: DDP_UNSUBSCRIBE,
-      payload: {
-        id: '1',
+      meta: {
+        subId: '1',
       },
     };
     store.dispatch(action);
@@ -168,8 +169,8 @@ describe('Test module - subscriptions - middleware', () => {
     });
     const action = {
       type: DDP_UNSUBSCRIBE,
-      payload: {
-        id: '1',
+      meta: {
+        subId: '1',
       },
     };
     store.dispatch(action);
@@ -206,8 +207,8 @@ describe('Test module - subscriptions - middleware', () => {
     });
     const action1 = {
       type: DDP_UNSUBSCRIBE,
-      payload: {
-        id: '1',
+      meta: {
+        subId: '1',
       },
     };
     const action2 = {
@@ -251,8 +252,8 @@ describe('Test module - subscriptions - middleware', () => {
     });
     const action = {
       type: DDP_UNSUBSCRIBE,
-      payload: {
-        id: '1',
+      meta: {
+        subId: '1',
       },
     };
     store.dispatch(action);

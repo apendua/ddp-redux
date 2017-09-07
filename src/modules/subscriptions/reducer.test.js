@@ -53,7 +53,9 @@ describe('Test module - subscriptions - reducer', () => {
         state: DDP_SUBSCRIPTION_STATE__PENDING,
         name: 'aSubscription',
         params: [1, 2, 3],
-        socketId: 'socket/1',
+        meta: {
+          socketId: 'socket/1',
+        },
       },
     });
   });
@@ -223,6 +225,9 @@ describe('Test module - subscriptions - reducer', () => {
         name: 'aSubscription',
         params: [1, 2, 3],
         users: 1,
+        meta: {
+          socketId: 'socket/1',
+        },
       },
       2: {
         id: '2',
@@ -230,11 +235,16 @@ describe('Test module - subscriptions - reducer', () => {
         name: 'aSubscription',
         params: [1, 2, 3],
         users: 1,
+        meta: {
+          socketId: 'socket/1',
+        },
       },
     }, {
       type: DDP_CONNECT,
       payload: {
-        msg: 'connect',
+      },
+      meta: {
+        socketId: 'socket/1',
       },
     }).should.deep.equal({
       1: {
@@ -243,6 +253,9 @@ describe('Test module - subscriptions - reducer', () => {
         name: 'aSubscription',
         params: [1, 2, 3],
         users: 1,
+        meta: {
+          socketId: 'socket/1',
+        },
       },
       2: {
         id: '2',
@@ -250,6 +263,9 @@ describe('Test module - subscriptions - reducer', () => {
         name: 'aSubscription',
         params: [1, 2, 3],
         users: 1,
+        meta: {
+          socketId: 'socket/1',
+        },
       },
     });
   });
