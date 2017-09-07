@@ -122,13 +122,11 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {
-            2: {
-              id: '2',
-              name: 'aQuery',
-              params: [1, 2, 3],
-              socketId: 'socket/1',
-            },
+          2: {
+            id: '2',
+            name: 'aQuery',
+            params: [1, 2, 3],
+            socketId: 'socket/1',
           },
         },
       },
@@ -160,17 +158,12 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {
-            1: {
-              id: '1',
-              name: 'aQuery',
-              params: [1, 2, 3],
-              socketId: 'socket/1',
-              state: DDP_QUERY_STATE__PENDING,
-            },
-          },
-          byMethodId: {
-            2: '1',
+          1: {
+            id: '1',
+            name: 'aQuery',
+            params: [1, 2, 3],
+            socketId: 'socket/1',
+            state: DDP_QUERY_STATE__PENDING,
           },
         },
       },
@@ -186,6 +179,9 @@ describe('Test module - queries - middleware', () => {
             },
           },
         },
+      },
+      meta: {
+        queryId: '1',
       },
     };
     store.dispatch(action);
@@ -213,7 +209,6 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {},
         },
       },
     });
@@ -233,17 +228,13 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {
-            1: {
-              id: '1',
-              state: DDP_QUERY_STATE__READY,
-              name: 'aQuery',
-              params: [1, 2, 3],
-              users: 1,
-              entities: {},
-            },
-          },
-          byMethodId: {
+          1: {
+            id: '1',
+            state: DDP_QUERY_STATE__READY,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            users: 1,
+            entities: {},
           },
         },
       },
@@ -278,15 +269,13 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {
-            1: {
-              id: '1',
-              state: DDP_QUERY_STATE__READY,
-              name: 'aQuery',
-              params: [1, 2, 3],
-              users: 1,
-              socketId: DEFAULT_SOCKET_ID,
-            },
+          1: {
+            id: '1',
+            state: DDP_QUERY_STATE__READY,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            users: 1,
+            socketId: DEFAULT_SOCKET_ID,
           },
         },
       },
@@ -326,14 +315,12 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {
-            1: {
-              id: '1',
-              state: DDP_QUERY_STATE__READY,
-              name: 'aQuery',
-              params: [1, 2, 3],
-              users: 2,
-            },
+          1: {
+            id: '1',
+            state: DDP_QUERY_STATE__READY,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            users: 2,
           },
         },
       },
@@ -359,23 +346,21 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {
-            1: {
-              id: '1',
-              state: DDP_QUERY_STATE__READY,
-              name: 'aQuery',
-              params: [1, 2, 3],
-              users: 1,
-              socketId: 'socket/1',
-            },
-            2: {
-              id: '2',
-              state: DDP_QUERY_STATE__READY,
-              name: 'aQuery',
-              params: [1, 2, 3],
-              users: 1,
-              socketId: 'socket/2',
-            },
+          1: {
+            id: '1',
+            state: DDP_QUERY_STATE__READY,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            users: 1,
+            socketId: 'socket/1',
+          },
+          2: {
+            id: '2',
+            state: DDP_QUERY_STATE__READY,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            users: 1,
+            socketId: 'socket/2',
           },
         },
       },
@@ -408,15 +393,13 @@ describe('Test module - queries - middleware', () => {
     const store = this.mockStore({
       ddp: {
         queries: {
-          byId: {
-            1: {
-              id: '1',
-              state: DDP_QUERY_STATE__READY,
-              name: 'aQuery',
-              params: [1, 2, 3],
-              users: 1,
-              socketId: 'socket/1',
-            },
+          1: {
+            id: '1',
+            state: DDP_QUERY_STATE__READY,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            users: 1,
+            socketId: 'socket/1',
           },
         },
       },

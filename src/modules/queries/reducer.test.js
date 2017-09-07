@@ -10,7 +10,6 @@ import {
 import {
   DDP_RESULT,
   DDP_CONNECT,
-  DDP_METHOD,
 
   DDP_QUERY_CREATE,
   DDP_QUERY_DELETE,
@@ -38,119 +37,89 @@ describe('Test module - queries - reducer', () => {
   });
 
   it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({
-      byId: {},
-      byMethodId: {},
-    });
+    this.reducer(undefined, {}).should.deep.equal({});
   });
 
   it('should increase number of query users', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-        },
+      1: {
+        name: 'A',
       },
-      byMethodId: {},
     }, {
       type: DDP_QUERY_REQUEST,
       meta: {
         queryId: '1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-          users: 1,
-        },
+      1: {
+        name: 'A',
+        users: 1,
       },
-      byMethodId: {},
     });
   });
 
   it('should decrease number of query users', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-          users: 1,
-        },
+      1: {
+        name: 'A',
+        users: 1,
       },
-      byMethodId: {},
     }, {
       type: DDP_QUERY_RELEASE,
       meta: {
         queryId: '1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-          users: 0,
-        },
+      1: {
+        name: 'A',
+        users: 0,
       },
-      byMethodId: {},
     });
   });
 
   it('should change query state to "restoring" on refetch', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-        },
+      1: {
+        name: 'A',
       },
-      byMethodId: {},
     }, {
       type: DDP_QUERY_REFETCH,
       meta: {
         queryId: '1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-          state: DDP_QUERY_STATE__RESTORING,
-        },
+      1: {
+        name: 'A',
+        state: DDP_QUERY_STATE__RESTORING,
       },
-      byMethodId: {},
     });
   });
 
   it('should delete one query', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-        },
-        2: {
-          name: 'B',
-        },
+      1: {
+        name: 'A',
       },
-      byMethodId: {},
+      2: {
+        name: 'B',
+      },
     }, {
       type: DDP_QUERY_DELETE,
       meta: {
         queryId: '2',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-        },
+      1: {
+        name: 'A',
       },
-      byMethodId: {},
     });
   });
 
   it('should create a new query', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-        },
+      1: {
+        name: 'A',
       },
-      byMethodId: {},
     }, {
       type: DDP_QUERY_CREATE,
       payload: {
@@ -162,30 +131,24 @@ describe('Test module - queries - reducer', () => {
         socketId: 'socket/1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-        },
-        2: {
-          id: '2',
-          name: 'B',
-          params: 1,
-          state: DDP_QUERY_STATE__PENDING,
-          socketId: 'socket/1',
-        },
+      1: {
+        name: 'A',
       },
-      byMethodId: {},
+      2: {
+        id: '2',
+        name: 'B',
+        params: 1,
+        state: DDP_QUERY_STATE__PENDING,
+        socketId: 'socket/1',
+      },
     });
   });
 
   it('should update an existing query', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-        },
+      1: {
+        name: 'A',
       },
-      byMethodId: {},
     }, {
       type: DDP_QUERY_UPDATE,
       payload: {
@@ -200,31 +163,23 @@ describe('Test module - queries - reducer', () => {
         queryId: '1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-          state: DDP_QUERY_STATE__READY,
-          entities: {
-            col1: {
-              1: { id: '1' },
-              2: { id: '2' },
-            },
+      1: {
+        name: 'A',
+        state: DDP_QUERY_STATE__READY,
+        entities: {
+          col1: {
+            1: { id: '1' },
+            2: { id: '2' },
           },
         },
       },
-      byMethodId: {},
     });
   });
 
   it('should store related method result', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-        },
-      },
-      byMethodId: {
-        2: '1',
+      1: {
+        name: 'A',
       },
     }, {
       type: DDP_RESULT,
@@ -236,25 +191,17 @@ describe('Test module - queries - reducer', () => {
         queryId: '1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-          result: 123,
-        },
+      1: {
+        name: 'A',
+        result: 123,
       },
-      byMethodId: {},
     });
   });
 
   it('should store related method error', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-        },
-      },
-      byMethodId: {
-        2: '1',
+      1: {
+        name: 'A',
       },
     }, {
       type: DDP_RESULT,
@@ -268,33 +215,26 @@ describe('Test module - queries - reducer', () => {
         queryId: '1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-          error: {
-            error: 'Error',
-          },
+      1: {
+        name: 'A',
+        error: {
+          error: 'Error',
         },
       },
-      byMethodId: {},
     });
   });
 
   it('should switch to "restoring" on connect', function () {
     this.reducer({
-      byId: {
-        1: {
-          name: 'A',
-          state: DDP_QUERY_STATE__READY,
-          socketId: 'socket/1',
-        },
-        2: {
-          name: 'B',
-          state: DDP_QUERY_STATE__READY,
-          socketId: 'socket/2',
-        },
+      1: {
+        name: 'A',
+        state: DDP_QUERY_STATE__READY,
+        socketId: 'socket/1',
       },
-      byMethodId: {
+      2: {
+        name: 'B',
+        state: DDP_QUERY_STATE__READY,
+        socketId: 'socket/2',
       },
     }, {
       type: DDP_CONNECT,
@@ -304,65 +244,15 @@ describe('Test module - queries - reducer', () => {
         socketId: 'socket/1',
       },
     }).should.deep.equal({
-      byId: {
-        1: {
-          name: 'A',
-          state: DDP_QUERY_STATE__RESTORING,
-          socketId: 'socket/1',
-        },
-        2: {
-          name: 'B',
-          state: DDP_QUERY_STATE__READY,
-          socketId: 'socket/2',
-        },
+      1: {
+        name: 'A',
+        state: DDP_QUERY_STATE__RESTORING,
+        socketId: 'socket/1',
       },
-      byMethodId: {},
-    });
-  });
-
-  it('should add related method to the queue', function () {
-    this.reducer({
-      byId: {},
-      byMethodId: {
-        2: '1',
-      },
-    }, {
-      type: DDP_METHOD,
-      payload: {
-        id: '4',
-      },
-      meta: {
-        queryId: '3',
-      },
-    }).should.deep.equal({
-      byId: {},
-      byMethodId: {
-        2: '1',
-        4: '3',
-      },
-    });
-  });
-
-  it('should remove methods on query refetch', function () {
-    this.reducer({
-      byId: {},
-      byMethodId: {
-        2: '1',
-        4: '3',
-      },
-    }, {
-      type: DDP_QUERY_REFETCH,
-      meta: {
-        queryId: '3',
-      },
-    }).should.deep.equal({
-      byId: {
-        3: {
-          state: DDP_QUERY_STATE__RESTORING,
-        },
-      },
-      byMethodId: {
-        2: '1',
+      2: {
+        name: 'B',
+        state: DDP_QUERY_STATE__READY,
+        socketId: 'socket/2',
       },
     });
   });

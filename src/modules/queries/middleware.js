@@ -27,7 +27,7 @@ import createDelayedTask from '../../utils/createDelayedTask';
 export const createMiddleware = ddpClient => (store) => {
   const scheduleCleanup = createDelayedTask((queryId) => {
     const state = store.getState();
-    const query = state.ddp.queries.byId[queryId];
+    const query = state.ddp.queries[queryId];
     store.dispatch({
       type: DDP_QUERY_DELETE,
       payload: {
@@ -49,7 +49,7 @@ export const createMiddleware = ddpClient => (store) => {
         return ((result) => {
           const socketId = action.meta && action.meta.socketId;
           const state = store.getState();
-          forEach(state.ddp.queries.byId, (query, queryId) => {
+          forEach(state.ddp.queries, (query, queryId) => {
             if (query.socketId === socketId) {
               store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
             }
@@ -64,7 +64,7 @@ export const createMiddleware = ddpClient => (store) => {
             params,
           } = action.payload;
           const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
-          const query = find(state.ddp.queries.byId, x => x.socketId === socketId && x.name === name && EJSON.equals(x.params, params));
+          const query = find(state.ddp.queries, x => x.socketId === socketId && x.name === name && EJSON.equals(x.params, params));
           const queryId = (query && query.id) || ddpClient.nextUniqueId();
           if (query) {
             scheduleCleanup.cancel(queryId);
@@ -96,7 +96,7 @@ export const createMiddleware = ddpClient => (store) => {
         return (() => {
           const queryId = action.meta.queryId;
           const state = store.getState();
-          const query = state.ddp.queries.byId[queryId];
+          const query = state.ddp.queries[queryId];
           // TODO: Explain why we want users to be positive.
           if (query && query.users) {
             const socketId = query.socketId;
@@ -107,9 +107,9 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_RESULT:
         return (() => {
           const state = store.getState();
-          const queryId = state.ddp.queries.byMethodId[action.payload.id];
+          const queryId = action.meta && action.meta.queryId;
           if (queryId) {
-            const query = state.ddp.queries.byId[queryId];
+            const query = state.ddp.queries[queryId];
             const result = next({
               ...action,
               meta: {
@@ -119,12 +119,8 @@ export const createMiddleware = ddpClient => (store) => {
             });
             const update = {
               type: DDP_QUERY_UPDATE,
-              payload: {
-
-              },
-              meta: {
-                queryId,
-              },
+              payload: {},
+              meta: { queryId },
             };
             if (!action.payload.error && action.payload.result && typeof action.payload.result === 'object') {
               update.payload.entities = ddpClient.extractEntities(
@@ -145,7 +141,7 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_QUERY_RELEASE:
         return (() => {
           const state = store.getState();
-          const query = state.ddp.queries.byId[action.meta.queryId];
+          const query = state.ddp.queries[action.meta.queryId];
           // NOTE: The number of users will only be decreased after "next(action)"
           //       so at this moment it's still taking into account the one which
           //       is resigning.

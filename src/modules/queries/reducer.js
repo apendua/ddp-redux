@@ -1,5 +1,3 @@
-import omit from 'lodash.omit';
-import forEach from 'lodash.foreach';
 import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DDP_QUERY_STATE__PENDING,
@@ -7,7 +5,6 @@ import {
   DDP_QUERY_STATE__RESTORING,
 
   DDP_CONNECT,
-  DDP_METHOD,
   DDP_RESULT,
 
   DDP_QUERY_REQUEST,
@@ -19,17 +16,7 @@ import {
   DDP_QUERY_UPDATE,
 } from '../../constants';
 
-// const withCollections = (state) => {
-//   if (state.result && state.result.$collections) {
-//     return {
-//       ...state,
-//       collections: mapValues(state.result.$collections, documents => Object.keys(documents)),
-//     };
-//   }
-//   return state;
-// };
-
-export const createPrimaryReducer = () => (state = {}, action) => {
+export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
     case DDP_QUERY_REQUEST:
       return {
@@ -131,46 +118,3 @@ export const createPrimaryReducer = () => (state = {}, action) => {
       return state;
   }
 };
-
-export const createSecondaryReducer = () => (state = {}, action) => {
-  switch (action.type) {
-    case DDP_METHOD:
-      return (() => {
-        if (action.meta.queryId) {
-          return {
-            ...state,
-            [action.payload.id]: action.meta.queryId,
-          };
-        }
-        return state;
-      })();
-    case DDP_RESULT:
-      return (() => {
-        if (state[action.payload.id]) {
-          return omit(state, action.payload.id);
-        }
-        return state;
-      })();
-    case DDP_QUERY_REFETCH:
-      // NOTE: This is only useful if user triggers "refetch" while query is still pending.
-      return carefullyMapValues(state, (queryId, methodId, remove) => {
-        if (queryId === action.meta.queryId) {
-          return remove(methodId);
-        }
-        return queryId;
-      });
-    default:
-      return state;
-  }
-};
-
-export const createReducer = () => (state = {}, action) => {
-  // TODO: Optimize
-  const primary = createPrimaryReducer();
-  const secondary = createSecondaryReducer();
-  return {
-    byId: primary(state.byId, action),
-    byMethodId: secondary(state.byMethodId, action),
-  };
-};
-
