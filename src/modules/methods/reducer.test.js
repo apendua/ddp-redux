@@ -42,12 +42,18 @@ describe('Test module - methods - reducer', () => {
         method: 'methodA',
         params: [1, 2, 3],
       },
+      meta: {
+        socketId: 'socket/1',
+      },
     }).should.deep.equal({
       1: {
         id: '1',
         name: 'methodA',
         params: [1, 2, 3],
         state: DDP_METHOD_STATE__PENDING,
+        meta: {
+          socketId: 'socket/1',
+        },
       },
     });
   });

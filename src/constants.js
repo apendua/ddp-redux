@@ -54,7 +54,7 @@ export const DDP_METHOD = '@DDP.OUT.METHOD';
 export const DDP_CANCEL = '@DDP.METHOD.CANCEL';
 export const DDP_RESULT = '@DDP.IN.RESULT';
 export const DDP_UPDATED = '@DDP.IN.UPDATED';
-export const DDP_OPTIMISTIC = '@DDP.METHOD.OPTIMISTIC';
+export const DDP_METHOD_UPDATE = '@DDP.METHOD.UPDATE';
 
 export const DDP_QUERY_CREATE = '@DDP.QUERY.CREATE';
 export const DDP_QUERY_DELETE = '@DDP.QUERY.DELETE';

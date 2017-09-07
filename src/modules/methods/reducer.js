@@ -29,9 +29,7 @@ export const createReducer = () => (state = {}, action) => {
           state:    DDP_METHOD_STATE__PENDING,
           name:     action.payload.method,
           params:   action.payload.params,
-          ...action.meta && action.meta.socketId && {
-            socketId: action.meta.socketId,
-          },
+          ...action.meta && { meta: action.meta },
         },
       };
     case DDP_RESULT:
