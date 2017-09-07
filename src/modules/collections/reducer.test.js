@@ -14,6 +14,8 @@ import {
   DDP_REMOVED,
   DDP_QUERY_UPDATE,
   DDP_QUERY_DELETE,
+  DDP_METHOD,
+  DDP_METHOD_UPDATE,
 } from '../../constants';
 import {
   DDPClient,
@@ -103,7 +105,33 @@ describe('Test module - collections - reducer', () => {
                 a: 2,
               },
             },
-            queryIds: ['query/1'],
+            queriesOrder: ['query/1'],
+          },
+        },
+      },
+    };
+    this.referenceState4 = {
+      ...this.referenceState2,
+      col2: {
+        ...this.referenceState2.col2,
+        nextById: {
+          ...this.referenceState2.col2.nextById,
+          1: {
+            ...this.referenceState2.col2.nextById['1'],
+            changes: {
+              'method/1': {
+                a: 2,
+              },
+            },
+            changesOrder: ['method/1'],
+          },
+          3: {
+            changes: {
+              'method/1': {
+                a: 3,
+              },
+            },
+            changesOrder: ['method/1'],
           },
         },
       },
@@ -325,13 +353,13 @@ describe('Test module - collections - reducer', () => {
               'query/1': { a: 2 },
               'query/2': { a: 1 },
             },
-            queryIds: ['query/1', 'query/2'],
+            queriesOrder: ['query/1', 'query/2'],
           },
           2: {
             queries: {
               'query/2': { a: 2 },
             },
-            queryIds: ['query/2'],
+            queriesOrder: ['query/2'],
           },
         },
       },
@@ -373,13 +401,13 @@ describe('Test module - collections - reducer', () => {
             queries: {
               'query/1': { a: 1 },
             },
-            queryIds: ['query/1'],
+            queriesOrder: ['query/1'],
           },
           2: {
             queries: {
               'query/1': { a: 2 },
             },
-            queryIds: ['query/1'],
+            queriesOrder: ['query/1'],
           },
         },
       },
@@ -402,6 +430,82 @@ describe('Test module - collections - reducer', () => {
     });
     state.should.deep.equal({
       ...this.referenceState3,
+      col2: {
+        nextById: {
+          1: {
+            current: {
+              'socket/1': {
+                _id: '1',
+                a: 1,
+                b: 2,
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it('should insert optimistic changes', function () {
+    const state = this.reducer(this.referenceState3, {
+      type: DDP_METHOD,
+      meta: {
+        methodId: 'method/2',
+        entities: {
+          col2: {
+            1: { a: 1 },
+            2: { a: 2 },
+          },
+        },
+      },
+    });
+    state.should.deep.equal({
+      ...this.referenceState3,
+      col2: {
+        nextById: {
+          1: {
+            current: {
+              'socket/1': {
+                _id: '1',
+                a: 1,
+                b: 2,
+              },
+            },
+            changes: {
+              'method/2': { a: 1 },
+            },
+            changesOrder: ['method/2'],
+            queries: {
+              'query/1': { a: 2 },
+            },
+            queriesOrder: ['query/1'],
+          },
+          2: {
+            changes: {
+              'method/2': { a: 2 },
+            },
+            changesOrder: ['method/2'],
+          },
+        },
+      },
+    });
+  });
+
+  it('should remove optimistic changes', function () {
+    const state = this.reducer(this.referenceState4, {
+      type: DDP_METHOD_UPDATE,
+      meta: {
+        methodId: 'method/1',
+        entities: {
+          col2: {
+            1: {},
+            3: {},
+          },
+        },
+      },
+    });
+    state.should.deep.equal({
+      ...this.referenceState4,
       col2: {
         nextById: {
           1: {

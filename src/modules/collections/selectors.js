@@ -15,12 +15,24 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
 
   const selectAll = createValuesMappingSelector(
     selectCollectionById,
-    ({ current, queries, queryIds }) => {
+    ({
+      current,
+      queries,
+      queriesOrder,
+      changes,
+      changesOrder,
+    }) => {
       const rawObject = {};
-      if (queryIds && queryIds.length > 0) {
-        Object.assign(rawObject, ...map(queryIds, id => queries[id]));
+      // 1. use information from query results
+      if (queriesOrder && queriesOrder.length > 0) {
+        Object.assign(rawObject, ...map(queriesOrder, id => queries[id]));
       }
+      // 2. use information from subscriptions
       Object.assign(rawObject, ...values(current));
+      // 3. use infromation from optimistic updates
+      if (changesOrder && changesOrder.length > 0) {
+        Object.assign(rawObject, ...map(changesOrder, id => changes[id]));
+      }
       return new Model(rawObject);
     },
   );
