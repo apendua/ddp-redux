@@ -19,8 +19,8 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
       current,
       queries,
       queriesOrder,
-      changes,
-      changesOrder,
+      methods,
+      methodsOrder,
     }) => {
       const rawObject = {};
       // 1. use information from query results
@@ -30,8 +30,8 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
       // 2. use information from subscriptions
       Object.assign(rawObject, ...values(current));
       // 3. use infromation from optimistic updates
-      if (changesOrder && changesOrder.length > 0) {
-        Object.assign(rawObject, ...map(changesOrder, id => changes[id]));
+      if (methodsOrder && methodsOrder.length > 0) {
+        Object.assign(rawObject, ...map(methodsOrder, id => methods[id]));
       }
       return new Model(rawObject);
     },
@@ -40,7 +40,7 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
   const selectOne = selectId => createSelector(
     selectId,
     selectAll,
-    (id, entities) => entities[id],
+    (id, docs) => docs[id],
   );
 
   const find = (selectPredicate) => {
@@ -61,11 +61,11 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
     return createSelector(
       selectAll,
       selectPredicateValues,
-      (entities, predicateValues) => {
+      (docs, predicateValues) => {
         const results = [];
         forEach(predicateValues, (accepted, id) => {
           if (accepted) {
-            results.push(entities[id]);
+            results.push(docs[id]);
           }
         });
         return results;
@@ -75,7 +75,7 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
 
   const findOne = selectPredicate => createSelector(
     find(selectPredicate),
-    entities => (entities.length > 0 ? entities[0] : null),
+    docs => (docs.length > 0 ? docs[0] : null),
   );
 
   return {

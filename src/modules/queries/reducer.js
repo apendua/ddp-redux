@@ -1,6 +1,6 @@
 import omit from 'lodash.omit';
 import forEach from 'lodash.foreach';
-import decentlyMapValues from '../../utils/decentlyMapValues';
+import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DDP_QUERY_STATE__PENDING,
   DDP_QUERY_STATE__READY,
@@ -63,7 +63,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
         return state;
       })();
     case DDP_QUERY_DELETE:
-      return decentlyMapValues(state, (query, id, remove) => {
+      return carefullyMapValues(state, (query, id, remove) => {
         if (id === action.meta.queryId) {
           return remove(id);
         }
@@ -95,7 +95,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_RESULT:
       return (() => {
         if (action.meta && action.meta.queryId) {
-          return decentlyMapValues(state, (query, id) => {
+          return carefullyMapValues(state, (query, id) => {
             if (action.meta.queryId === id) {
               if (action.payload.error) {
                 return {
@@ -116,7 +116,7 @@ export const createPrimaryReducer = () => (state = {}, action) => {
     case DDP_CONNECT:
       return (() => {
         const socketId = action.meta && action.meta.socketId;
-        return decentlyMapValues(state, (query) => {
+        return carefullyMapValues(state, (query) => {
           // NOTE: If the state was pending, it should remain pending
           if (query.socketId === socketId && query.state === DDP_QUERY_STATE__READY) {
             return {
@@ -153,7 +153,7 @@ export const createSecondaryReducer = () => (state = {}, action) => {
       })();
     case DDP_QUERY_REFETCH:
       // NOTE: This is only useful if user triggers "refetch" while query is still pending.
-      return decentlyMapValues(state, (queryId, methodId, remove) => {
+      return carefullyMapValues(state, (queryId, methodId, remove) => {
         if (queryId === action.meta.queryId) {
           return remove(methodId);
         }

@@ -3,7 +3,16 @@ import mapValues from 'lodash.mapvalues';
 
 const defaultIsEqual = (a, b) => a === b;
 
-const decentlyMapValues = (object, mapValue, isEqual = defaultIsEqual) => {
+/**
+ * Like lodash.mapValues, but with more caution, e.g. when new value is the
+ * the same as the old one, do not create a new object. Also gives ability
+ * to remove selected fields.
+ * @param {object} object to map
+ * @param {function} mapValue
+ * @param {function} isEqual
+ * @returns {object}
+ */
+const carefullyMapValues = (object, mapValue, isEqual = defaultIsEqual) => {
   let modified = false;
 
   const toRemove = [];
@@ -26,4 +35,4 @@ const decentlyMapValues = (object, mapValue, isEqual = defaultIsEqual) => {
   return newObject;
 };
 
-export default decentlyMapValues;
+export default carefullyMapValues;

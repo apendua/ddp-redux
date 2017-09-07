@@ -1,5 +1,5 @@
 import omit from 'lodash.omit';
-import decentlyMapValues from '../../utils/decentlyMapValues';
+import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_SUBSCRIPTION_STATE__READY,
@@ -52,7 +52,7 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_NOSUB:
       // NOTE: If the subscription was deleted in the meantime, this will
       //       have completely no effect.
-      return decentlyMapValues(state, (sub, id) => {
+      return carefullyMapValues(state, (sub, id) => {
         if (action.payload.id === id) {
           return {
             ...sub,
@@ -65,7 +65,7 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_READY:
       // NOTE: If the subscription was deleted in the meantime, this will
       //       have completely no effect.
-      return decentlyMapValues(state, (sub, id) => {
+      return carefullyMapValues(state, (sub, id) => {
         if (action.payload.subs.indexOf(id) >= 0) {
           return {
             ...sub,
@@ -77,7 +77,7 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_CONNECT:
       return (() => {
         const socketId = action.meta && action.meta.socketId;
-        return decentlyMapValues(state, (sub) => {
+        return carefullyMapValues(state, (sub) => {
           if (sub.socketId === socketId && sub.state === DDP_SUBSCRIPTION_STATE__READY) {
             return {
               ...sub,

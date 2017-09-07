@@ -1,7 +1,7 @@
 import omit from 'lodash.omit';
 import without from 'lodash.without';
 import isEmpty from 'lodash.isempty';
-import decentlyMapValues from './decentlyMapValues';
+import carefullyMapValues from './carefullyMapValues';
 
 /**
  * Contruct a function that can be used for removing document snapshots
@@ -14,7 +14,7 @@ const createRemoveEntities = (itemsFieldName, orderFieldName) => {
     if (!docs) {
       return state;
     }
-    const nextById = decentlyMapValues(state.nextById, (item, id, remove) => {
+    const nextById = carefullyMapValues(state.nextById, (item, id, remove) => {
       if (!docs[id]) {
         return item;
       }
@@ -49,7 +49,7 @@ const createRemoveEntities = (itemsFieldName, orderFieldName) => {
     if (!entities || isEmpty(entities)) {
       return state;
     }
-    return decentlyMapValues(state, (collection, name) => removeFromCollection(collection, dataSourceId, entities[name]));
+    return carefullyMapValues(state, (collection, name) => removeFromCollection(collection, dataSourceId, entities[name]));
   };
 
   return removeEntities;

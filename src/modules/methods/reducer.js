@@ -9,13 +9,13 @@ import {
   DDP_RESULT,
   DDP_UPDATED,
 } from '../../constants';
-import decentlyMapValues from '../../utils/decentlyMapValues';
+import carefullyMapValues from '../../utils/carefullyMapValues';
 
 export const createReducer = () => (state = {}, action) => {
   const id = action.payload && action.payload.id;
   switch (action.type) {
     case DDP_CANCEL:
-      return decentlyMapValues(state, (method, methodId, remove) => {
+      return carefullyMapValues(state, (method, methodId, remove) => {
         if (methodId === action.meta.id) {
           return remove(methodId);
         }
@@ -45,7 +45,7 @@ export const createReducer = () => (state = {}, action) => {
         }
         : omit(state, id);
     case DDP_UPDATED:
-      return decentlyMapValues(state, (method, methodId, remove) => {
+      return carefullyMapValues(state, (method, methodId, remove) => {
         if (action.payload.methods.indexOf(methodId) < 0) {
           return method;
         }

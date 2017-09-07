@@ -11,7 +11,7 @@ import {
   DDP_QUERY_UPDATE,
   DDP_QUERY_DELETE,
 } from '../../constants';
-import decentlyMapValues from '../../utils/decentlyMapValues';
+import carefullyMapValues from '../../utils/carefullyMapValues';
 import createInsertEntities from '../../utils/createInsertEntities';
 import createRemoveEntities from '../../utils/createRemoveEntities';
 
@@ -53,8 +53,8 @@ export const mutateCollections = (state, collection, id, socketId, mutateOne) =>
 const insertQueries = createInsertEntities('queries', 'queriesOrder');
 const removeQueries = createRemoveEntities('queries', 'queriesOrder');
 
-const insertChanges = createInsertEntities('changes', 'changesOrder');
-const removeChanges = createRemoveEntities('changes', 'changesOrder');
+const insertChanges = createInsertEntities('methods', 'methodsOrder');
+const removeChanges = createRemoveEntities('methods', 'methodsOrder');
 
 export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
@@ -90,7 +90,7 @@ export const createReducer = () => (state = {}, action) => {
         null,
       );
     case DDP_FLUSH:
-      return decentlyMapValues(state, (collection) => {
+      return carefullyMapValues(state, (collection) => {
         if (collection.nextById !== collection.byId) {
           return {
             ...collection,

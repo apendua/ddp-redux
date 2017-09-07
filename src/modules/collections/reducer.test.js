@@ -118,20 +118,20 @@ describe('Test module - collections - reducer', () => {
           ...this.referenceState2.col2.nextById,
           1: {
             ...this.referenceState2.col2.nextById['1'],
-            changes: {
+            methods: {
               'method/1': {
                 a: 2,
               },
             },
-            changesOrder: ['method/1'],
+            methodsOrder: ['method/1'],
           },
           3: {
-            changes: {
+            methods: {
               'method/1': {
                 a: 3,
               },
             },
-            changesOrder: ['method/1'],
+            methodsOrder: ['method/1'],
           },
         },
       },
@@ -471,20 +471,20 @@ describe('Test module - collections - reducer', () => {
                 b: 2,
               },
             },
-            changes: {
+            methods: {
               'method/2': { a: 1 },
             },
-            changesOrder: ['method/2'],
+            methodsOrder: ['method/2'],
             queries: {
               'query/1': { a: 2 },
             },
             queriesOrder: ['query/1'],
           },
           2: {
-            changes: {
+            methods: {
               'method/2': { a: 2 },
             },
-            changesOrder: ['method/2'],
+            methodsOrder: ['method/2'],
           },
         },
       },

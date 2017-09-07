@@ -11,7 +11,7 @@ import {
   DDP_CONNECTED,
   DDP_CONNECT,
 } from '../../constants';
-import decentlyMapValues from '../../utils/decentlyMapValues';
+import carefullyMapValues from '../../utils/carefullyMapValues';
 
 export const createSocketReducer = () => (state = {
   state: DDP_CONNECTION_STATE__DISCONNECTED,
@@ -82,7 +82,7 @@ export const createReducer = (DDPClient) => {
           if (actionSocketId) {
             return {
               ...state,
-              sockets: decentlyMapValues(state.sockets, (socket, socketId, remove) => {
+              sockets: carefullyMapValues(state.sockets, (socket, socketId, remove) => {
                 if (actionSocketId === socketId) {
                   if (action.type === DDP_DISCONNECTED && !socket.users) {
                     return remove(socketId);

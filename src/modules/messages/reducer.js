@@ -12,7 +12,7 @@ import {
 
   ACTION_TO_PRIORITY,
 } from '../../constants';
-import decentlyMapValues from '../../utils/decentlyMapValues';
+import carefullyMapValues from '../../utils/carefullyMapValues';
 
 const initialPending = {
   '[connect]': ACTION_TO_PRIORITY[DDP_CONNECT],
@@ -105,7 +105,7 @@ export const createReducer = (DDPClient) => {
           if (action.meta && action.meta.socketId) {
             return {
               ...state,
-              sockets: decentlyMapValues(state.sockets, (socket, socketId) => {
+              sockets: carefullyMapValues(state.sockets, (socket, socketId) => {
                 if (socketId === action.meta.socketId) {
                   return socketReducer(socket, action);
                 }

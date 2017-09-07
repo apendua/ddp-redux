@@ -1,5 +1,5 @@
 import shallowEqual from 'shallowequal';
-import decentlyMapValues from './decentlyMapValues';
+import carefullyMapValues from './carefullyMapValues';
 
 const defaultIsEqual = (a, b) => a === b;
 
@@ -10,7 +10,7 @@ const memoizeValuesMapping = (mapOneValue, isEqual = defaultIsEqual) => {
     if (!lastResult) {
       lastResult = input;
     }
-    const result = decentlyMapValues(input, (value, key) => {
+    const result = carefullyMapValues(input, (value, key) => {
       const lastValue = lastResult && lastResult[key];
       if (lastInput && lastInput[key] === value) {
         return lastValue;
