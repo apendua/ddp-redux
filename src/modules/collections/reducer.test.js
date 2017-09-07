@@ -12,11 +12,11 @@ import {
   DDP_ADDED_BEFORE,
   DDP_CHANGED,
   DDP_REMOVED,
+  DDP_QUERY_UPDATE,
+  DDP_QUERY_DELETE,
 } from '../../constants';
 import {
   DDPClient,
-  Model1,
-  Model2,
 } from './common.test';
 
 chai.should();
@@ -30,11 +30,11 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
             },
           },
         },
@@ -43,11 +43,11 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
             },
           },
         },
@@ -58,20 +58,20 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
             },
           },
           2: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '2',
                 a: 3,
                 b: 4,
-              }),
+              },
             },
           },
         },
@@ -80,12 +80,30 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model2({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
             },
+          },
+        },
+      },
+    };
+    this.referenceState3 = {
+      ...this.referenceState2,
+      col2: {
+        ...this.referenceState2.col2,
+        nextById: {
+          ...this.referenceState2.col2.nextById,
+          1: {
+            ...this.referenceState2.col2.nextById['1'],
+            queries: {
+              'query/1': {
+                a: 2,
+              },
+            },
+            queryIds: ['query/1'],
           },
         },
       },
@@ -117,11 +135,11 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
             },
           },
         },
@@ -146,11 +164,11 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
             },
           },
         },
@@ -202,19 +220,19 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '1',
                 a: 3,
-              }),
+              },
             },
           },
           2: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '2',
                 a: 3,
                 b: 4,
-              }),
+              },
             },
           },
         },
@@ -223,11 +241,11 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model2({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
             },
           },
         },
@@ -251,11 +269,11 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           2: {
             current: {
-              'socket/1': new Model1({
+              'socket/1': {
                 _id: '2',
                 a: 3,
                 b: 4,
-              }),
+              },
             },
           },
         },
@@ -264,11 +282,135 @@ describe('Test module - collections - reducer', () => {
         nextById: {
           1: {
             current: {
-              'socket/1': new Model2({
+              'socket/1': {
                 _id: '1',
                 a: 1,
                 b: 2,
-              }),
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it('should update query results', function () {
+    const state = this.reducer(this.referenceState3, {
+      type: DDP_QUERY_UPDATE,
+      payload: {
+        entities: {
+          col2: {
+            1: { a: 1 },
+            2: { a: 2 },
+          },
+        },
+      },
+      meta: {
+        queryId: 'query/2',
+      },
+    });
+    state.should.deep.equal({
+      ...this.referenceState3,
+      col2: {
+        nextById: {
+          1: {
+            current: {
+              'socket/1': {
+                _id: '1',
+                a: 1,
+                b: 2,
+              },
+            },
+            queries: {
+              'query/1': { a: 2 },
+              'query/2': { a: 1 },
+            },
+            queryIds: ['query/1', 'query/2'],
+          },
+          2: {
+            queries: {
+              'query/2': { a: 2 },
+            },
+            queryIds: ['query/2'],
+          },
+        },
+      },
+    });
+  });
+
+  it('should replace old query results', function () {
+    const state = this.reducer(this.referenceState3, {
+      type: DDP_QUERY_UPDATE,
+      payload: {
+        entities: {
+          col2: {
+            1: { a: 1 },
+            2: { a: 2 },
+          },
+        },
+        oldEntities: {
+          col2: {
+            1: {},
+          },
+        },
+      },
+      meta: {
+        queryId: 'query/1',
+      },
+    });
+    state.should.deep.equal({
+      ...this.referenceState3,
+      col2: {
+        nextById: {
+          1: {
+            current: {
+              'socket/1': {
+                _id: '1',
+                a: 1,
+                b: 2,
+              },
+            },
+            queries: {
+              'query/1': { a: 1 },
+            },
+            queryIds: ['query/1'],
+          },
+          2: {
+            queries: {
+              'query/1': { a: 2 },
+            },
+            queryIds: ['query/1'],
+          },
+        },
+      },
+    });
+  });
+
+  it('should completely remove query results', function () {
+    const state = this.reducer(this.referenceState3, {
+      type: DDP_QUERY_DELETE,
+      payload: {
+        entities: {
+          col2: {
+            1: {},
+          },
+        },
+      },
+      meta: {
+        queryId: 'query/1',
+      },
+    });
+    state.should.deep.equal({
+      ...this.referenceState3,
+      col2: {
+        nextById: {
+          1: {
+            current: {
+              'socket/1': {
+                _id: '1',
+                a: 1,
+                b: 2,
+              },
             },
           },
         },

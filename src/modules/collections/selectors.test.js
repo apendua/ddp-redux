@@ -31,9 +31,14 @@ describe('Test module - collections - selectors', () => {
               'socket/2': {
                 _id: '1',
                 c: 3,
+              },
+            },
+            queries: {
+              'query/1': {
                 d: 4,
               },
             },
+            queryIds: ['query/1'],
           },
         },
       },
@@ -44,9 +49,16 @@ describe('Test module - collections - selectors', () => {
               'socket/1': {
                 _id: '1',
                 a: 1,
+              },
+            },
+            queries: {
+              'query/1': {
+                _id: '1',
+                a: 9,
                 b: 2,
               },
             },
+            queryIds: ['query/1'],
           },
         },
       },

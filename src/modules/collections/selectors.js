@@ -1,14 +1,13 @@
 import mapValues from 'lodash.mapvalues';
 import values from 'lodash.values';
-import merge from 'lodash.merge';
 import forEach from 'lodash.foreach';
+import map from 'lodash.map';
 import {
   createSelector,
 } from 'reselect';
 import createValuesMappingSelector from '../../utils/createValuesMappingSelector';
 
 const identity = x => x;
-
 export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, collection) => {
   const selectCollectionById = state =>
     state.ddp.collections[collection] &&
@@ -16,8 +15,12 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
 
   const selectAll = createValuesMappingSelector(
     selectCollectionById,
-    ({ current }) => {
-      const rawObject = merge({}, ...values(current));
+    ({ current, queries, queryIds }) => {
+      const rawObject = {};
+      if (queryIds && queryIds.length > 0) {
+        Object.assign(rawObject, ...map(queryIds, id => queries[id]));
+      }
+      Object.assign(rawObject, ...values(current));
       return new Model(rawObject);
     },
   );
