@@ -38,6 +38,16 @@ export const createMiddleware = ddpClient => (store) => {
       type: DDP_DISCONNECTED,
     });
   });
+  if (ddpClient.defaultEndpoint) {
+    setTimeout(() => {
+      store.dispatch({
+        type: DDP_OPEN,
+        payload: {
+          endpoint: ddpClient.defaultEndpoint,
+        },
+      });
+    });
+  }
   const scheduleCleanup = createDelayedTask((socketId) => {
     ddpClient.close({ socketId });
   });

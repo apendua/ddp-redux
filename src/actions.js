@@ -1,10 +1,29 @@
 import {
+  DDP_OPEN,
+  DDP_CLOSE,
   DDP_METHOD,
   DDP_SUBSCRIBE,
   DDP_UNSUBSCRIBE,
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
 } from './constants';
+
+export const openSocket = (endpoint, params, meta) => ({
+  type: DDP_OPEN,
+  payload: {
+    endpoint,
+    params,
+  },
+  ...meta && { meta },
+});
+
+export const closeSocket = (socketId, meta) => ({
+  type: DDP_CLOSE,
+  meta: {
+    ...meta,
+    socketId,
+  },
+});
 
 export const callMethod = (name, params, meta) => ({
   type: DDP_METHOD,
@@ -24,15 +43,15 @@ export const subscribe = (name, params, meta) => ({
   ...meta && { meta },
 });
 
-export const unsubscribe = (id, meta) => ({
+export const unsubscribe = (subId, meta) => ({
   type: DDP_UNSUBSCRIBE,
-  payload: {
-    id,
+  meta: {
+    ...meta,
+    subId,
   },
-  ...meta && { meta },
 });
 
-export const request = (name, params, meta) => ({
+export const queryRequest = (name, params, meta) => ({
   type: DDP_QUERY_REQUEST,
   payload: {
     name,
@@ -41,11 +60,10 @@ export const request = (name, params, meta) => ({
   ...meta && { meta },
 });
 
-export const release = (name, params, meta) => ({
+export const queryRelease = (queryId, meta) => ({
   type: DDP_QUERY_RELEASE,
-  payload: {
-    name,
-    params,
+  meta: {
+    ...meta,
+    queryId,
   },
-  ...meta && { meta },
 });

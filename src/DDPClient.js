@@ -2,6 +2,7 @@ import shallowEqual from 'shallowequal';
 import mapValues from 'lodash.mapvalues';
 import DDPSocket from './DDPSocket';
 import DDPEmitter from './DDPEmitter';
+import { compose } from 'recompose';
 
 import {
   DEFAULT_SOCKET_ID,
@@ -32,10 +33,7 @@ class DDPClient extends DDPEmitter {
     this.SocketConstructor = SocketConstructor;
     this.sockets = {};
     this.counter = 0;
-
-    if (endpoint) {
-      this.open(endpoint);
-    }
+    this.defaultEndpoint = endpoint;
   }
 
   send(msg, { socketId = DEFAULT_SOCKET_ID } = {}) {

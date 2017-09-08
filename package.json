@@ -8,6 +8,7 @@
     "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*' 'examples/**/*.test.js'",
     "flow": "flow",
     "build": "babel src/ -d lib/",
+    "build-watch": "watch 'npm run build' ./src",
     "prepublish": "npm run build"
   },
   "repository": {
@@ -47,7 +48,8 @@
     "mocha": "^3.5.0",
     "redux-mock-store": "^1.2.3",
     "sinon": "^2.4.1",
-    "sinon-chai": "^2.12.0"
+    "sinon-chai": "^2.12.0",
+    "watch": "^1.0.2"
   },
   "dependencies": {
     "base64-js": "^1.2.1",
@@ -55,6 +57,7 @@
     "lodash.find": "^4.6.0",
     "lodash.foreach": "^4.5.0",
     "lodash.isempty": "^4.4.0",
+    "lodash.keyby": "^4.6.0",
     "lodash.map": "^4.6.0",
     "lodash.mapvalues": "^4.6.0",
     "lodash.max": "^4.0.1",

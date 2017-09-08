@@ -1,4 +1,4 @@
-export const DDP_PROTOCOL_VERSION = '1.0';
+export const DDP_PROTOCOL_VERSION = '1';
 
 export const DEFAULT_SOCKET_ID = 'default';
 

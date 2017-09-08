@@ -1,204 +1,314 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import forEach from 'lodash.foreach';
+import keyBy from 'lodash.keyby';
+import find from 'lodash.find';
 import map from 'lodash.map';
-import difference from 'lodash.difference';
+import {
+  compose,
+  branch,
+  lifecycle,
+  withState,
+  renderComponent,
+  setDisplayName,
+} from 'recompose';
+import {
+  createSelector,
+  createStructuredSelector,
+} from 'reselect';
+import { connect } from 'react-redux';
+import DDPClient from '../DDPClient';
+import wrapSelector from './wrapSelector';
+import {
+  subscribe,
+  unsubscribe,
+  queryRequest,
+  queryRelease,
+  openSocket,
+  closeSocket,
+} from '../actions';
+import {
+  DDP_SUBSCRIPTION_STATE__PENDING,
+  DDP_CONNECTION_STATE__CONNECTING,
+  DDP_QUERY_STATE__PENDING,
+} from '../constants';
 import EJSON from '../ejson';
+import {
+  createSelectors,
+} from '../modules/collections/selectors';
+
+const identity = x => x;
+const constant = x => () => x;
+const noop = () => {};
 
 const ddp = ({
-  subscriptions: makeMapStateToSubscriptions,
-  queries: makeMapStateToQueries,
-  mutations = {},
-}, {
-  onMutationError,
-  renderLoader = defaultComponent => React.createElement(defaultComponent),
-  getResourceId = params => EJSON.stringify(params),
-  queriesUpdateDelay,
-  subscriptionsUpdateDalay,
-} = {}) => (Inner) => {
-  const propTypes = {
-    subscriptions: PropTypes.array,
-    queries: PropTypes.object,
-    subscriptionsReady: PropTypes.bool,
-    queriesReady: PropTypes.bool,
-  };
+  subscriptions: selectSubscriptions,
+  queries:       selectQueries,
+  connection:    selectConnection,
+  slectors:      createEntitiesSelectors,
+  loader:        Loader,
+}) => {
+  const mapStateToSubscriptions = wrapSelector(selectSubscriptions);
+  const mapStateToConnection = wrapSelector(selectConnection);
+  const mapStateToQueries = wrapSelector(selectQueries);
 
-  const defaultProps = {
-    subscriptions: [],
-    queries: {},
-    subscriptionsReady: true,
-    queriesReady: true,
-  };
+  const createConnectionStateSelector = () => createSelector(
+    mapStateToConnection,
+    ({ endpoint, params } = {}, state) =>
+      find(
+        state.ddp &&
+        state.ddp.connections &&
+        state.ddp.connections.sockets,
+        x => x.endpoint === endpoint && EJSON.equals(x.params, params),
+      ),
+  );
 
-  class Container extends React.Component {
-    constructor(props) {
-      super(props);
+  const createSubscriptionsStateSelector = () => createSelector(
+    mapStateToSubscriptions,
+    createConnectionStateSelector(),
+    identity,
+    (subscriptions, connection, state) => (connection
+      ? map(subscriptions, ({ name, params }) =>
+        find(
+          state.ddp &&
+          state.ddp.subscriptions,
+          x => x.meta.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
+        ),
+      )
+      : map(subscriptions, constant(null))
+    ),
+  );
 
-      this.state = {
-        subscriptionIds: [],
-        queryIds:        [],
-      };
+  const createQueriesStateSelector = () => createSelector(
+    mapStateToQueries,
+    createConnectionStateSelector(),
+    identity,
+    (queries, connection, state) => (connection
+      ? map(queries, ({ name, params }) =>
+        find(
+          state.ddp &&
+          state.ddp.queries,
+          x => x.meta.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
+        ),
+      )
+      : map(queries, constant(null))
+    ),
+  );
 
-      const mutate = (request) => {
-        if (request) {
-          const { name, params } = request;
-          this.beginMutation();
-          return this.ddpConnector.apply(name, params, {})
-            .then(res => this.endMutation(res))
-            .catch((err) => {
-              this.endMutation();
-              if (onMutationError) {
-                onMutationError(err);
-              } else {
-                throw err;
-              }
-            });
-        }
-        return Promise.resolve();
-      };
+  return compose(
+    setDisplayName('ddp'),
+    connect(
+      () => createStructuredSelector({
+        ...createEntitiesSelectors(createSelectors(DDPClient)),
 
-      this.handlers = {};
-      Object.keys(mutations).forEach((key) => {
-        this.handlers[key] = (...args) => {
-          mutations[key]({
-            ...this.props,
-            mutate,
-          })(...args);
+        subscriptions: createSubscriptionsStateSelector(),
+        connection:    createConnectionStateSelector(),
+        queries:       createQueriesStateSelector(),
+
+        declaredSubscriptions: mapStateToSubscriptions,
+        declaredConnection:    mapStateToConnection,
+        declaredQueries:       mapStateToQueries,
+      }),
+    ),
+    withState(
+      'requestedSubscriptions',
+      'setRequestedSubscriptions',
+      [],
+    ),
+    withState(
+      'requestedConnection',
+      'setRequestedConnection',
+      null,
+    ),
+    withState(
+      'requestedQueries',
+      'setRequestedQueries',
+      [],
+    ),
+    lifecycle({
+      componentWillMount() {
+        this.updateSubscriptions = (props = this.props) => {
+          const {
+            dispatch,
+            connection,
+            subscriptions,
+            declaredSubscriptions,
+            requestedSubscriptions,
+            setRequestedSubscriptions,
+          } = props;
+          const doNotDelete = keyBy(subscriptions, 'id');
+          const doNotCreate = keyBy(requestedSubscriptions);
+          forEach(requestedSubscriptions, (subId) => {
+            if (doNotDelete[subId]) {
+              return;
+            }
+            dispatch(unsubscribe(subId));
+          });
+          if (connection) {
+            setRequestedSubscriptions(
+              map(
+                declaredSubscriptions,
+                ({ name, params }, i) => {
+                  const sub = subscriptions[i];
+                  if (sub && doNotCreate[sub.id]) {
+                    return sub.id;
+                  }
+                  return dispatch(
+                    subscribe(name, params, {
+                      socketId: connection.id,
+                    }),
+                  );
+                },
+              ),
+            );
+          } else {
+            setRequestedSubscriptions([]);
+          }
         };
-      });
-    }
-
-    componentDidMount() {
-      this.updateSubscriptions(this.props);
-      this.updateQueries(this.props);
-    }
-
-    componentWillReceiveProps(nextProps) {
-      this.updateSubscriptions(nextProps);
-      this.updateQueries(nextProps);
-    }
-
-    componentWillUnmount() {
-      this.updateSubscriptions();
-      this.updateQueries();
-    }
-
-    updateSubscriptions(nextProps = {}) {
-      const dispatch = this.props.dispatch;
-      const subscriptionIds = map(nextProps.subscriptions, sub => dispatch({
-        type: '@DDP/API/SUBSCRIBE',
-        payload: {
-          name:   sub.name,
-          params: sub.params,
-        },
-      }));
-      forEach(this.state.subscriptionIds, id => dispatch({
-        type: '@DDP/API/UNSUBSCRIBE',
-        payload: {
-          id,
-        },
-      }));
-      this.setState({ subscriptionIds });
-    }
-
-    updateQueries(nextProps = {}) {
-      const dispatch = this.props.dispatch;
-      const queryIds = map(nextProps.subscriptions, sub => dispatch({
-        type: '@DDP/API/START_QUERY',
-        payload: {
-          name:   sub.name,
-          params: sub.params,
-        },
-      }));
-      forEach(this.state.queryIds, id => dispatch({
-        type: '@DDP/API/STOP_QUERY',
-        payload: {
-          id,
-        },
-      }));
-      this.setState({ queryIds });
-    }
-
-    beginMutation() {
-      this.setState({
-        numberOfPendingMutations: this.state.numberOfPendingMutations + 1,
-      });
-    }
-
-    endMutation(result) {
-      this.setState({
-        numberOfPendingMutations: this.state.numberOfPendingMutations - 1,
-      });
-      return result;
-    }
-
-    render() {
-      const { ddpConnector } = this.context;
-      const {
-        numberOfPendingMutations,
-      } = this.state;
-      const {
-        subscriptionsReady,
-        queriesReady,
-        queries,
-        subscriptions,
-        ...other
-      } = this.props;
-      const mutationsReady = numberOfPendingMutations <= 0;
-      if (renderLoader &&
-        (
-          !subscriptionsReady ||
-          !mutationsReady ||
-          !queriesReady
-        )
-      ) {
-        return renderLoader(ddpConnector.getLoaderComponent(), {
-          ...other,
-          subscriptionsReady,
-          mutationsReady,
-          queriesReady,
+        this.updateConnection = (props = this.props) => {
+          const {
+            dispatch,
+            connection,
+            declaredConnection,
+            requestedConnection,
+            setRequestedConnection,
+          } = props;
+          // NOTE: If connection && connection.id === requestedConnection then nothing will happen
+          if ((
+            connection &&
+            connection.id !== requestedConnection
+          ) ||
+          (
+            !connection &&
+            requestedConnection
+          )) {
+            dispatch(closeSocket(requestedConnection));
+          }
+          if (!connection && declaredConnection) {
+            setRequestedConnection(
+              dispatch(openSocket(declaredConnection.endpoint, declaredConnection.parmas)),
+            );
+          }
+        };
+        this.updateQueries = (props = this.props) => {
+          const {
+            dispatch,
+            connection,
+            queries,
+            declaredQueries,
+            requestedQueries,
+            setRequestedQueries,
+          } = props;
+          const doNotDelete = keyBy(queries, 'id');
+          const doNotCreate = keyBy(requestedQueries);
+          forEach(requestedQueries, (queryId) => {
+            if (doNotDelete[queryId]) {
+              return;
+            }
+            dispatch(queryRelease(queryId));
+          });
+          if (connection) {
+            setRequestedQueries(
+              map(
+                declaredQueries,
+                ({ name, params }, i) => {
+                  const query = queries[i];
+                  if (query && doNotCreate[query.id]) {
+                    return query.id;
+                  }
+                  return dispatch(
+                    queryRequest(name, params, {
+                      socketId: connection.id,
+                    }),
+                  );
+                },
+              ),
+            );
+          } else {
+            setRequestedQueries([]);
+          }
+        };
+      },
+      componentDidMount() {
+        this.updateSubscriptions();
+        this.updateConnection();
+        this.updateQueries();
+      },
+      componentWillUnmount() {
+        this.updateSubscriptions({
+          dispatch:                  this.props.dispatch,
+          requestedSubscriptions:    this.props.requestedSubscriptions,
+          setRequestedSubscriptions: noop,
         });
-      }
-      return React.createElement(Inner, {
-        ...other,
-        ...this.handlers,
-        queriesReady,
-        mutationsReady,
-        subscriptionsReady,
-      });
-    }
-  }
-
-  Container.propTypes = propTypes;
-  Container.defaultProps = defaultProps;
-  Container.contextTypes = contextTypes;
-
-  if (process.env.NODE_ENV !== 'production') {
-    Container.displayName = `ddp(${Inner.displayName})`;
-  }
-
-  const wrappedMapStateToSubscriptions = wrapMapState(makeMapStateToSubscriptions);
-  const wrappedMapStateToQueries = wrapMapState(makeMapStateToQueries);
-
-  return connect(
-    () => {
-      const getSubscriptionsReady = makeGetSubscriptionsReady((_, x) => getResourceId(x));
-      const getQueriesValues = makeGetQueriesValues((_, x) => getResourceId(x));
-      const getQueriesReady = makeGetQueriesReady((_, x) => getResourceId(x));
-      //----------------------------------------------------------------------
-      return (state, ownProps) => {
-        const subscriptions = wrappedMapStateToSubscriptions(state, ownProps) || [];
-        const queries = wrappedMapStateToQueries(state, ownProps) || {};
-        return {
-          ...getQueriesValues(state, queries),
+        this.updateConnection({
+          dispatch:            this.props.dispatch,
+          connection:          null,
+          requestedConnection: this.props.requestedConnection,
+        });
+        this.updateQueries({
+          dispatch:            this.props.dispatch,
+          requestedQueries:    this.props.requestedQueries,
+          setRequestedQueries: noop,
+        });
+      },
+      componentWillReceiveProps(nextProps) {
+        this.updateSubscriptions(nextProps);
+        this.updateConnection(nextProps);
+        this.updateQueries(nextProps);
+      },
+    }),
+    (Loader
+      ? branch(
+        ({
           subscriptions,
+          connection,
           queries,
-          subscriptionsReady: getSubscriptionsReady(state, { subscriptions }),
-          queriesReady: getQueriesReady(state, { queries }),
-        };
-      };
-    },
-  )(Container);
+        }) => {
+          if (subscriptions.some(x => !x || x.state === DDP_SUBSCRIPTION_STATE__PENDING)) {
+            return false;
+          }
+          if (!connection || connection.state === DDP_CONNECTION_STATE__CONNECTING) {
+            return false;
+          }
+          if (queries.some(x => !x || x.state === DDP_QUERY_STATE__PENDING)) {
+            return false;
+          }
+          return true;
+        },
+        renderComponent(Loader),
+        identity,
+      )
+      : identity
+    ),
+  );
 };
 
 export default ddp;
+
+// const mutate = (request) => {
+//   if (request) {
+//     const { name, params } = request;
+//     this.beginMutation();
+//     return this.ddpConnector.apply(name, params, {})
+//       .then(res => this.endMutation(res))
+//       .catch((err) => {
+//         this.endMutation();
+//         if (onMutationError) {
+//           onMutationError(err);
+//         } else {
+//           throw err;
+//         }
+//       });
+//   }
+//   return Promise.resolve();
+// };
+//
+// this.handlers = {};
+// Object.keys(mutations).forEach((key) => {
+//   this.handlers[key] = (...args) => {
+//     mutations[key]({
+//       ...this.props,
+//       mutate,
+//     })(...args);
+//   };
+// });
+// }
