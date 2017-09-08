@@ -23,9 +23,9 @@ const Router = () => (
           />
         )}
       />
-      <Route component={NotFound} />
       <Route path="/lists" exact component={Lists} />
       <Route path="/lists/:listId" component={List} />
+      <Route component={NotFound} />
     </Switch>
   </BrowserRouter>
 );

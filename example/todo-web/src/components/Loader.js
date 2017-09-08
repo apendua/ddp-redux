@@ -1,7 +1,7 @@
 import React from 'react';
 
-const NotFound = () => (
-  <div>Not found ...</div>
+const Loader = () => (
+  <div>Loading ...</div>
 );
 
-export default NotFound;
+export default Loader;

@@ -7,11 +7,16 @@ import {
 import Router from '../routes/Router';
 
 const App = withContext({
-  ddpClient: PropTypes.instanceOf(DDPClient),
+  ddpClient:         PropTypes.instanceOf(DDPClient),
+  store:             PropTypes.object,
+  storeSubscription: PropTypes.object,
 }, ({
   ddpClient,
+  store,
 }) => ({
   ddpClient,
+  store,
+  storeSubscription: null,
 }))(() => (
   <Router />
 ));

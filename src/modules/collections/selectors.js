@@ -8,6 +8,9 @@ import {
 import createValuesMappingSelector from '../../utils/createValuesMappingSelector';
 
 const identity = x => x;
+const constant = x => () => x;
+const constantTrue = constant(true);
+
 export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, collection) => {
   const selectCollectionById = state =>
     state.ddp.collections[collection] &&
@@ -43,7 +46,7 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
     (id, docs) => docs[id],
   );
 
-  const find = (selectPredicate) => {
+  const find = (selectPredicate = constant(constantTrue)) => {
     const selectPredicateValues = createSelector(
       createSelector(
         selectPredicate,

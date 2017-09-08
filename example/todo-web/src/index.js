@@ -14,6 +14,7 @@ import ReactDOM from 'react-dom';
 import App from './containers/App';
 import registerServiceWorker from './registerServiceWorker';
 import rootReducer from './store/rootReducer';
+import './store/registerModels';
 
 const ddpClient = new DDPClient({
   endpoint: process.env.REACT_APP_ENDPOINT,

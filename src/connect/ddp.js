@@ -3,6 +3,7 @@ import forEach from 'lodash.foreach';
 import keyBy from 'lodash.keyby';
 import find from 'lodash.find';
 import map from 'lodash.map';
+import shallowEqual from 'shallowequal';
 import {
   compose,
   branch,
@@ -27,6 +28,7 @@ import {
   closeSocket,
 } from '../actions';
 import {
+  DEFAULT_SOCKET_ID,
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_CONNECTION_STATE__CONNECTING,
   DDP_QUERY_STATE__PENDING,
@@ -44,7 +46,7 @@ const ddp = ({
   subscriptions: selectSubscriptions,
   queries:       selectQueries,
   connection:    selectConnection,
-  slectors:      createEntitiesSelectors,
+  selectors:     createEntitiesSelectors,
   loader:        Loader,
 }) => {
   const mapStateToSubscriptions = wrapSelector(selectSubscriptions);
@@ -53,13 +55,18 @@ const ddp = ({
 
   const createConnectionStateSelector = () => createSelector(
     mapStateToConnection,
-    ({ endpoint, params } = {}, state) =>
-      find(
+    identity,
+    (options, state) => (options
+      ? find(
         state.ddp &&
-        state.ddp.connections &&
-        state.ddp.connections.sockets,
-        x => x.endpoint === endpoint && EJSON.equals(x.params, params),
-      ),
+        state.ddp.connection &&
+        state.ddp.connection.sockets,
+        x => x.endpoint === options.endpoint && EJSON.equals(x.params, options.params),
+      )
+      : state.ddp &&
+        state.ddp.connection &&
+        state.ddp.connection.sockets[DEFAULT_SOCKET_ID]
+    ),
   );
 
   const createSubscriptionsStateSelector = () => createSelector(
@@ -93,12 +100,11 @@ const ddp = ({
       : map(queries, constant(null))
     ),
   );
-
   return compose(
     setDisplayName('ddp'),
     connect(
       () => createStructuredSelector({
-        ...createEntitiesSelectors(createSelectors(DDPClient)),
+        ...createEntitiesSelectors && createEntitiesSelectors(createSelectors(DDPClient)),
 
         subscriptions: createSubscriptionsStateSelector(),
         connection:    createConnectionStateSelector(),
@@ -143,25 +149,25 @@ const ddp = ({
             }
             dispatch(unsubscribe(subId));
           });
-          if (connection) {
-            setRequestedSubscriptions(
-              map(
-                declaredSubscriptions,
-                ({ name, params }, i) => {
-                  const sub = subscriptions[i];
-                  if (sub && doNotCreate[sub.id]) {
-                    return sub.id;
-                  }
-                  return dispatch(
-                    subscribe(name, params, {
-                      socketId: connection.id,
-                    }),
-                  );
-                },
-              ),
-            );
-          } else {
-            setRequestedSubscriptions([]);
+          console.log('connection', connection);
+          const newRequestedSubscriptions = connection
+            ? map(
+              declaredSubscriptions,
+              ({ name, params }, i) => {
+                const sub = subscriptions[i];
+                if (sub && doNotCreate[sub.id]) {
+                  return sub.id;
+                }
+                return dispatch(
+                  subscribe(name, params, {
+                    socketId: connection.id,
+                  }),
+                );
+              },
+            )
+            : [];
+          if (!shallowEqual(newRequestedSubscriptions, requestedSubscriptions)) {
+            setRequestedSubscriptions(newRequestedSubscriptions);
           }
         };
         this.updateConnection = (props = this.props) => {
@@ -183,10 +189,11 @@ const ddp = ({
           )) {
             dispatch(closeSocket(requestedConnection));
           }
-          if (!connection && declaredConnection) {
-            setRequestedConnection(
-              dispatch(openSocket(declaredConnection.endpoint, declaredConnection.parmas)),
-            );
+          const newRequestedConnection = !connection && declaredConnection
+            ? dispatch(openSocket(declaredConnection.endpoint, declaredConnection.parmas))
+            : (connection && connection.id) || null;
+          if (newRequestedConnection !== requestedConnection) {
+            setRequestedConnection(newRequestedConnection);
           }
         };
         this.updateQueries = (props = this.props) => {
@@ -206,25 +213,24 @@ const ddp = ({
             }
             dispatch(queryRelease(queryId));
           });
-          if (connection) {
-            setRequestedQueries(
-              map(
-                declaredQueries,
-                ({ name, params }, i) => {
-                  const query = queries[i];
-                  if (query && doNotCreate[query.id]) {
-                    return query.id;
-                  }
-                  return dispatch(
-                    queryRequest(name, params, {
-                      socketId: connection.id,
-                    }),
-                  );
-                },
-              ),
-            );
-          } else {
-            setRequestedQueries([]);
+          const newRequestedQueries = connection
+            ? map(
+              declaredQueries,
+              ({ name, params }, i) => {
+                const query = queries[i];
+                if (query && doNotCreate[query.id]) {
+                  return query.id;
+                }
+                return dispatch(
+                  queryRequest(name, params, {
+                    socketId: connection.id,
+                  }),
+                );
+              },
+            )
+            : [];
+          if (!shallowEqual(newRequestedQueries, requestedQueries)) {
+            setRequestedQueries(newRequestedQueries);
           }
         };
       },

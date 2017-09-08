@@ -25,12 +25,12 @@ export const createReducer = () => (state = {}, action) => {
         },
       };
     case DDP_UNSUBSCRIBE:
-      return state[action.payload.id]
+      return state[action.meta.subId]
         ? {
           ...state,
-          [action.payload.id]: {
-            ...state[action.payload.id],
-            users: (state[action.payload.id].users || 0) - 1,
+          [action.meta.subId]: {
+            ...state[action.meta.subId],
+            users: (state[action.meta.subId].users || 0) - 1,
           },
         }
         : state;

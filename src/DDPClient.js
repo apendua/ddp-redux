@@ -2,7 +2,6 @@ import shallowEqual from 'shallowequal';
 import mapValues from 'lodash.mapvalues';
 import DDPSocket from './DDPSocket';
 import DDPEmitter from './DDPEmitter';
-import { compose } from 'recompose';
 
 import {
   DEFAULT_SOCKET_ID,
@@ -91,7 +90,7 @@ class DDPClient extends DDPEmitter {
   }
 
   getSubscriptionCleanupTimeout() {
-    return this.constructor.geSubscriptionCleanupTimeout();
+    return this.constructor.getSubscriptionCleanupTimeout();
   }
 
   nextUniqueId() {
