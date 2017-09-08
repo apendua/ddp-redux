@@ -59,7 +59,7 @@ describe('Test module - subscriptions - middleware', () => {
     ]);
   });
 
-  it('should not dispatch SUB if not yet subscribed', function () {
+  it('should dispatch SUB if not yet subscribed', function () {
     const store = this.mockStore({
       ddp: {
         subscriptions: {
@@ -96,6 +96,10 @@ describe('Test module - subscriptions - middleware', () => {
           ...action.payload,
           id: '1',
         },
+        meta: {
+          subId: '1',
+          socketId: 'socket/1',
+        },
       },
     ]);
   });
@@ -129,6 +133,10 @@ describe('Test module - subscriptions - middleware', () => {
         payload: {
           ...action.payload,
           id: '1',
+        },
+        meta: {
+          subId: '1',
+          socketId: DEFAULT_SOCKET_ID,
         },
       },
     ]);
@@ -186,6 +194,9 @@ describe('Test module - subscriptions - middleware', () => {
         payload: {
           id: '1',
         },
+        meta: {
+          subId: '1',
+        },
       },
     ]);
   });
@@ -226,13 +237,25 @@ describe('Test module - subscriptions - middleware', () => {
     store.dispatch(action2);
     store.getActions().should.deep.equal([
       action1,
-      action2,
+      {
+        ...action2,
+        meta: {
+          ...action2.meta,
+          subId: '1',
+        },
+      },
     ]);
 
     this.clock.tick(30000);
     store.getActions().should.deep.equal([
       action1,
-      action2,
+      {
+        ...action2,
+        meta: {
+          ...action2.meta,
+          subId: '1',
+        },
+      },
     ]);
   });
 

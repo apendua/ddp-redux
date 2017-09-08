@@ -7,6 +7,7 @@ import {
   DDP_CONNECT,
   DDP_SUB,
   DDP_UNSUB,
+  DDP_NOSUB,
   DDP_SUBSCRIBE,
   DDP_UNSUBSCRIBE,
 } from '../../constants';
@@ -22,6 +23,9 @@ export const createMiddleware = ddpClient => (store) => {
       type: DDP_UNSUB,
       payload: {
         id,
+      },
+      meta: {
+        subId: id,
       },
     });
   }, {
@@ -98,9 +102,20 @@ export const createMiddleware = ddpClient => (store) => {
               ...action.payload,
               id: subId,
             },
+            meta: {
+              subId,
+              socketId,
+            },
           });
           return subId;
         })();
+      case DDP_NOSUB:
+        return next({
+          ...action,
+          meta: {
+            subId: action.payload.id,
+          },
+        });
       default:
         return next(action);
     }

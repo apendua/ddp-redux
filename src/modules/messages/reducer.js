@@ -1,5 +1,7 @@
 import omit from 'lodash.omit';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_DISCONNECTED,
   DDP_PONG,
   DDP_RESULT,
@@ -9,6 +11,7 @@ import {
   DDP_SUB,
   DDP_UNSUB,
   DDP_ENQUEUE,
+  DDP_OPEN,
 
   ACTION_TO_PRIORITY,
 } from '../../constants';
@@ -93,6 +96,20 @@ export const createReducer = (DDPClient) => {
     sockets: {},
   }, action) => {
     switch (action.type) {
+      case DDP_OPEN:
+        return (() => {
+          const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
+          if (socketId) {
+            return {
+              ...state,
+              sockets: {
+                ...state.sockets,
+                [socketId]: socketReducer(undefined, action),
+              },
+            };
+          }
+          return state;
+        })();
       case DDP_DISCONNECTED:
       case DDP_ENQUEUE:
       case DDP_CONNECTED:

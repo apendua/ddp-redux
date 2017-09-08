@@ -1,6 +1,8 @@
 import omit from 'lodash.omit';
 import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_SUBSCRIPTION_STATE__READY,
   DDP_SUBSCRIPTION_STATE__RESTORING,
@@ -17,13 +19,31 @@ import {
 export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
     case DDP_SUBSCRIBE:
-      return {
-        ...state,
-        [action.payload.id]: {
-          ...state[action.payload.id],
-          users: (state[action.payload.id].users || 0) + 1,
-        },
-      };
+      return (() => {
+        const sub = state[action.meta.subId];
+        if (sub) {
+          return {
+            ...state,
+            [action.meta.subId]: {
+              ...sub,
+              users: (sub.users || 0) + 1,
+            },
+          };
+        }
+        return {
+          ...state,
+          [action.meta.subId]: {
+            id:     action.meta.subId,
+            state:  DDP_SUBSCRIPTION_STATE__PENDING,
+            name:   action.payload.name,
+            params: action.payload.params,
+            users:  1,
+            ...action.meta && action.meta.socketId && {
+              socketId: action.meta.socketId,
+            },
+          },
+        };
+      })();
     case DDP_UNSUBSCRIBE:
       return state[action.meta.subId]
         ? {
@@ -34,24 +54,24 @@ export const createReducer = () => (state = {}, action) => {
           },
         }
         : state;
-    case DDP_SUB:
-      return {
-        ...state,
-        [action.payload.id]: {
-          id:     action.payload.id,
-          state:  DDP_SUBSCRIPTION_STATE__PENDING,
-          name:   action.payload.name,
-          params: action.payload.params,
-          ...action.meta && { meta: action.meta },
-        },
-      };
+    // case DDP_SUB:
+    //   return {
+    //     ...state,
+    //     [action.meta.subId]: {
+    //       id:     action.meta.subId,
+    //       state:  DDP_SUBSCRIPTION_STATE__PENDING,
+    //       name:   action.payload.name,
+    //       params: action.payload.params,
+    //       ...action.meta && { meta: action.meta },
+    //     },
+    //   };
     case DDP_UNSUB:
-      return omit(state, [action.payload.id]);
+      return omit(state, [action.meta.subId]);
     case DDP_NOSUB:
       // NOTE: If the subscription was deleted in the meantime, this will
       //       have completely no effect.
       return carefullyMapValues(state, (sub, id) => {
-        if (action.payload.id === id) {
+        if (action.meta.subId === id) {
           return {
             ...sub,
             state: DDP_SUBSCRIPTION_STATE__READY,

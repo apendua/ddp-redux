@@ -118,7 +118,7 @@ describe('Test module - queries - middleware', () => {
     ]);
   });
 
-  it('should should not create query if it already exists', function () {
+  it('should not create query if it already exists', function () {
     const store = this.mockStore({
       ddp: {
         queries: {

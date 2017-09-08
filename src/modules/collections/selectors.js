@@ -43,7 +43,7 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
   const selectOne = selectId => createSelector(
     selectId,
     selectAll,
-    (id, docs) => docs[id],
+    (id, docs) => docs && docs[id],
   );
 
   const find = (selectPredicate = constant(constantTrue)) => {

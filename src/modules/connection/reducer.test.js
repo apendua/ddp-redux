@@ -135,6 +135,7 @@ describe('Test module - connection - reducer', () => {
     this.reducer({
       sockets: {
         1: {
+          id: '1',
           endpoint: 'http://example.com',
           params: [],
           state: DDP_CONNECTION_STATE__CONNECTED,
@@ -153,6 +154,7 @@ describe('Test module - connection - reducer', () => {
     }).should.deep.equal({
       sockets: {
         1: {
+          id: '1',
           endpoint: 'http://example.com',
           params: [],
           state: DDP_CONNECTION_STATE__CONNECTED,

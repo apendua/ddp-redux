@@ -133,7 +133,7 @@ class DDPClient extends DDPEmitter {
   }
 
   static getFlushTimeout() {
-    return this.defaultFlushTimeout();
+    return this.defaultFlushTimeout;
   }
 
   static getQueryCleanupTimeout() {

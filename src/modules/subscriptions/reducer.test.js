@@ -38,13 +38,14 @@ describe('Test module - subscriptions - reducer', () => {
 
   it('should create a new subscription', function () {
     this.reducer({}, {
-      type: DDP_SUB,
+      type: DDP_SUBSCRIBE,
       payload: {
         id: '1',
         name: 'aSubscription',
         params: [1, 2, 3],
       },
       meta: {
+        subId: '1',
         socketId: 'socket/1',
       },
     }).should.deep.equal({
@@ -53,9 +54,8 @@ describe('Test module - subscriptions - reducer', () => {
         state: DDP_SUBSCRIPTION_STATE__PENDING,
         name: 'aSubscription',
         params: [1, 2, 3],
-        meta: {
-          socketId: 'socket/1',
-        },
+        users: 1,
+        socketId: 'socket/1',
       },
     });
   });
@@ -111,6 +111,9 @@ describe('Test module - subscriptions - reducer', () => {
           errorType: 'Meteor.Error',
         },
       },
+      meta: {
+        subId: '1',
+      },
     }).should.deep.equal({
       1: {
         id: '1',
@@ -149,6 +152,9 @@ describe('Test module - subscriptions - reducer', () => {
         name: 'aSubscription',
         params: [1, 2, 3],
       },
+      meta: {
+        subId: '1',
+      },
     }).should.deep.equal({
       1: {
         id: '1',
@@ -173,6 +179,9 @@ describe('Test module - subscriptions - reducer', () => {
       type: DDP_UNSUBSCRIBE,
       payload: {
         id: '1',
+      },
+      meta: {
+        subId: '1',
       },
     }).should.deep.equal({
       1: {
@@ -203,8 +212,8 @@ describe('Test module - subscriptions - reducer', () => {
       },
     }, {
       type: DDP_UNSUB,
-      payload: {
-        id: '2',
+      meta: {
+        subId: '2',
       },
     }).should.deep.equal({
       1: {
