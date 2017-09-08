@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import forEach from 'lodash.foreach';
 import keyBy from 'lodash.keyby';
 import find from 'lodash.find';
@@ -17,8 +16,7 @@ import {
   createStructuredSelector,
 } from 'reselect';
 import { connect } from 'react-redux';
-import DDPClient from '../DDPClient';
-import wrapSelector from './wrapSelector';
+import DDPClient, { EJSON } from 'ddp-client';
 import {
   subscribe,
   unsubscribe,
@@ -26,17 +24,17 @@ import {
   queryRelease,
   openSocket,
   closeSocket,
-} from '../actions';
+} from 'ddp-client/lib/actions';
 import {
   DEFAULT_SOCKET_ID,
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_CONNECTION_STATE__CONNECTING,
   DDP_QUERY_STATE__PENDING,
-} from '../constants';
-import EJSON from '../ejson';
+} from 'ddp-client/lib/constants';
 import {
   createSelectors,
-} from '../modules/collections/selectors';
+} from 'ddp-client/lib/modules/collections/selectors';
+import wrapSelector from './wrapSelector';
 
 const identity = x => x;
 const constant = x => () => x;
@@ -78,7 +76,7 @@ const ddp = ({
         find(
           state.ddp &&
           state.ddp.subscriptions,
-          x => x.meta.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
+          x => x.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
         ),
       )
       : map(subscriptions, constant(null))
@@ -94,7 +92,7 @@ const ddp = ({
         find(
           state.ddp &&
           state.ddp.queries,
-          x => x.meta.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
+          x => x.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
         ),
       )
       : map(queries, constant(null))
@@ -141,6 +139,9 @@ const ddp = ({
             requestedSubscriptions,
             setRequestedSubscriptions,
           } = props;
+          if (!connection) {
+            return;
+          }
           const doNotDelete = keyBy(subscriptions, 'id');
           const doNotCreate = keyBy(requestedSubscriptions);
           forEach(requestedSubscriptions, (subId) => {
@@ -149,23 +150,20 @@ const ddp = ({
             }
             dispatch(unsubscribe(subId));
           });
-          console.log('connection', connection);
-          const newRequestedSubscriptions = connection
-            ? map(
-              declaredSubscriptions,
-              ({ name, params }, i) => {
-                const sub = subscriptions[i];
-                if (sub && doNotCreate[sub.id]) {
-                  return sub.id;
-                }
-                return dispatch(
-                  subscribe(name, params, {
-                    socketId: connection.id,
-                  }),
-                );
-              },
-            )
-            : [];
+          const newRequestedSubscriptions = map(
+            declaredSubscriptions,
+            ({ name, params }, i) => {
+              const sub = subscriptions[i];
+              if (sub && doNotCreate[sub.id]) {
+                return sub.id;
+              }
+              return dispatch(
+                subscribe(name, params, {
+                  socketId: connection.id,
+                }),
+              );
+            },
+          );
           if (!shallowEqual(newRequestedSubscriptions, requestedSubscriptions)) {
             setRequestedSubscriptions(newRequestedSubscriptions);
           }
@@ -181,6 +179,7 @@ const ddp = ({
           // NOTE: If connection && connection.id === requestedConnection then nothing will happen
           if ((
             connection &&
+            requestedConnection &&
             connection.id !== requestedConnection
           ) ||
           (
@@ -189,9 +188,12 @@ const ddp = ({
           )) {
             dispatch(closeSocket(requestedConnection));
           }
-          const newRequestedConnection = !connection && declaredConnection
-            ? dispatch(openSocket(declaredConnection.endpoint, declaredConnection.parmas))
-            : (connection && connection.id) || null;
+          let newRequestedConnection;
+          if (declaredConnection && (!connection || (connection.id !== requestedConnection))) {
+            newRequestedConnection = dispatch(openSocket(declaredConnection.endpoint, declaredConnection.parmas));
+          } else {
+            newRequestedConnection = null;
+          }
           if (newRequestedConnection !== requestedConnection) {
             setRequestedConnection(newRequestedConnection);
           }
@@ -205,6 +207,9 @@ const ddp = ({
             requestedQueries,
             setRequestedQueries,
           } = props;
+          if (!connection) {
+            return;
+          }
           const doNotDelete = keyBy(queries, 'id');
           const doNotCreate = keyBy(requestedQueries);
           forEach(requestedQueries, (queryId) => {
@@ -213,22 +218,20 @@ const ddp = ({
             }
             dispatch(queryRelease(queryId));
           });
-          const newRequestedQueries = connection
-            ? map(
-              declaredQueries,
-              ({ name, params }, i) => {
-                const query = queries[i];
-                if (query && doNotCreate[query.id]) {
-                  return query.id;
-                }
-                return dispatch(
-                  queryRequest(name, params, {
-                    socketId: connection.id,
-                  }),
-                );
-              },
-            )
-            : [];
+          const newRequestedQueries = map(
+            declaredQueries,
+            ({ name, params }, i) => {
+              const query = queries[i];
+              if (query && doNotCreate[query.id]) {
+                return query.id;
+              }
+              return dispatch(
+                queryRequest(name, params, {
+                  socketId: connection.id,
+                }),
+              );
+            },
+          );
           if (!shallowEqual(newRequestedQueries, requestedQueries)) {
             setRequestedQueries(newRequestedQueries);
           }
@@ -257,9 +260,21 @@ const ddp = ({
         });
       },
       componentWillReceiveProps(nextProps) {
-        this.updateSubscriptions(nextProps);
-        this.updateConnection(nextProps);
-        this.updateQueries(nextProps);
+        const {
+          connection,
+          declaredSubscriptions,
+          declaredConnection,
+          declaredQueries,
+        } = this.props;
+        if (nextProps.connection !== connection || nextProps.declaredSubscriptions !== declaredSubscriptions) {
+          this.updateSubscriptions(nextProps);
+        }
+        if (nextProps.declaredConnection !== declaredConnection) {
+          this.updateConnection(nextProps);
+        }
+        if (nextProps.connection !== connection || nextProps.declaredQueries !== declaredQueries) {
+          this.updateQueries(nextProps);
+        }
       },
     }),
     (Loader
@@ -280,8 +295,8 @@ const ddp = ({
           }
           return true;
         },
-        renderComponent(Loader),
         identity,
+        renderComponent(Loader),
       )
       : identity
     ),

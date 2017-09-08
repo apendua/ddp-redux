@@ -11,10 +11,10 @@ import {
   withProps,
   withHandlers,
 } from 'recompose';
-import ddp from 'ddp-client/lib/connect/ddp';
 import {
   callMethod,
 } from 'ddp-client/lib/actions';
+import ddp from '../common/utils/ddp';
 import {
   insert,
   update,
@@ -65,8 +65,8 @@ const List = compose(
       Todos,
       TodoLists,
     }) => ({
-      list: Todos.selectOne(getListId),
-      todos: TodoLists.find(
+      list: TodoLists.selectOne(getListId),
+      todos: Todos.find(
         createSelector(
           getListId,
           listId => todo => todo.getListId() === listId,

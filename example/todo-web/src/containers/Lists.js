@@ -10,10 +10,10 @@ import {
   withState,
   withHandlers,
 } from 'recompose';
-import ddp from 'ddp-client/lib/connect/ddp';
 import {
   callMethod,
 } from 'ddp-client/lib/actions';
+import ddp from '../common/utils/ddp';
 import {
   insert,
   allLists,
