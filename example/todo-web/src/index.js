@@ -8,7 +8,6 @@ import {
   applyMiddleware,
 } from 'redux';
 import DDPClient from 'ddp-client';
-import thunk from 'redux-thunk';
 import React from 'react';
 import ReactDOM from 'react-dom';
 // NOTE: It's important that it goes before we load actuall components
@@ -36,7 +35,6 @@ const store = createStore(
   compose(
     applyMiddleware(
       ddpClient.middleware(),
-      // thunk.withExtraArgument({ ddpClient }),
     ),
     enhancer,
   ),
