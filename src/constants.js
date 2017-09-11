@@ -6,6 +6,9 @@ export const DDP_CONNECTION_STATE__CONNECTING = 'connecting';
 export const DDP_CONNECTION_STATE__CONNECTED = 'connected';
 export const DDP_CONNECTION_STATE__DISCONNECTED = 'disconnected';
 
+export const DDP_USER_STATE__LOGGING_IN = 'loggingIn';
+export const DDP_USER_STATE__LOGGED_IN = 'loggedIn';
+
 export const DDP_SUBSCRIPTION_STATE__PENDING = 'pending';
 export const DDP_SUBSCRIPTION_STATE__READY = 'ready';
 export const DDP_SUBSCRIPTION_STATE__RESTORING = 'restoring';
@@ -55,6 +58,11 @@ export const DDP_CANCEL = '@DDP.METHOD.CANCEL';
 export const DDP_RESULT = '@DDP.IN.RESULT';
 export const DDP_UPDATED = '@DDP.IN.UPDATED';
 export const DDP_METHOD_UPDATE = '@DDP.METHOD.UPDATE';
+
+export const DDP_LOGIN = '@DDP.USER.LOGIN';
+export const DDP_LOGGED_IN = '@DDP.USER.LOGGED_IN';
+export const DDP_LOGOUT = '@DDP.USER.LOGOUT';
+export const DDP_LOGGED_OUT = '@DDP.USER.LOGGED_OUT';
 
 export const DDP_QUERY_CREATE = '@DDP.QUERY.CREATE';
 export const DDP_QUERY_DELETE = '@DDP.QUERY.DELETE';
@@ -121,4 +129,11 @@ export const ACTION_TO_PRIORITY = {
   [DDP_CONNECT]:      100,
   [DDP_PONG]:         10,
 };
+
+// NOTE: It's important that the value is smaller than DDP_CONNECT priority,
+//       but also greater than any other action priorities.
+export const LOGIN_ACTION_PRIORITY = 99;
+
+export const DEFAULT_LOGIN_METHOD_NAME = 'login';
+export const DEFUALT_LOGOUT_METHOD_NAME = 'logout';
 
