@@ -1,4 +1,5 @@
 import {
+  DDP_METHOD,
   DDP_ADDED,
   DDP_CHANGED,
   DDP_REMOVED,
@@ -30,6 +31,7 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_ADDED:
       case DDP_CHANGED:
       case DDP_REMOVED:
+      case DDP_METHOD:
         return ((result) => {
           flush();
           return result;
