@@ -24,6 +24,7 @@ import {
 import {
   oneList,
 } from '../common/api/TodoLists';
+import Todo from '../common/models/Todo';
 import Loader from '../components/Loader';
 
 const ListItem = withHandlers({
@@ -83,11 +84,20 @@ const List = compose(
       listId,
     }) => ({
       onAddTodo: () =>
-        dispatch(callMethod(insert, { listId, name }))
+        dispatch(callMethod(insert.name, [{ listId, name }]))
           .then(() => setName('')),
 
       onUpdateTodo: ({ todoId, name, done }) =>
-        dispatch(callMethod(update, { todoId, done, name })),
+        dispatch(callMethod(update.name, [{ todoId, done, name }], {
+          entities: {
+            [Todo.collection]: {
+              [todoId]: {
+                done,
+                name,
+              },
+            },
+          },
+        })),
     }),
   ),
   withHandlers({

@@ -31,13 +31,6 @@ class ApiSpec {
   getValidator(ValidationError) {
     return makeSchemaValidator(this.schema, ValidationError);
   }
-
-  callMethod(params, { client, ValidationError }) {
-    const validator = this.getValidator(ValidationError);
-    return Promise.resolve()
-      .then(() => validator(params))
-      .then(() => client.apply(this.name, [params]));
-  }
 }
 
 export default ApiSpec;

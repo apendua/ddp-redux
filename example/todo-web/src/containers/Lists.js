@@ -37,7 +37,7 @@ const Lists = compose(
     null,
     (dispatch, { title, setTitle }) => ({
       onAddList: () =>
-        dispatch(callMethod(insert, { title }))
+        dispatch(callMethod(insert.name, [{ title }]))
           .then(() => setTitle('')),
     }),
   ),

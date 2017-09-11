@@ -98,6 +98,7 @@ const ddp = ({
       : map(queries, constant(null))
     ),
   );
+
   return compose(
     setDisplayName('ddp'),
     connect(
