@@ -9,6 +9,9 @@ import {
   DDP_RESULT,
   DDP_UPDATED,
 } from '../../constants';
+import {
+  extractMetadata,
+} from './helpers';
 import carefullyMapValues from '../../utils/carefullyMapValues';
 
 export const createReducer = () => (state = {}, action) => {
@@ -16,7 +19,7 @@ export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
     case DDP_CANCEL:
       return carefullyMapValues(state, (method, methodId, remove) => {
-        if (methodId === action.meta.id) {
+        if (methodId === action.meta.methodId) {
           return remove(methodId);
         }
         return method;
@@ -29,7 +32,7 @@ export const createReducer = () => (state = {}, action) => {
           state:    DDP_METHOD_STATE__PENDING,
           name:     action.payload.method,
           params:   action.payload.params,
-          ...action.meta && { meta: action.meta },
+          ...extractMetadata(action.meta),
         },
       };
     case DDP_RESULT:

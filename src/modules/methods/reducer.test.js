@@ -51,9 +51,7 @@ describe('Test module - methods - reducer', () => {
         name: 'methodA',
         params: [1, 2, 3],
         state: DDP_METHOD_STATE__PENDING,
-        meta: {
-          socketId: 'socket/1',
-        },
+        socketId: 'socket/1',
       },
     });
   });
@@ -135,7 +133,7 @@ describe('Test module - methods - reducer', () => {
     }, {
       type: DDP_CANCEL,
       meta: {
-        id: '1',
+        methodId: '1',
       },
     }).should.deep.equal({});
   });

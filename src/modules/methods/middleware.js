@@ -13,6 +13,9 @@ import {
   DDP_METHOD_UPDATE,
 } from '../../constants';
 import DDPError from '../../DDPError';
+import {
+  extractMetadata,
+} from './helpers.js';
 
 /**
  * Convert error into a DDPError object.
@@ -42,11 +45,13 @@ const cleanError = (error) => {
  * @param {object} method
  */
 const enhance = (action, method) => {
-  if (method && method.meta) {
+  if (method) {
     return {
       ...action,
       meta: {
-        ...method.meta,
+        socketId: method.socketId,
+        methodId: method.id,
+        ...extractMetadata(method),
         ...action.meta,
       },
     };
@@ -100,8 +105,7 @@ export const createMiddleware = () => (store) => {
           const socketId = action.meta && action.meta.socketId;
           forEach(state.ddp.methods, (method, id) => {
             // cancel all methods that were pending on the socket being closed, unless they're flagged as "retry"
-            if (method.meta &&
-                method.meta.socketId === socketId) {
+            if (method.socketId === socketId) {
               if (method.retry && method.state === DDP_METHOD_STATE__PENDING) {
                 // call the same method again after connection is re-established
                 store.dispatch({
@@ -137,8 +141,7 @@ export const createMiddleware = () => (store) => {
           const socketId = action.meta && action.meta.socketId;
           forEach(state.ddp.methods, (method, methodId) => {
             // cancel all methods that were pending on the socket being closed, unless they're flagged as "retry"
-            if (method.meta &&
-                method.meta.socketId === socketId &&
+            if (method.socketId === socketId &&
                 method.state !== DDP_METHOD_STATE__RETURNED) {
               //----------------------------------------------------------------
               if (method.state === DDP_METHOD_STATE__UPDATED || !method.retry) {
@@ -199,13 +202,12 @@ export const createMiddleware = () => (store) => {
               fulfill(methodId, method);
             }
             if (method) {
-              store.dispatch({
-                type: DDP_METHOD_UPDATE,
-                meta: {
-                  methodId,
-                  ...method.meta,
-                },
-              });
+              store.dispatch(
+                enhance(
+                  { type: DDP_METHOD_UPDATE },
+                  method,
+                ),
+              );
             }
           });
           return next(action);

@@ -168,10 +168,9 @@ describe('Test module - methods - middleware', () => {
 
   it('should dispatch DDP_METHOD_UPDATE if method is updated', function () {
     const store = this.mockStore(createInitialState('1', {
+      id: '1',
       state: DDP_METHOD_STATE__PENDING,
-      meta: {
-        socketId: '1',
-      },
+      socketId: '1',
     }));
     store.dispatch({
       type: DDP_UPDATED,
@@ -199,9 +198,7 @@ describe('Test module - methods - middleware', () => {
   it('should resolve a promise when method is canceled', function () {
     const store = this.mockStore(createInitialState('1', {
       state: DDP_METHOD_STATE__PENDING,
-      meta: {
-        socketId: '1',
-      },
+      socketId: '1',
     }));
     const assertion = store.dispatch({
       type: DDP_METHOD,
@@ -241,9 +238,7 @@ describe('Test module - methods - middleware', () => {
   it('should reject a promise when method is canceled', function () {
     const store = this.mockStore(createInitialState('1', {
       state: DDP_METHOD_STATE__PENDING,
-      meta: {
-        socketId: '1',
-      },
+      socketId: '1',
     }));
     const assertion = store.dispatch({
       type: DDP_METHOD,
@@ -290,9 +285,7 @@ describe('Test module - methods - middleware', () => {
     const store = this.mockStore(createInitialState('1', {
       state: DDP_METHOD_STATE__PENDING,
       name: 'A',
-      meta: {
-        socketId: '1',
-      },
+      socketId: '1',
     }));
     const action = {
       type: DDP_DISCONNECTED,
@@ -314,9 +307,7 @@ describe('Test module - methods - middleware', () => {
           details: {
             state: DDP_METHOD_STATE__PENDING,
             name: 'A',
-            meta: {
-              socketId: '1',
-            },
+            socketId: '1',
           },
         },
         meta: {
@@ -332,9 +323,7 @@ describe('Test module - methods - middleware', () => {
       state: DDP_METHOD_STATE__PENDING,
       name: 'A',
       retry: true,
-      meta: {
-        socketId: '1',
-      },
+      socketId: '1',
     }));
     const action = {
       type: DDP_DISCONNECTED,
@@ -354,9 +343,7 @@ describe('Test module - methods - middleware', () => {
     const store = this.mockStore(createInitialState('1', {
       state: DDP_METHOD_STATE__PENDING,
       name: 'A',
-      meta: {
-        socketId: '1',
-      },
+      socketId: '1',
       retry: true,
     }));
     const action = {
