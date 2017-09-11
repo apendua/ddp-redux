@@ -15,6 +15,6 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-describe('Test module - queries - selectors', () => {
+describe('Test module - methods - selectors', () => {
 
 });
