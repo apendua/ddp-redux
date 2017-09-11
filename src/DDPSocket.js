@@ -32,7 +32,9 @@ class DDPScoket extends DDPEmitter {
     };
 
     this.rawSocket.onerror = () => {
-      delete this.rawSocket.onclose;
+      // NOTE: Overwrite the "onclose" hook to prevent emitting "close" event twice.
+      //       Please note that "delete this.rawSocket.onclose" does not work in this case.
+      this.rawSocket.onclose = null;
       this.rawSocket.close();
       this.rawSocket = null;
       this.emit('close');

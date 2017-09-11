@@ -68,7 +68,7 @@ class DDPClient extends DDPEmitter {
           // NOTE: This means, socket was not closed intentionally, so we try to reconnect after 5 seconds.
           //       Before we do it, we need to delete it, because otherwise a "duplicate" error will be thrown.
           delete this.sockets[socketId];
-          this.open(endpoint, socketId);
+          this.open(endpoint, { socketId });
         }
       }, 5000);
     });
