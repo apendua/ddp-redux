@@ -35,6 +35,7 @@ class DDPClient extends DDPEmitter {
     this.sockets = {};
     this.counter = 0;
     this.defaultEndpoint = endpoint;
+    this.tokens = {};
   }
 
   send(msg, { socketId = DEFAULT_SOCKET_ID } = {}) {
@@ -81,6 +82,23 @@ class DDPClient extends DDPEmitter {
       delete this.sockets[socketId];
       socket.close();
     }
+  }
+
+  clearResumeToken({ endpoint }) {
+    delete this.tokens[endpoint];
+    return Promise.resolve();
+  }
+
+  setResumeToken({ endpoint }, token) {
+    this.tokens[endpoint] = token;
+    return Promise.resolve();
+  }
+
+  getResumeToken({ endpoint }) {
+    if (!this.tokens[endpoint]) {
+      return Promise.reject(new Error('Token not found'));
+    }
+    return Promise.resolve(this.tokens[endpoint]);
   }
 
   getFlushTimeout() {

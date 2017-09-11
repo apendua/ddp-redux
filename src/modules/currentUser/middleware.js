@@ -6,6 +6,7 @@ import {
   DDP_LOGGED_IN,
   DDP_LOGOUT,
   DDP_LOGGED_OUT,
+  DDP_CONNECTED,
 
   LOGIN_ACTION_PRIORITY,
 } from '../../constants';
@@ -30,6 +31,36 @@ export const createMiddleware = ddpClient => (store) => {
       return next(action);
     }
     switch (action.type) {
+      case DDP_CONNECTED:
+        return ((result) => {
+          const socketId = action.meta.socketId;
+          const state = store.getState();
+          const socket = state.ddp &&
+                         state.ddp.connection &&
+                         state.ddp.connection.sockets &&
+                         state.ddp.connection.sockets[socketId];
+          ddpClient
+            .getResumeToken(socket)
+            .then(resume => store.dispatch({
+              type: DDP_LOGIN,
+              payload: {
+                resume,
+              },
+            }))
+            .catch(handleLoginError.bind(null, { socketId }));
+          return result;
+        })(next(action));
+      case DDP_LOGGED_IN:
+        return (() => {
+          const socketId = action.meta.socketId;
+          const state = store.getState();
+          const socket = state.ddp &&
+                         state.ddp.connection &&
+                         state.ddp.connection.sockets &&
+                         state.ddp.connection.sockets[socketId];
+          ddpClient.setResumeToken(socket, action.payload.token);
+          return next(action);
+        })();
       case DDP_LOGIN:
         return (() => {
           next(action);
