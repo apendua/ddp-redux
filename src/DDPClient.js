@@ -9,15 +9,17 @@ import {
 
 import * as collections from './modules/collections';
 import * as connection from './modules/connection';
+import * as currentUser from './modules/currentUser';
 import * as messages from './modules/messages';
 import * as methods from './modules/methods';
 import * as queries from './modules/queries';
 import * as subscriptions from './modules/subscriptions';
 
 const modules = {
-  messages,
   collections,
   connection,
+  currentUser,
+  messages,
   methods,
   queries,
   subscriptions,
@@ -61,13 +63,13 @@ class DDPClient extends DDPEmitter {
     socket.on('close', () => {
       this.emit('close', { socketId });
       setTimeout(() => {
-        if (!this.sockets[socketId]) {
-          // NOTE: This means, socket was not closed intentionally, so we try to reconnect after 10 seconds.
+        if (this.sockets[socketId]) {
+          // NOTE: This means, socket was not closed intentionally, so we try to reconnect after 5 seconds.
           //       Before we do it, we need to delete it, because otherwise a "duplicate" error will be thrown.
           delete this.sockets[socketId];
           this.open(endpoint, socketId);
         }
-      }, 10000);
+      }, 5000);
     });
     socket.open(endpoint);
     return socketId;
@@ -102,6 +104,7 @@ class DDPClient extends DDPEmitter {
     const middlewares = [
       'connection',
       'messages',
+      'currentUser',
       'collections',
       'methods',
       'queries',
@@ -156,7 +159,7 @@ DDPClient.UnknownModel = class UnknownModel {
   }
 };
 
-DDPClient.defaultFlushTimeout = 200;
+DDPClient.defaultFlushTimeout = 100;
 DDPClient.defaultQueryCleanupTimeout = 30000;
 DDPClient.defaultSubscriptionCleanupTimeout = 30000;
 
