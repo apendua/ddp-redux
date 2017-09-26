@@ -1,4 +1,4 @@
-import omit from 'lodash.omit';
+import omit from 'lodash/omit';
 import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DEFAULT_SOCKET_ID,

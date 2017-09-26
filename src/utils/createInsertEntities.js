@@ -1,6 +1,6 @@
-import forEach from 'lodash.foreach';
-import without from 'lodash.without';
-import isEmpty from 'lodash.isempty';
+import forEach from 'lodash/forEach';
+import without from 'lodash/without';
+import isEmpty from 'lodash/isEmpty';
 
 /**
  * Contruct a function that can be used for inseting document snapshots

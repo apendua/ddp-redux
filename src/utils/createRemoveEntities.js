@@ -1,6 +1,6 @@
-import omit from 'lodash.omit';
-import without from 'lodash.without';
-import isEmpty from 'lodash.isempty';
+import omit from 'lodash/omit';
+import without from 'lodash/without';
+import isEmpty from 'lodash/isEmpty';
 import carefullyMapValues from './carefullyMapValues';
 
 /**

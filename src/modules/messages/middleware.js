@@ -1,5 +1,5 @@
-import max from 'lodash.max';
-import values from 'lodash.values';
+import max from 'lodash/max';
+import values from 'lodash/values';
 import {
   DEFAULT_SOCKET_ID,
 

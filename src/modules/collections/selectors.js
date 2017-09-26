@@ -1,7 +1,7 @@
-import mapValues from 'lodash.mapvalues';
-import values from 'lodash.values';
-import forEach from 'lodash.foreach';
-import map from 'lodash.map';
+import mapValues from 'lodash/mapValues';
+import values from 'lodash/values';
+import forEach from 'lodash/forEach';
+import map from 'lodash/map';
 import {
   createSelector,
 } from 'reselect';

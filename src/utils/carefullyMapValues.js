@@ -1,10 +1,10 @@
-import omit from 'lodash.omit';
-import mapValues from 'lodash.mapvalues';
+import omit from 'lodash/omit';
+import mapValues from 'lodash/mapValues';
 
 const defaultIsEqual = (a, b) => a === b;
 
 /**
- * Like lodash.mapValues, but with more caution, e.g. when new value is the
+ * Like lodash/mapValues, but with more caution, e.g. when new value is the
  * the same as the old one, do not create a new object. Also gives ability
  * to remove selected fields.
  * @param {object} object to map

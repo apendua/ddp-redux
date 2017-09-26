@@ -1,5 +1,5 @@
-import omit from 'lodash.omit';
-import isEmpty from 'lodash.isempty';
+import omit from 'lodash/omit';
+import isEmpty from 'lodash/isEmpty';
 import {
   DDP_METHOD,
   DDP_METHOD_UPDATE,

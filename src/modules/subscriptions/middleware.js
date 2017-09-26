@@ -1,5 +1,5 @@
-import find from 'lodash.find';
-import forEach from 'lodash.foreach';
+import find from 'lodash/find';
+import forEach from 'lodash/forEach';
 import EJSON from '../../ejson';
 import {
   DEFAULT_SOCKET_ID,

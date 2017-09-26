@@ -1,4 +1,4 @@
-import omit from 'lodash.omit';
+import omit from 'lodash/omit';
 import {
   DDP_METHOD_STATE__PENDING,
   DDP_METHOD_STATE__UPDATED,

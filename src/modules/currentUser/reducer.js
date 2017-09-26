@@ -1,6 +1,6 @@
 /** @module createUser/reducer */
 
-import omit from 'lodash.omit';
+import omit from 'lodash/omit';
 import {
   DDP_LOGOUT,
   DDP_LOGGED_OUT,

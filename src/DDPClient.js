@@ -1,5 +1,5 @@
 import shallowEqual from 'shallowequal';
-import mapValues from 'lodash.mapvalues';
+import mapValues from 'lodash/mapValues';
 import DDPSocket from './DDPSocket';
 import DDPEmitter from './DDPEmitter';
 import Storage from './utils/Storage';
