@@ -74,10 +74,10 @@ export const createMiddleware = ddpClient => (store) => {
               payload: {
                 name,
                 params,
-                socketId,
               },
               meta: {
                 queryId,
+                socketId,
               },
             });
             // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.

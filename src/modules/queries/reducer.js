@@ -1,5 +1,7 @@
 import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_QUERY_STATE__PENDING,
   DDP_QUERY_STATE__READY,
   DDP_QUERY_STATE__RESTORING,
@@ -61,13 +63,11 @@ export const createReducer = () => (state = {}, action) => {
         ...state,
         [action.meta.queryId]: {
           ...state[action.meta.queryId],
-          id:      action.meta.queryId,
-          state:   DDP_QUERY_STATE__PENDING,
-          name:    action.payload.name,
-          params:  action.payload.params,
-          ...action.meta && action.meta.socketId && {
-            socketId: action.meta.socketId,
-          },
+          id:       action.meta.queryId,
+          state:    DDP_QUERY_STATE__PENDING,
+          name:     action.payload.name,
+          params:   action.payload.params,
+          socketId: (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
         },
       };
     case DDP_QUERY_UPDATE:

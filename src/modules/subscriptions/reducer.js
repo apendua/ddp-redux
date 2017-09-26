@@ -8,7 +8,7 @@ import {
   DDP_SUBSCRIPTION_STATE__RESTORING,
 
   DDP_CONNECT,
-  DDP_SUB,
+  // DDP_SUB,
   DDP_UNSUB,
   DDP_READY,
   DDP_NOSUB,
@@ -33,14 +33,12 @@ export const createReducer = () => (state = {}, action) => {
         return {
           ...state,
           [action.meta.subId]: {
-            id:     action.meta.subId,
-            state:  DDP_SUBSCRIPTION_STATE__PENDING,
-            name:   action.payload.name,
-            params: action.payload.params,
-            users:  1,
-            ...action.meta && action.meta.socketId && {
-              socketId: action.meta.socketId,
-            },
+            id:       action.meta.subId,
+            state:    DDP_SUBSCRIPTION_STATE__PENDING,
+            name:     action.payload.name,
+            params:   action.payload.params,
+            users:    1,
+            socketId: (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
           },
         };
       })();

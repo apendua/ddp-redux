@@ -8,6 +8,8 @@ import {
   createReducer,
 } from './reducer';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_RESULT,
   DDP_CONNECT,
 
@@ -140,6 +142,27 @@ describe('Test module - queries - reducer', () => {
         params: 1,
         state: DDP_QUERY_STATE__PENDING,
         socketId: 'socket/1',
+      },
+    });
+  });
+
+  it('should set default socketId if missing', function () {
+    this.reducer({}, {
+      type: DDP_QUERY_CREATE,
+      payload: {
+        name: 'B',
+        params: 1,
+      },
+      meta: {
+        queryId: '2',
+      },
+    }).should.deep.equal({
+      2: {
+        id: '2',
+        name: 'B',
+        params: 1,
+        state: DDP_QUERY_STATE__PENDING,
+        socketId: DEFAULT_SOCKET_ID,
       },
     });
   });

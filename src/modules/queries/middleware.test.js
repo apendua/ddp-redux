@@ -91,10 +91,10 @@ describe('Test module - queries - middleware', () => {
         payload: {
           name: 'aQuery',
           params: [1, 2, 3],
-          socketId: 'socket/1',
         },
         meta: {
           queryId: '1',
+          socketId: 'socket/1',
         },
       },
       {

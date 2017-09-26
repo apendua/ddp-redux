@@ -2,12 +2,14 @@ import forEach from 'lodash.foreach';
 import keyBy from 'lodash.keyby';
 import find from 'lodash.find';
 import map from 'lodash.map';
+import mapValues from 'lodash.mapvalues';
 import shallowEqual from 'shallowequal';
 import {
   compose,
   branch,
   lifecycle,
   withState,
+  withPropsOnChange,
   renderComponent,
   setDisplayName,
 } from 'recompose';
@@ -16,31 +18,34 @@ import {
   createStructuredSelector,
 } from 'reselect';
 import { connect } from 'react-redux';
-import DDPClient, { EJSON } from 'ddp-client';
 import {
+  EJSON,
+  DEFAULT_SOCKET_ID,
+  DDP_SUBSCRIPTION_STATE__PENDING,
+  DDP_CONNECTION_STATE__CONNECTING,
+  DDP_QUERY_STATE__PENDING,
   subscribe,
   unsubscribe,
   queryRequest,
   queryRelease,
   openSocket,
   closeSocket,
-} from 'ddp-client/lib/actions';
-import {
-  DEFAULT_SOCKET_ID,
-  DDP_SUBSCRIPTION_STATE__PENDING,
-  DDP_CONNECTION_STATE__CONNECTING,
-  DDP_QUERY_STATE__PENDING,
-} from 'ddp-client/lib/constants';
-import {
-  createSelectors,
-} from 'ddp-client/lib/modules/collections/selectors';
+  createCollectionSelectors,
+} from 'ddp-client';
 import wrapSelector from './wrapSelector';
 
 const identity = x => x;
 const constant = x => () => x;
 const noop = () => {};
+const stableMap = (collection, ...args) => (Array.isArray(collection)
+  ? map(collection, ...args)
+  : mapValues(collection, ...args)
+);
 
 const ddp = ({
+  models,
+  User,
+  mapQueries,
   subscriptions: selectSubscriptions,
   queries:       selectQueries,
   connection:    selectConnection,
@@ -72,14 +77,14 @@ const ddp = ({
     createConnectionStateSelector(),
     identity,
     (subscriptions, connection, state) => (connection
-      ? map(subscriptions, ({ name, params }) =>
+      ? stableMap(subscriptions, ({ name, params }) =>
         find(
           state.ddp &&
           state.ddp.subscriptions,
           x => x.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
         ),
       )
-      : map(subscriptions, constant(null))
+      : stableMap(subscriptions, constant(null))
     ),
   );
 
@@ -88,31 +93,68 @@ const ddp = ({
     createConnectionStateSelector(),
     identity,
     (queries, connection, state) => (connection
-      ? map(queries, ({ name, params }) =>
+      ? stableMap(queries, ({ name, params }) =>
         find(
           state.ddp &&
           state.ddp.queries,
           x => x.socketId === connection.id && x.name === name && EJSON.equals(x.params, params),
         ),
       )
-      : map(queries, constant(null))
+      : stableMap(queries, constant(null))
     ),
   );
+
+  const userSelectorCreators = User
+    ? createCollectionSelectors(User, User.collection)
+    : null;
+
+  const createCurrentUserIdSelector = () => createSelector(
+    createConnectionStateSelector(),
+    identity,
+    (connection, state) => (connection
+      ? state.ddp &&
+        state.ddp.currentUser[connection.id] &&
+        state.ddp.currentUser[connection.id].userId
+      : null
+    ),
+  );
+
+  const createCurrentUserSelector = () => userSelectorCreators.selectOne(
+    createCurrentUserIdSelector(),
+  );
+
+  const createSelectorsForModel = (Model) => {
+    const selectors = createCollectionSelectors(Model, Model.collection);
+    if (User && User.collection === Model.collection) {
+      selectors.current = createCurrentUserSelector;
+    }
+    return selectors;
+  };
 
   return compose(
     setDisplayName('ddp'),
     connect(
-      () => createStructuredSelector({
-        ...createEntitiesSelectors && createEntitiesSelectors(createSelectors(DDPClient)),
+      () => {
+        const selectorCreateors = {};
+        forEach(models, (Model) => {
+          selectorCreateors[Model.collection] = createSelectorsForModel(Model);
+        });
+        if (User && !selectorCreateors[User.collection]) {
+          selectorCreateors[User.collection] = createSelectorsForModel(User);
+        }
+        return createStructuredSelector({
+          ...createEntitiesSelectors && createEntitiesSelectors(selectorCreateors),
+          userId: createCurrentUserIdSelector(),
 
-        subscriptions: createSubscriptionsStateSelector(),
-        connection:    createConnectionStateSelector(),
-        queries:       createQueriesStateSelector(),
+          subscriptions: createSubscriptionsStateSelector(),
+          connection:    createConnectionStateSelector(),
+          queries:       createQueriesStateSelector(),
 
-        declaredSubscriptions: mapStateToSubscriptions,
-        declaredConnection:    mapStateToConnection,
-        declaredQueries:       mapStateToQueries,
-      }),
+          declaredSubscriptions: mapStateToSubscriptions,
+          declaredConnection:    mapStateToConnection,
+          declaredQueries:       mapStateToQueries,
+        });
+      },
     ),
     withState(
       'requestedSubscriptions',
@@ -151,7 +193,7 @@ const ddp = ({
             }
             dispatch(unsubscribe(subId));
           });
-          const newRequestedSubscriptions = map(
+          const newRequestedSubscriptions = stableMap(
             declaredSubscriptions,
             ({ name, params }, i) => {
               const sub = subscriptions[i];
@@ -219,10 +261,10 @@ const ddp = ({
             }
             dispatch(queryRelease(queryId));
           });
-          const newRequestedQueries = map(
+          const newRequestedQueries = stableMap(
             declaredQueries,
-            ({ name, params }, i) => {
-              const query = queries[i];
+            ({ name, params }, key) => {
+              const query = queries[key];
               if (query && doNotCreate[query.id]) {
                 return query.id;
               }
@@ -278,6 +320,12 @@ const ddp = ({
         }
       },
     }),
+    (mapQueries
+      ? withPropsOnChange([
+        'queries',
+      ], ({ queries }) => mapQueries(queries))
+      : identity
+    ),
     (Loader
       ? branch(
         ({

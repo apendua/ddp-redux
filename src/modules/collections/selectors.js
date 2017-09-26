@@ -11,7 +11,7 @@ const identity = x => x;
 const constant = x => () => x;
 const constantTrue = constant(true);
 
-export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, collection) => {
+export const createCollectionSelectors = (Model, collection) => {
   const selectCollectionById = state =>
     state.ddp.collections[collection] &&
     state.ddp.collections[collection].byId;
@@ -87,4 +87,6 @@ export const createSelectors = DDPClient => mapValues(DDPClient.models, (Model, 
     find,
     findOne,
   };
-});
+};
+
+export const createSelectors = DDPClient => mapValues(DDPClient.models, createCollectionSelectors);

@@ -135,5 +135,5 @@ export const ACTION_TO_PRIORITY = {
 export const LOGIN_ACTION_PRIORITY = 99;
 
 export const DEFAULT_LOGIN_METHOD_NAME = 'login';
-export const DEFUALT_LOGOUT_METHOD_NAME = 'logout';
+export const DEFAULT_LOGOUT_METHOD_NAME = 'logout';
 

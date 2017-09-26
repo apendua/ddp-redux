@@ -1,6 +1,9 @@
+/** @module createUser/middleware */
+
 import {
+  DEFAULT_SOCKET_ID,
   DEFAULT_LOGIN_METHOD_NAME,
-  DEFAULT_LOGOUT_MEHTOD_NAME,
+  DEFAULT_LOGOUT_METHOD_NAME,
 
   DDP_LOGIN,
   DDP_LOGGED_IN,
@@ -17,14 +20,25 @@ import {
 /**
  * Create middleware for the given ddpClient.
  * @param {DDPClient} ddpClient
+ * @returns {ReduxMiddleware}
+ * @private
  */
 export const createMiddleware = ddpClient => (store) => {
+  const getSocket = (socketId) => {
+    const state = store.getState();
+    return state.ddp &&
+           state.ddp.connection &&
+           state.ddp.connection.sockets &&
+           state.ddp.connection.sockets[socketId];
+  };
   const handleLoginError = (meta, err) => {
     store.dispatch({
       type: DDP_LOGGED_OUT,
+      error: true,
+      payload: err,
       meta,
     });
-    ddpClient.emit(err);
+    ddpClient.emit('error', err);
   };
   return next => (action) => {
     if (!action || typeof action !== 'object') {
@@ -34,11 +48,7 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_CONNECTED:
         return ((result) => {
           const socketId = action.meta.socketId;
-          const state = store.getState();
-          const socket = state.ddp &&
-                         state.ddp.connection &&
-                         state.ddp.connection.sockets &&
-                         state.ddp.connection.sockets[socketId];
+          const socket = getSocket(socketId);
           ddpClient
             .getResumeToken(socket)
             .then(resume => store.dispatch({
@@ -46,23 +56,33 @@ export const createMiddleware = ddpClient => (store) => {
               payload: {
                 resume,
               },
+              meta: {
+                socketId,
+              },
             }))
-            .catch(handleLoginError.bind(null, { socketId }));
+            .catch((err) => {
+              console.warn(err);
+            });
           return result;
         })(next(action));
       case DDP_LOGGED_IN:
         return (() => {
-          const socketId = action.meta.socketId;
-          const state = store.getState();
-          const socket = state.ddp &&
-                         state.ddp.connection &&
-                         state.ddp.connection.sockets &&
-                         state.ddp.connection.sockets[socketId];
+          const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
+          const socket = getSocket(socketId);
           ddpClient.setResumeToken(socket, action.payload.token);
+          return next(action);
+        })();
+      case DDP_LOGGED_OUT:
+        return (() => {
+          const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
+          const socket = getSocket(socketId);
+          ddpClient.clearResumeToken(socket);
           return next(action);
         })();
       case DDP_LOGIN:
         return (() => {
+          const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
+
           next(action);
           const result = store.dispatch(
             callMethod(DEFAULT_LOGIN_METHOD_NAME, [action.payload], {
@@ -78,7 +98,7 @@ export const createMiddleware = ddpClient => (store) => {
                 token,
               },
               meta: {
-                socketId: action.meta.socketId,
+                socketId,
               },
             })).catch(handleLoginError.bind(null, action.meta));
           }
@@ -88,18 +108,20 @@ export const createMiddleware = ddpClient => (store) => {
         return (() => {
           next(action);
           const result = store.dispatch(
-            callMethod(DEFAULT_LOGOUT_MEHTOD_NAME, [], {
+            callMethod(DEFAULT_LOGOUT_METHOD_NAME, [], {
               ...action.meta,
               priority: LOGIN_ACTION_PRIORITY,
             }),
           );
           if (result instanceof Promise) {
-            result.then(() => store.dispatch({
-              type: DDP_LOGGED_OUT,
-              meta: {
-                socketId: action.meta.socketId,
-              },
-            })).catch(handleLoginError.bind(null, action.meta));
+            result
+              .then(() => store.dispatch({
+                type: DDP_LOGGED_OUT,
+                meta: {
+                  socketId: action.meta.socketId,
+                },
+              }))
+              .catch(handleLoginError.bind(null, action.meta));
           }
           return result;
         })();

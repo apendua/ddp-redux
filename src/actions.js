@@ -6,7 +6,11 @@ import {
   DDP_UNSUBSCRIBE,
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
+
+  DDP_LOGIN,
+  DDP_LOGOUT,
 } from './constants';
+import sha256 from './utils/sha256';
 
 export const openSocket = (endpoint, params, meta) => ({
   type: DDP_OPEN,
@@ -67,3 +71,34 @@ export const queryRelease = (queryId, meta) => ({
     queryId,
   },
 });
+
+export const login = (payload, meta) => ({
+  type: DDP_LOGIN,
+  payload,
+  ...meta && { meta },
+});
+
+export const logout = meta => ({
+  type: DDP_LOGOUT,
+  ...meta && { meta },
+});
+
+export const loginWithPassword = ({
+  username,
+  email,
+  password,
+}, meta) => ({
+  type: DDP_LOGIN,
+  payload: {
+    user: {
+      username,
+      email,
+    },
+    password: {
+      digest: sha256(password),
+      algorithm: 'sha-256',
+    },
+  },
+  ...meta && { meta },
+});
+

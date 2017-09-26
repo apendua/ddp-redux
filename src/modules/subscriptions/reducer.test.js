@@ -7,6 +7,8 @@ import {
   createReducer,
 } from './reducer';
 import {
+  DEFAULT_SOCKET_ID,
+
   DDP_SUBSCRIPTION_STATE__RESTORING,
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_SUBSCRIPTION_STATE__READY,
@@ -14,7 +16,7 @@ import {
   DDP_SUBSCRIBE,
   DDP_UNSUBSCRIBE,
 
-  DDP_SUB,
+  // DDP_SUB,
   DDP_UNSUB,
   DDP_READY,
   DDP_NOSUB,
@@ -56,6 +58,29 @@ describe('Test module - subscriptions - reducer', () => {
         params: [1, 2, 3],
         users: 1,
         socketId: 'socket/1',
+      },
+    });
+  });
+
+  it('should set default scoket id if missing', function () {
+    this.reducer({}, {
+      type: DDP_SUBSCRIBE,
+      payload: {
+        id: '1',
+        name: 'aSubscription',
+        params: [1, 2, 3],
+      },
+      meta: {
+        subId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        id: '1',
+        state: DDP_SUBSCRIPTION_STATE__PENDING,
+        name: 'aSubscription',
+        params: [1, 2, 3],
+        users: 1,
+        socketId: DEFAULT_SOCKET_ID,
       },
     });
   });

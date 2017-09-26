@@ -2,6 +2,7 @@ import shallowEqual from 'shallowequal';
 import mapValues from 'lodash.mapvalues';
 import DDPSocket from './DDPSocket';
 import DDPEmitter from './DDPEmitter';
+import Storage from './utils/Storage';
 
 import {
   DEFAULT_SOCKET_ID,
@@ -25,10 +26,22 @@ const modules = {
   subscriptions,
 };
 
+/**
+ * @class
+ */
 class DDPClient extends DDPEmitter {
+  /**
+   * Creates an instance of DDPClient.
+   * @param {string} endpoint
+   * @param {function} SocketConstructor
+   * @param {module:utils/storage~Storage} storage
+   * @param {function} getStorageKey
+   */
   constructor({
     endpoint,
     SocketConstructor,
+    storage = new Storage(),
+    getStorageKey = socket => socket.endpoint,
   } = {}) {
     super();
     this.SocketConstructor = SocketConstructor;
@@ -36,6 +49,8 @@ class DDPClient extends DDPEmitter {
     this.counter = 0;
     this.defaultEndpoint = endpoint;
     this.tokens = {};
+    this.storage = storage;
+    this.getStorageKey = getStorageKey;
   }
 
   send(msg, { socketId = DEFAULT_SOCKET_ID } = {}) {
@@ -84,21 +99,16 @@ class DDPClient extends DDPEmitter {
     }
   }
 
-  clearResumeToken({ endpoint }) {
-    delete this.tokens[endpoint];
-    return Promise.resolve();
+  clearResumeToken(socket) {
+    return this.storage.del(this.getStorageKey(socket));
   }
 
-  setResumeToken({ endpoint }, token) {
-    this.tokens[endpoint] = token;
-    return Promise.resolve();
+  setResumeToken(socket, token) {
+    return this.storage.set(this.getStorageKey(socket), token);
   }
 
-  getResumeToken({ endpoint }) {
-    if (!this.tokens[endpoint]) {
-      return Promise.reject(new Error('Token not found'));
-    }
-    return Promise.resolve(this.tokens[endpoint]);
+  getResumeToken(socket) {
+    return this.storage.get(this.getStorageKey(socket));
   }
 
   getFlushTimeout() {
