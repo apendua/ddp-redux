@@ -25,6 +25,7 @@ import {
   oneList,
 } from '../common/api/TodoLists';
 import Todo from '../common/models/Todo';
+import TodoList from '../common/models/TodoList';
 import Loader from '../components/Loader';
 
 const ListItem = withHandlers({
@@ -61,6 +62,10 @@ const List = compose(
     subscriptions: (state, { listId }) => [
       oneList.withParams({ listId }),
       todosInList.withParams({ listId }),
+    ],
+    models: [
+      Todo,
+      TodoList,
     ],
     selectors: ({
       Todos,

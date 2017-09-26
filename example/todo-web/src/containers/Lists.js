@@ -19,12 +19,16 @@ import {
   allLists,
 } from '../common/api/TodoLists';
 import Loader from '../components/Loader';
+import TodoList from '../common/models/TodoList';
 
 const Lists = compose(
   withState('title', 'setTitle', ''),
   ddp({
     subscriptions: [
       allLists.withParams(),
+    ],
+    models: [
+      TodoList,
     ],
     selectors: ({
       TodoLists,

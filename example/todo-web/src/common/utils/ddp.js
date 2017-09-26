@@ -2,6 +2,7 @@ import forEach from 'lodash.foreach';
 import keyBy from 'lodash.keyby';
 import find from 'lodash.find';
 import map from 'lodash.map';
+import some from 'lodash.some';
 import mapValues from 'lodash.mapvalues';
 import shallowEqual from 'shallowequal';
 import {
@@ -333,13 +334,13 @@ const ddp = ({
           connection,
           queries,
         }) => {
-          if (subscriptions.some(x => !x || x.state === DDP_SUBSCRIPTION_STATE__PENDING)) {
+          if (some(subscriptions, x => !x || x.state === DDP_SUBSCRIPTION_STATE__PENDING)) {
             return false;
           }
           if (!connection || connection.state === DDP_CONNECTION_STATE__CONNECTING) {
             return false;
           }
-          if (queries.some(x => !x || x.state === DDP_QUERY_STATE__PENDING)) {
+          if (some(queries, x => !x || x.state === DDP_QUERY_STATE__PENDING)) {
             return false;
           }
           return true;
