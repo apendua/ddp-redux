@@ -12,6 +12,11 @@ import {
 } from './constants';
 import sha256 from './utils/sha256';
 
+const hashPassword = password => ({
+  digest: sha256(password),
+  algorithm: 'sha-256',
+});
+
 export const openSocket = (endpoint, params, meta) => ({
   type: DDP_OPEN,
   payload: {
@@ -72,9 +77,9 @@ export const queryRelease = (queryId, meta) => ({
   },
 });
 
-export const login = (payload, meta) => ({
+export const login = (params, meta) => ({
   type: DDP_LOGIN,
-  payload,
+  payload: [params],
   ...meta && { meta },
 });
 
@@ -87,18 +92,40 @@ export const loginWithPassword = ({
   username,
   email,
   password,
+}, meta) => login({
+  user: {
+    username,
+    email,
+  },
+  password: hashPassword(password),
+}, meta);
+
+export const createUser = ({
+  password,
+  ...rest
 }, meta) => ({
   type: DDP_LOGIN,
-  payload: {
-    user: {
-      username,
-      email,
-    },
-    password: {
-      digest: sha256(password),
-      algorithm: 'sha-256',
-    },
+  payload: [{
+    password: hashPassword(password),
+    ...rest,
+  }],
+  meta: {
+    ...meta,
+    method: 'createUser',
   },
-  ...meta && { meta },
 });
 
+export const resetPassword = ({
+  token,
+  newPassword,
+}, meta) => ({
+  type: DDP_LOGIN,
+  payload: [
+    token,
+    hashPassword(newPassword),
+  ],
+  meta: {
+    ...meta,
+    method: 'resetPassword',
+  },
+});

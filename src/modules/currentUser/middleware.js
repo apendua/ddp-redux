@@ -82,10 +82,10 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_LOGIN:
         return (() => {
           const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
-
+          const method = (action.meta && action.meta.method) || DEFAULT_LOGIN_METHOD_NAME;
           next(action);
           const result = store.dispatch(
-            callMethod(DEFAULT_LOGIN_METHOD_NAME, [action.payload], {
+            callMethod(method, action.payload, {
               ...action.meta,
               priority: LOGIN_ACTION_PRIORITY,
             }),
