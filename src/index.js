@@ -1,4 +1,5 @@
 import DDPClient from './DDPClient';
+import DDPError from './DDPError';
 import EJSON from './ejson';
 import {
   createCollectionSelectors,
@@ -11,6 +12,7 @@ export * from './actions';
 export * from './constants';
 export {
   EJSON,
+  DDPError,
   createCollectionSelectors,
   createCurrentUserSelectors,
 };
