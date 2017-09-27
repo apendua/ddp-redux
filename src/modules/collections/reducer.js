@@ -30,12 +30,13 @@ export const mutateCollections = (state, collection, id, socketId, mutateOne) =>
       [socketId]: mutateOne(current && current[socketId]),
     };
   const shouldRemoveCurrent = isEmpty(newCurrent);
-  const shouldRemoveCompltely = shouldRemoveCurrent && isEmpty(other);
+  const shouldRemoveCompletely = shouldRemoveCurrent && isEmpty(other);
   return {
     ...state,
     [collection]: {
       ...stateCollection,
-      nextById: shouldRemoveCompltely
+      needsUpdate: true,
+      nextById: shouldRemoveCompletely
         ? omit(stateCollectionById, id)
         : {
           ...stateCollectionById,
@@ -91,9 +92,13 @@ export const createReducer = () => (state = {}, action) => {
       );
     case DDP_FLUSH:
       return carefullyMapValues(state, (collection) => {
-        if (collection.nextById !== collection.byId) {
+        if (collection.needsUpdate) {
+          const {
+            needsUpdate,
+            ...other
+          } = collection;
           return {
-            ...collection,
+            ...other,
             byId: collection.nextById,
           };
         }

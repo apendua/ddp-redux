@@ -1,4 +1,7 @@
+import some from 'lodash/some';
 import {
+  DDP_READY,
+  DDP_UPDATED,
   DDP_METHOD,
   DDP_ADDED,
   DDP_CHANGED,
@@ -12,14 +15,17 @@ import {
  */
 export const createMiddleware = ddpClient => (store) => {
   let flushTimeout = null;
-  const flush = () => {
+  const scheduleFlush = () => {
     if (flushTimeout) {
       clearTimeout(flushTimeout);
     }
     flushTimeout = setTimeout(() => {
-      store.dispatch({
-        type: DDP_FLUSH,
-      });
+      const state = store.getState();
+      if (some(state.ddp.collections, collection => collection.needsUpdate)) {
+        store.dispatch({
+          type: DDP_FLUSH,
+        });
+      }
       flushTimeout = null;
     }, ddpClient.getFlushTimeout());
   };
@@ -32,10 +38,14 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_CHANGED:
       case DDP_REMOVED:
       case DDP_METHOD:
-        return ((result) => {
-          flush();
-          return result;
-        })(next(action));
+        scheduleFlush();
+        return next(action);
+      case DDP_READY:
+      case DDP_UPDATED:
+        store.dispatch({
+          type: DDP_FLUSH,
+        });
+        return next(action);
       default:
         return next(action);
     }

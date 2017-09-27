@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* eslint no-unused-expressions: "off" */
+/* eslint no-invalid-this: "off" */
 
 import chai from 'chai';
 import sinon from 'sinon';
@@ -10,11 +11,12 @@ import {
 } from './middleware';
 import {
   DDP_FLUSH,
-  DDP_ADDED,
+  DDP_READY,
+  DDP_UPDATED,
 
-  MSG_ADDED,
-  MSG_CHANGED,
-  MSG_REMOVED,
+  DDP_ADDED,
+  DDP_CHANGED,
+  DDP_REMOVED,
 } from '../../constants';
 import {
   DDPClient,
@@ -55,22 +57,23 @@ describe('Test module - collections - middleware', () => {
   });
 
   [
-    MSG_ADDED,
-    MSG_CHANGED,
-    MSG_REMOVED,
-  ].forEach((event) => {
-    it(`should dispatch FLUSH after ${event}`, function () {
+    DDP_ADDED,
+    DDP_CHANGED,
+    DDP_REMOVED,
+  ].forEach((type) => {
+    it(`should schedule dispatching ${DDP_FLUSH} after ${type}`, function () {
       const store = this.mockStore({
         ddp: {
-          collections: {},
+          collections: {
+            col1: {
+              needsUpdate: true,
+            },
+          },
         },
       });
       const action = {
-        type: DDP_ADDED,
+        type,
         payload: {
-          msg: event,
-          id: '1',
-          collection: 'col1',
         },
         meta: {
           socketId: 'socket/1',
@@ -88,6 +91,35 @@ describe('Test module - collections - middleware', () => {
         {
           type: DDP_FLUSH,
         },
+      ]);
+    });
+  });
+
+  [
+    DDP_READY,
+    DDP_UPDATED,
+  ].forEach((type) => {
+    it(`should dispatch ${DDP_FLUSH} right before ${type}`, function () {
+      const store = this.mockStore({
+        ddp: {
+          collections: {
+            col1: {
+              needsUpdate: true,
+            },
+          },
+        },
+      });
+      const action = {
+        type,
+        payload: {
+        },
+      };
+      store.dispatch(action);
+      store.getActions().should.deep.equal([
+        {
+          type: DDP_FLUSH,
+        },
+        action,
       ]);
     });
   });
