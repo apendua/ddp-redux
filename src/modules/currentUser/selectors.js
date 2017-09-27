@@ -12,10 +12,18 @@ import {
 const constant = x => () => x;
 const identity = x => x;
 
+const noModelSpecified = () => {
+  console.warn(`You attempted to "selectCurrent" user but no User model was specified.
+This will result with null value being returned even if a user is logged in. To fix this,
+please make sure that you pass a valid Model and collection name to createCollectionSelectors().`);
+};
+
 export const createCurrentUserSelectors = (Model, collection, {
   selectConnectionId = constant(DEFAULT_SOCKET_ID),
 } = {}) => {
-  const userSelectorCreators = createCollectionSelectors(Model, collection);
+  const userSelectorCreators = Model && collection
+    ? createCollectionSelectors(Model, collection)
+    : null;
 
   const selectCurrentUserState = createSelector(
     selectConnectionId,
@@ -32,9 +40,11 @@ export const createCurrentUserSelectors = (Model, collection, {
     state => state && state.userId,
   );
 
-  const selectCurrent = userSelectorCreators.selectOne(
-    selectCurrentUserId,
-  );
+  const selectCurrent = userSelectorCreators
+    ? userSelectorCreators.selectOne(
+      selectCurrentUserId,
+    )
+    : noModelSpecified;
 
   const selectIsLoggingIn = createSelector(
     selectCurrentUserState,
@@ -43,6 +53,7 @@ export const createCurrentUserSelectors = (Model, collection, {
 
   return {
     selectCurrent,
+    selectCurrentUserId,
     selectIsLoggingIn,
   };
 };
