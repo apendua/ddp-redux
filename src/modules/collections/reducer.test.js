@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* eslint no-unused-expressions: "off" */
+/* eslint no-invalid-this: "off" */
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
@@ -29,6 +30,7 @@ describe('Test module - collections - reducer', () => {
     this.reducer = createReducer(DDPClient);
     this.referenceState1 = {
       col1: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -42,6 +44,7 @@ describe('Test module - collections - reducer', () => {
         },
       },
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -57,6 +60,7 @@ describe('Test module - collections - reducer', () => {
     };
     this.referenceState2 = {
       col1: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -79,6 +83,7 @@ describe('Test module - collections - reducer', () => {
         },
       },
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -147,12 +152,12 @@ describe('Test module - collections - reducer', () => {
       type: DDP_FLUSH,
     }).should.deep.equal({
       col1: {
-        ...this.referenceState1.col1,
         byId: this.referenceState1.col1.nextById,
+        nextById: this.referenceState1.col1.nextById,
       },
       col2: {
-        ...this.referenceState1.col2,
         byId: this.referenceState1.col2.nextById,
+        nextById: this.referenceState1.col2.nextById,
       },
     });
   });
@@ -160,6 +165,7 @@ describe('Test module - collections - reducer', () => {
   it('should add an entity to an empty collection', function () {
     const state = this.reducer({
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -189,6 +195,7 @@ describe('Test module - collections - reducer', () => {
   it('should add an entity to an empty collection (using added before)', function () {
     const state = this.reducer({
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -245,6 +252,7 @@ describe('Test module - collections - reducer', () => {
     });
     state.should.deep.equal({
       col1: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -266,6 +274,7 @@ describe('Test module - collections - reducer', () => {
         },
       },
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -294,6 +303,7 @@ describe('Test module - collections - reducer', () => {
     });
     state.should.deep.equal({
       col1: {
+        needsUpdate: true,
         nextById: {
           2: {
             current: {
@@ -307,6 +317,7 @@ describe('Test module - collections - reducer', () => {
         },
       },
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -340,6 +351,7 @@ describe('Test module - collections - reducer', () => {
     state.should.deep.equal({
       ...this.referenceState3,
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -389,6 +401,7 @@ describe('Test module - collections - reducer', () => {
     state.should.deep.equal({
       ...this.referenceState3,
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -431,6 +444,7 @@ describe('Test module - collections - reducer', () => {
     state.should.deep.equal({
       ...this.referenceState3,
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -462,6 +476,7 @@ describe('Test module - collections - reducer', () => {
     state.should.deep.equal({
       ...this.referenceState3,
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
@@ -507,6 +522,7 @@ describe('Test module - collections - reducer', () => {
     state.should.deep.equal({
       ...this.referenceState4,
       col2: {
+        needsUpdate: true,
         nextById: {
           1: {
             current: {
