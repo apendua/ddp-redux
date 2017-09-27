@@ -20,7 +20,7 @@ import {
  * @param {string} socketId
  * @returns {number}
  */
-const getMessageTreshold = (state, socketId) => {
+const getMessageThreshold = (state, socketId) => {
   const priorities = values(state.ddp.messages.sockets[socketId] &&
                             state.ddp.messages.sockets[socketId].pending);
   if (priorities.length === 0) {
@@ -57,7 +57,7 @@ export const createMiddleware = ddpClient => (store) => {
       const queue = state.ddp.messages.sockets[socketId] &&
                     state.ddp.messages.sockets[socketId].queue;
       if (queue) {
-        const threshold = getMessageTreshold(state, socketId);
+        const threshold = getMessageThreshold(state, socketId);
         let i = 0;
         while (i < queue.length && threshold <= queue[i].meta.priority) {
           store.dispatch(queue[i]);
@@ -88,11 +88,11 @@ export const createMiddleware = ddpClient => (store) => {
       newAction.payload.id = newAction.payload.id || ddpClient.nextUniqueId();
     }
     const state = store.getState();
-    const threshold = getMessageTreshold(state, socketId);
+    const threshold = getMessageThreshold(state, socketId);
     if (newAction.meta.priority >= threshold) {
       // NOTE: Initially (before "connected" message is received), the threshold will be set
       //       to "connect" action priority which is the highest possible. As a result, nothing
-      //       will be sent untill the connection is established.
+      //       will be sent until the connection is established.
       ddpClient.send(newAction.payload, newAction.meta);
       return next(newAction);
     }
