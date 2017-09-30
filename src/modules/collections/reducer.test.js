@@ -16,7 +16,7 @@ import {
   DDP_QUERY_UPDATE,
   DDP_QUERY_DELETE,
   DDP_METHOD,
-  DDP_METHOD_UPDATE,
+  DDP_UPDATED,
 } from '../../constants';
 import {
   DDPClient,
@@ -508,15 +508,19 @@ describe('Test module - collections - reducer', () => {
 
   it('should remove optimistic changes', function () {
     const state = this.reducer(this.referenceState4, {
-      type: DDP_METHOD_UPDATE,
+      type: DDP_UPDATED,
       meta: {
-        methodId: 'method/1',
-        entities: {
-          col2: {
-            1: {},
-            3: {},
+        methods: [
+          {
+            id: 'method/1',
+            entities: {
+              col2: {
+                1: {},
+                3: {},
+              },
+            },
           },
-        },
+        ],
       },
     });
     state.should.deep.equal({
