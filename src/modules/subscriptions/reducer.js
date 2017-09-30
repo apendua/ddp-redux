@@ -3,12 +3,15 @@ import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DEFAULT_SOCKET_ID,
 
+  DDP_SUBSCRIPTION_STATE__INITIAL,
+  DDP_SUBSCRIPTION_STATE__QUEUED,
   DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_SUBSCRIPTION_STATE__READY,
   DDP_SUBSCRIPTION_STATE__RESTORING,
 
+  DDP_ENQUEUE,
   DDP_CONNECT,
-  // DDP_SUB,
+  DDP_SUB,
   DDP_UNSUB,
   DDP_READY,
   DDP_NOSUB,
@@ -21,24 +24,15 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_SUBSCRIBE:
       return (() => {
         const sub = state[action.meta.subId];
-        if (sub) {
-          return {
-            ...state,
-            [action.meta.subId]: {
-              ...sub,
-              users: (sub.users || 0) + 1,
-            },
-          };
-        }
         return {
           ...state,
           [action.meta.subId]: {
-            id:       action.meta.subId,
-            state:    DDP_SUBSCRIPTION_STATE__PENDING,
-            name:     action.payload.name,
-            params:   action.payload.params,
-            users:    1,
-            socketId: (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
+            id:       sub ? sub.id : action.meta.subId,
+            state:    sub ? sub.state : DDP_SUBSCRIPTION_STATE__INITIAL,
+            name:     sub ? sub.name : action.payload.name,
+            params:   sub ? sub.params : action.payload.params,
+            users:    sub ? (sub.users || 0) + 1 : 1,
+            socketId: sub ? sub.socketId : (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
           },
         };
       })();
@@ -52,17 +46,41 @@ export const createReducer = () => (state = {}, action) => {
           },
         }
         : state;
-    // case DDP_SUB:
-    //   return {
-    //     ...state,
-    //     [action.meta.subId]: {
-    //       id:     action.meta.subId,
-    //       state:  DDP_SUBSCRIPTION_STATE__PENDING,
-    //       name:   action.payload.name,
-    //       params: action.payload.params,
-    //       ...action.meta && { meta: action.meta },
-    //     },
-    //   };
+    case DDP_ENQUEUE:
+      return (() => {
+        const id = action.meta.subId;
+        const sub = state[id];
+        if (sub && sub.state === DDP_SUBSCRIPTION_STATE__INITIAL) {
+          return {
+            ...state,
+            [id]: {
+              ...state[id],
+              state: DDP_SUBSCRIPTION_STATE__QUEUED,
+            },
+          };
+        }
+        return state;
+      })();
+    case DDP_SUB:
+      return (() => {
+        const id = action.meta.subId;
+        const sub = state[id];
+        if (
+          sub && (
+            sub.state === DDP_SUBSCRIPTION_STATE__INITIAL ||
+            sub.state === DDP_SUBSCRIPTION_STATE__QUEUED
+          )
+        ) {
+          return {
+            ...state,
+            [id]: {
+              ...state[id],
+              state: DDP_SUBSCRIPTION_STATE__PENDING,
+            },
+          };
+        }
+        return state;
+      })();
     case DDP_UNSUB:
       return omit(state, [action.meta.subId]);
     case DDP_NOSUB:

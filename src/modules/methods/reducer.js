@@ -1,5 +1,6 @@
 import omit from 'lodash/omit';
 import {
+  DDP_METHOD_STATE__QUEUED,
   DDP_METHOD_STATE__PENDING,
   DDP_METHOD_STATE__UPDATED,
   DDP_METHOD_STATE__RETURNED,
@@ -8,6 +9,7 @@ import {
   DDP_METHOD,
   DDP_RESULT,
   DDP_UPDATED,
+  DDP_ENQUEUE,
 } from '../../constants';
 import {
   extractMetadata,
@@ -15,7 +17,7 @@ import {
 import carefullyMapValues from '../../utils/carefullyMapValues';
 
 export const createReducer = () => (state = {}, action) => {
-  const id = action.payload && action.payload.id;
+  const id = action.meta && action.meta.methodId;
   switch (action.type) {
     case DDP_CANCEL:
       return carefullyMapValues(state, (method, methodId, remove) => {
@@ -24,10 +26,25 @@ export const createReducer = () => (state = {}, action) => {
         }
         return method;
       });
+    case DDP_ENQUEUE:
+      return (() => {
+        if (action.meta.type === DDP_METHOD) {
+          return {
+            ...state,
+            [id]: {
+              ...state[id],
+              id,
+              state: DDP_METHOD_STATE__QUEUED,
+            },
+          };
+        }
+        return state;
+      })();
     case DDP_METHOD:
       return {
         ...state,
         [id]: {
+          ...state[id],
           id,
           state:    DDP_METHOD_STATE__PENDING,
           name:     action.payload.method,

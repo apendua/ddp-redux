@@ -6,6 +6,7 @@ import stableMap from '../../utils/stableMap';
 import EJSON from '../../ejson';
 import {
   DEFAULT_SOCKET_ID,
+  DDP_QUERY_STATE__READY,
 } from '../../constants';
 
 const constant = x => () => x;
@@ -21,7 +22,9 @@ const constant = x => () => x;
 export const createQueriesSelector = ({
   selectDeclaredQueries,
   selectConnectionId = constant(DEFAULT_SOCKET_ID),
-  emptyState = {},
+  emptyState = {
+    state: DDP_QUERY_STATE__READY,
+  },
 }) => createSelector(
   selectDeclaredQueries,
   selectConnectionId,

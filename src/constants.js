@@ -9,10 +9,13 @@ export const DDP_CONNECTION_STATE__DISCONNECTED = 'disconnected';
 export const DDP_USER_STATE__LOGGING_IN = 'loggingIn';
 export const DDP_USER_STATE__LOGGED_IN = 'loggedIn';
 
+export const DDP_SUBSCRIPTION_STATE__INITIAL = 'initial';
+export const DDP_SUBSCRIPTION_STATE__QUEUED = 'queued';
 export const DDP_SUBSCRIPTION_STATE__PENDING = 'pending';
 export const DDP_SUBSCRIPTION_STATE__READY = 'ready';
 export const DDP_SUBSCRIPTION_STATE__RESTORING = 'restoring';
 
+export const DDP_METHOD_STATE__QUEUED = 'queued';
 export const DDP_METHOD_STATE__PENDING = 'pending';
 // NOTE: Methods do not have "ready" state, because they're usually removed from store
 //       as soon as they're completed, i.e. both "result" and "updated" messages are received.
@@ -20,6 +23,8 @@ export const DDP_METHOD_STATE__PENDING = 'pending';
 export const DDP_METHOD_STATE__UPDATED = 'updated';
 export const DDP_METHOD_STATE__RETURNED = 'returned';
 
+export const DDP_QUERY_STATE__INITIAL = 'initial';
+export const DDP_QUERY_STATE__QUEUED = 'queued';
 export const DDP_QUERY_STATE__PENDING = 'pending';
 export const DDP_QUERY_STATE__READY = 'ready';
 export const DDP_QUERY_STATE__RESTORING = 'restoring';
