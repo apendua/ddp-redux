@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* eslint no-unused-expressions: "off" */
+/* eslint no-invalid-this: "off" */
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -10,6 +11,8 @@ import {
 import {
   DEFAULT_SOCKET_ID,
 
+  DDP_ENQUEUE,
+  DDP_METHOD,
   DDP_RESULT,
   DDP_CONNECT,
 
@@ -21,6 +24,8 @@ import {
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
 
+  DDP_QUERY_STATE__QUEUED,
+  DDP_QUERY_STATE__INITIAL,
   DDP_QUERY_STATE__PENDING,
   DDP_QUERY_STATE__RESTORING,
   DDP_QUERY_STATE__READY,
@@ -79,7 +84,7 @@ describe('Test module - queries - reducer', () => {
     });
   });
 
-  it('should change query state to "restoring" on refetch', function () {
+  it('should change query state to "restoring" on re-fetch', function () {
     this.reducer({
       1: {
         name: 'A',
@@ -140,8 +145,103 @@ describe('Test module - queries - reducer', () => {
         id: '2',
         name: 'B',
         params: 1,
-        state: DDP_QUERY_STATE__PENDING,
+        state: DDP_QUERY_STATE__INITIAL,
         socketId: 'socket/1',
+      },
+    });
+  });
+
+  it('should switch query state from "initial" to "queued"', function () {
+    this.reducer({
+      1: {
+        id: '1',
+        state: DDP_QUERY_STATE__INITIAL,
+      },
+    }, {
+      type: DDP_ENQUEUE,
+      payload: {
+      },
+      meta: {
+        type: DDP_METHOD,
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        id: '1',
+        state: DDP_QUERY_STATE__QUEUED,
+      },
+    });
+  });
+
+  it('should not switch query state from "restoring" to "queued"', function () {
+    this.reducer({
+      1: {
+        id: '1',
+        state: DDP_QUERY_STATE__RESTORING,
+      },
+    }, {
+      type: DDP_ENQUEUE,
+      payload: {
+      },
+      meta: {
+        type: DDP_METHOD,
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        id: '1',
+        state: DDP_QUERY_STATE__RESTORING,
+      },
+    });
+  });
+
+  it('should switch state from "initial" to "pending" on DDP_METHOD', function () {
+    this.reducer({
+      1: {
+        state: DDP_QUERY_STATE__INITIAL,
+      },
+    }, {
+      type: DDP_METHOD,
+      meta: {
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        state: DDP_QUERY_STATE__PENDING,
+      },
+    });
+  });
+
+  it('should switch state from "queued" to "pending" on DDP_METHOD', function () {
+    this.reducer({
+      1: {
+        state: DDP_QUERY_STATE__QUEUED,
+      },
+    }, {
+      type: DDP_METHOD,
+      meta: {
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        state: DDP_QUERY_STATE__PENDING,
+      },
+    });
+  });
+
+  it('should not change "restoring" state on DDP_METHOD', function () {
+    this.reducer({
+      1: {
+        state: DDP_QUERY_STATE__RESTORING,
+      },
+    }, {
+      type: DDP_METHOD,
+      meta: {
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        state: DDP_QUERY_STATE__RESTORING,
       },
     });
   });
@@ -161,7 +261,7 @@ describe('Test module - queries - reducer', () => {
         id: '2',
         name: 'B',
         params: 1,
-        state: DDP_QUERY_STATE__PENDING,
+        state: DDP_QUERY_STATE__INITIAL,
         socketId: DEFAULT_SOCKET_ID,
       },
     });

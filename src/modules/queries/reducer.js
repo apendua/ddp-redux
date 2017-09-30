@@ -2,10 +2,14 @@ import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DEFAULT_SOCKET_ID,
 
+  DDP_QUERY_STATE__INITIAL,
+  DDP_QUERY_STATE__QUEUED,
   DDP_QUERY_STATE__PENDING,
   DDP_QUERY_STATE__READY,
   DDP_QUERY_STATE__RESTORING,
 
+  DDP_METHOD,
+  DDP_ENQUEUE,
   DDP_CONNECT,
   DDP_RESULT,
 
@@ -51,6 +55,47 @@ export const createReducer = () => (state = {}, action) => {
         }
         return state;
       })();
+    case DDP_ENQUEUE:
+      return (() => {
+        if (action.meta.type === DDP_METHOD && action.meta.queryId) {
+          const id = action.meta.queryId;
+          const query = state[id];
+          if (query && query.state === DDP_QUERY_STATE__INITIAL) {
+            return {
+              ...state,
+              [id]: {
+                ...state[id],
+                state: DDP_QUERY_STATE__QUEUED,
+              },
+            };
+          }
+          return state;
+        }
+        return state;
+      })();
+    case DDP_METHOD:
+      return (() => {
+        if (action.meta.queryId) {
+          const id = action.meta.queryId;
+          const query = state[id];
+          if (
+            query && (
+              query.state === DDP_QUERY_STATE__INITIAL ||
+              query.state === DDP_QUERY_STATE__QUEUED
+            )
+          ) {
+            return {
+              ...state,
+              [id]: {
+                ...state[id],
+                state: DDP_QUERY_STATE__PENDING,
+              },
+            };
+          }
+          return state;
+        }
+        return state;
+      })();
     case DDP_QUERY_DELETE:
       return carefullyMapValues(state, (query, id, remove) => {
         if (id === action.meta.queryId) {
@@ -64,7 +109,7 @@ export const createReducer = () => (state = {}, action) => {
         [action.meta.queryId]: {
           ...state[action.meta.queryId],
           id:       action.meta.queryId,
-          state:    DDP_QUERY_STATE__PENDING,
+          state:    DDP_QUERY_STATE__INITIAL,
           name:     action.payload.name,
           params:   action.payload.params,
           socketId: (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
