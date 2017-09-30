@@ -57,7 +57,6 @@ export const DDP_METHOD = '@DDP.OUT.METHOD';
 export const DDP_CANCEL = '@DDP.METHOD.CANCEL';
 export const DDP_RESULT = '@DDP.IN.RESULT';
 export const DDP_UPDATED = '@DDP.IN.UPDATED';
-export const DDP_METHOD_UPDATE = '@DDP.METHOD.UPDATE';
 
 export const DDP_LOGIN = '@DDP.USER.LOGIN';
 export const DDP_LOGGED_IN = '@DDP.USER.LOGGED_IN';

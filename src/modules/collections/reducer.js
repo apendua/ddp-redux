@@ -1,8 +1,9 @@
 import omit from 'lodash/omit';
+import reduce from 'lodash/reduce';
 import isEmpty from 'lodash/isEmpty';
 import {
   DDP_METHOD,
-  DDP_METHOD_UPDATE,
+  DDP_UPDATED,
   DDP_ADDED,
   DDP_ADDED_BEFORE,
   DDP_CHANGED,
@@ -135,11 +136,18 @@ export const createReducer = () => (state = {}, action) => {
         action.meta.methodId,
         action.meta.entities,
       );
-    case DDP_METHOD_UPDATE:
-      return removeChanges(
+    case DDP_UPDATED:
+      return reduce(
+        action.meta.methods,
+        (previousState, method) => (method
+          ? removeChanges(
+            previousState,
+            method.id,
+            method.entities,
+          )
+          : previousState
+        ),
         state,
-        action.meta.methodId,
-        action.meta.entities,
       );
     default:
       return state;

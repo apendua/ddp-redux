@@ -13,7 +13,6 @@ import {
 import DDPError from '../../DDPError';
 import {
   DDP_METHOD,
-  DDP_METHOD_UPDATE,
   DDP_UPDATED,
   DDP_CONNECTED,
   DDP_DISCONNECTED,
@@ -62,7 +61,7 @@ describe('Test module - methods - middleware', () => {
     ]);
   });
 
-  it('should dispatch DDP_METHOD_UPDATE if method is updated', function () {
+  it('should attach method details to metadata on DDP_UPDATED', function () {
     const store = this.mockStore(createInitialState('1', {
       id: '1',
       state: DDP_METHOD_STATE__PENDING,
@@ -76,16 +75,19 @@ describe('Test module - methods - middleware', () => {
     });
     store.getActions().should.deep.equal([
       {
-        type: DDP_METHOD_UPDATE,
-        meta: {
-          methodId: '1',
-          socketId: '1',
-        },
-      },
-      {
         type: DDP_UPDATED,
         payload: {
           methods: ['1', '2'],
+        },
+        meta: {
+          methods: [
+            {
+              id: '1',
+              state: DDP_METHOD_STATE__PENDING,
+              socketId: '1',
+            },
+            undefined, // unknown method
+          ],
         },
       },
     ]);

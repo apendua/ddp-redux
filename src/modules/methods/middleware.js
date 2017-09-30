@@ -1,3 +1,4 @@
+import map from 'lodash/map';
 import forEach from 'lodash/forEach';
 import {
   DDP_METHOD_STATE__PENDING,
@@ -10,7 +11,6 @@ import {
   DDP_METHOD,
   DDP_RESULT,
   DDP_UPDATED,
-  DDP_METHOD_UPDATE,
 } from '../../constants';
 import DDPError from '../../DDPError';
 import {
@@ -142,20 +142,16 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_UPDATED:
         return (() => {
           const state = store.getState();
-          forEach(action.payload.methods, (methodId) => {
-            const method = state.ddp.methods[methodId];
-            // TODO: Instead of dispatching multiple actions here,
-            //       attach relevant metadata to the original action.
-            if (method) {
-              store.dispatch(
-                enhance(
-                  { type: DDP_METHOD_UPDATE },
-                  method,
-                ),
-              );
-            }
+          return next({
+            ...action,
+            meta: {
+              ...action.meta,
+              methods: map(
+                action.payload.methods,
+                methodId => state.ddp.methods[methodId],
+              ),
+            },
           });
-          return next(action);
         })();
       default:
         return next(action);
