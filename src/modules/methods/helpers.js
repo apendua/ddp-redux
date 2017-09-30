@@ -1,7 +1,7 @@
 
 /**
  * Pick fields from metadata object that can potentially
- * be stored at directly the method object in redux store,
+ * be stored directly at the method object in redux store,
  * and vice versa.
  * @param {object} object
  * @returns {object}

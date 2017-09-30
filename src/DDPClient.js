@@ -1,8 +1,9 @@
-import shallowEqual from 'shallowequal';
 import mapValues from 'lodash/mapValues';
 import DDPSocket from './DDPSocket';
 import DDPEmitter from './DDPEmitter';
+import DDPError from './DDPError';
 import Storage from './utils/Storage';
+import carefullyMapValues from './utils/carefullyMapValues';
 
 import {
   DEFAULT_SOCKET_ID,
@@ -15,16 +16,7 @@ import * as messages from './modules/messages';
 import * as methods from './modules/methods';
 import * as queries from './modules/queries';
 import * as subscriptions from './modules/subscriptions';
-
-const modules = {
-  collections,
-  connection,
-  currentUser,
-  messages,
-  methods,
-  queries,
-  subscriptions,
-};
+import * as wrapWithPromise from './modules/wrapWithPromise';
 
 /**
  * @class
@@ -51,6 +43,7 @@ class DDPClient extends DDPEmitter {
     this.tokens = {};
     this.storage = storage;
     this.getStorageKey = getStorageKey;
+    this.promises = {};
   }
 
   send(msg, { socketId = DEFAULT_SOCKET_ID } = {}) {
@@ -130,14 +123,15 @@ class DDPClient extends DDPEmitter {
 
   middleware() {
     const middlewares = [
-      'connection',
-      'messages',
-      'currentUser',
-      'collections',
-      'methods',
-      'queries',
-      'subscriptions',
-    ].map(name => modules[name].createMiddleware(this));
+      connection,
+      messages,
+      wrapWithPromise, // needs to go after messages, because id must be set
+      currentUser,
+      collections,
+      methods,
+      queries,
+      subscriptions,
+    ].map(module => module.createMiddleware(this));
     return (store) => {
       const chain = middlewares.map(middleware => middleware(store));
       return chain.reduce((a, b) => next => a(b(next)));
@@ -148,14 +142,45 @@ class DDPClient extends DDPEmitter {
     return this.constructor.defaultExtractEntities(result, options);
   }
 
+  cleanError(error) {
+    return this.constructor.toDDPError(error);
+  }
+
+  /**
+   * Transforms different types of data into an instance of DDPError.
+   * If falsy value is passed, null is return.
+   * @param {string|object|DDPError} error
+   * @returns {DDPError}
+   */
+  static toDDPError(error) {
+    if (!error) {
+      return null;
+    }
+    if (error instanceof DDPError) {
+      return error;
+    }
+    if (error && typeof error === 'object') {
+      return new DDPError(error.error, error.reason, error.details);
+    }
+    if (typeof error === 'string') {
+      return new DDPError(error);
+    }
+    return new DDPError();
+  }
+
   static reducer() {
-    const reducers = mapValues(modules, module => module.createReducer(this));
+    const reducers = mapValues({
+      connection,
+      messages,
+      currentUser,
+      collections,
+      methods,
+      queries,
+      subscriptions,
+    }, module => module.createReducer(this));
     return (state = {}, action) => {
-      const newState = mapValues(reducers, (reducer, key) => reducer(state[key], action));
-      if (shallowEqual(newState, state)) {
-        return state;
-      }
-      return newState;
+      // TODO: Filter relevant actions; do nothing if action is unknown.
+      return carefullyMapValues(reducers, (reducer, key) => reducer(state[key], action));
     };
   }
 

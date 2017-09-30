@@ -96,7 +96,7 @@ export const createMiddleware = ddpClient => (store) => {
       ddpClient.send(newAction.payload, newAction.meta);
       return next(newAction);
     }
-    store.dispatch({
+    return store.dispatch({
       type: DDP_ENQUEUE,
       payload: newAction.payload,
       meta: {
@@ -104,6 +104,5 @@ export const createMiddleware = ddpClient => (store) => {
         ...newAction.meta,
       },
     });
-    return undefined;
   };
 };

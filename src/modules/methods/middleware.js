@@ -18,27 +18,6 @@ import {
 } from './helpers.js';
 
 /**
- * Convert error into a DDPError object.
- * @param {string|object|DDPError} error
- * @returns {DDPError}
- */
-const cleanError = (error) => {
-  if (!error) {
-    return null;
-  }
-  if (error instanceof DDPError) {
-    return error;
-  }
-  if (error && typeof error === 'object') {
-    return new DDPError(error.error, error.reason, error.details);
-  }
-  if (typeof error === 'string') {
-    return new DDPError(error);
-  }
-  return new DDPError();
-};
-
-/**
  * Return action equipped with additional meta data taken
  * from the provided method descriptor.
  * @param {object} action
@@ -63,17 +42,7 @@ const enhance = (action, method) => {
  * Create middleware for the given ddpClient.
  * @param {DDPClient} ddpClient
  */
-export const createMiddleware = () => (store) => {
-  const promises = {};
-  const fulfill = (id, method) => {
-    const promise = promises[id];
-    if (promise) {
-      promise.fulfill(
-        cleanError(method.error),
-        method.result,
-      );
-    }
-  };
+export const createMiddleware = ddpClient => (store) => {
   return next => (action) => {
     if (!action || typeof action !== 'object') {
       return next(action);
@@ -84,19 +53,6 @@ export const createMiddleware = () => (store) => {
           const state = store.getState();
           const methodId = action.meta.methodId;
           const method = state.ddp.methods[methodId];
-          // cancel can result in either resolving or rejecting the promise, depending on the "error" flag
-          fulfill(action.meta.methodId, action.error
-            ? {
-              error: action.payload || {
-                error: DDPError.ERROR_CANCELED,
-                reason: 'Method was canceled by user',
-                details: action.meta,
-              },
-            }
-            : {
-              result: action.payload,
-            },
-          );
           return next(enhance(action, method));
         })();
       case DDP_CONNECTED:
@@ -108,7 +64,7 @@ export const createMiddleware = () => (store) => {
             if (method.socketId === socketId) {
               if (method.retry && method.state === DDP_METHOD_STATE__PENDING) {
                 // call the same method again after connection is re-established
-                store.dispatch({
+                const promise = store.dispatch({
                   type: DDP_METHOD,
                   payload: {
                     id,
@@ -119,9 +75,14 @@ export const createMiddleware = () => (store) => {
                     socketId,
                   },
                 });
+                if (promise instanceof Promise) {
+                  promise.catch((error) => {
+                    ddpClient.emit('error', error);
+                  });
+                }
               } else if (method.state === DDP_METHOD_STATE__RETURNED) {
                 // TODO: Ideally, this should be fulfilled when there are no pending subscriptions,
-                //       but retruning the result which we already have should be relatively safe.
+                //       but returning the result which we already have should be relatively safe.
                 store.dispatch({
                   type: DDP_CANCEL,
                   payload: method.result,
@@ -164,33 +125,18 @@ export const createMiddleware = () => (store) => {
           return result;
         })(next(action));
       case DDP_METHOD:
-        next({
+        return next({
           ...action,
           meta: {
             ...action.meta,
             methodId: action.payload.id,
           },
         });
-        return new Promise((resolve, reject) => {
-          promises[action.payload.id] = {
-            fulfill: (err, res) => {
-              delete promises[action.payload.id];
-              if (err) {
-                reject(err);
-              } else {
-                resolve(res);
-              }
-            },
-          };
-        });
       case DDP_RESULT:
         return (() => {
           const state = store.getState();
           const methodId = action.payload.id;
           const method = state.ddp.methods[methodId];
-          if (method && method.state === DDP_METHOD_STATE__UPDATED) {
-            fulfill(methodId, action.payload);
-          }
           return next(enhance(action, method));
         })();
       case DDP_UPDATED:
@@ -198,9 +144,8 @@ export const createMiddleware = () => (store) => {
           const state = store.getState();
           forEach(action.payload.methods, (methodId) => {
             const method = state.ddp.methods[methodId];
-            if (method && method.state === DDP_METHOD_STATE__RETURNED) {
-              fulfill(methodId, method);
-            }
+            // TODO: Instead of dispatching multiple actions here,
+            //       attach relevant metadata to the original action.
             if (method) {
               store.dispatch(
                 enhance(

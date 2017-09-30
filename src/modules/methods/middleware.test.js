@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* eslint no-unused-expressions: "off" */
+/* eslint no-invalid-this: "off" */
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -15,13 +16,10 @@ import {
   DDP_METHOD_UPDATE,
   DDP_UPDATED,
   DDP_CONNECTED,
-  DDP_RESULT,
   DDP_DISCONNECTED,
   DDP_CANCEL,
 
   DDP_METHOD_STATE__PENDING,
-  DDP_METHOD_STATE__UPDATED,
-  DDP_METHOD_STATE__RETURNED,
 } from '../../constants';
 import {
   DDPClient,
@@ -64,108 +62,6 @@ describe('Test module - methods - middleware', () => {
     ]);
   });
 
-  it('should return a promise when method is dispatched', function () {
-    const store = this.mockStore();
-    const action = {
-      type: DDP_METHOD,
-      payload: {
-        id: '1',
-      },
-    };
-    store.dispatch(action).should.be.instanceOf(Promise);
-    store.getActions().should.deep.equal([{
-      type: DDP_METHOD,
-      payload: action.payload,
-      meta: {
-        methodId: '1',
-      },
-    }]);
-  });
-
-  it('should resolve a promise when method returns after being updated', function () {
-    const store = this.mockStore(createInitialState('1', {
-      state: DDP_METHOD_STATE__UPDATED,
-    }));
-    const assertion = store.dispatch({
-      type: DDP_METHOD,
-      payload: {
-        id: '1',
-      },
-    }).should.eventually.equal(1);
-    store.dispatch({
-      type: DDP_RESULT,
-      payload: {
-        id: '1',
-        result: 1,
-      },
-    });
-    return assertion;
-  });
-
-  it('should reject a promise when method returns after being updated', function () {
-    const store = this.mockStore(createInitialState('1', {
-      state: DDP_METHOD_STATE__UPDATED,
-    }));
-    const assertion = store.dispatch({
-      type: DDP_METHOD,
-      payload: {
-        id: '1',
-      },
-    }).should.be.rejectedWith('Error');
-    store.dispatch({
-      type: DDP_RESULT,
-      payload: {
-        id: '1',
-        error: {
-          error: 'Error',
-        },
-      },
-    });
-    return assertion;
-  });
-
-  it('should resolve a promise when method is updated after returning', function () {
-    const store = this.mockStore(createInitialState('1', {
-      state: DDP_METHOD_STATE__RETURNED,
-      result: 1,
-    }));
-    const assertion = store.dispatch({
-      type: DDP_METHOD,
-      payload: {
-        id: '1',
-      },
-    }).should.eventually.equal(1);
-    store.dispatch({
-      type: DDP_UPDATED,
-      payload: {
-        methods: ['1', '2'],
-      },
-    });
-    return assertion;
-  });
-
-  it('should reject a promise when method is updated after returning', function () {
-    const store = this.mockStore(createInitialState('1', {
-      state: DDP_METHOD_STATE__RETURNED,
-      error: {
-        error: 'Error',
-      },
-    }));
-    const assertion = store.dispatch({
-      type: DDP_METHOD,
-      payload: {
-        id: '1',
-      },
-    }).should.be.rejectedWith('Error');
-    store.dispatch({
-      type: DDP_UPDATED,
-      payload: {
-        methods: ['1', '2'],
-      },
-    });
-    return assertion;
-  });
-
   it('should dispatch DDP_METHOD_UPDATE if method is updated', function () {
     const store = this.mockStore(createInitialState('1', {
       id: '1',
@@ -193,92 +89,6 @@ describe('Test module - methods - middleware', () => {
         },
       },
     ]);
-  });
-
-  it('should resolve a promise when method is canceled', function () {
-    const store = this.mockStore(createInitialState('1', {
-      state: DDP_METHOD_STATE__PENDING,
-      socketId: '1',
-    }));
-    const assertion = store.dispatch({
-      type: DDP_METHOD,
-      payload: {
-        id: '1',
-      },
-    }).should.eventually.equal(1);
-    store.dispatch({
-      type: DDP_CANCEL,
-      payload: 1,
-      meta: {
-        methodId: '1',
-      },
-    });
-    store.getActions().should.deep.equal([
-      {
-        type: DDP_METHOD,
-        payload: {
-          id: '1',
-        },
-        meta: {
-          methodId: '1',
-        },
-      },
-      {
-        type: DDP_CANCEL,
-        payload: 1,
-        meta: {
-          methodId: '1',
-          socketId: '1',
-        },
-      },
-    ]);
-    return assertion;
-  });
-
-  it('should reject a promise when method is canceled', function () {
-    const store = this.mockStore(createInitialState('1', {
-      state: DDP_METHOD_STATE__PENDING,
-      socketId: '1',
-    }));
-    const assertion = store.dispatch({
-      type: DDP_METHOD,
-      payload: {
-        id: '1',
-      },
-    }).should.be.rejectedWith('Error');
-    store.dispatch({
-      type: DDP_CANCEL,
-      error: true,
-      payload: {
-        error: 'Error',
-      },
-      meta: {
-        methodId: '1',
-      },
-    });
-    store.getActions().should.deep.equal([
-      {
-        type: DDP_METHOD,
-        payload: {
-          id: '1',
-        },
-        meta: {
-          methodId: '1',
-        },
-      },
-      {
-        type: DDP_CANCEL,
-        error: true,
-        payload: {
-          error: 'Error',
-        },
-        meta: {
-          methodId: '1',
-          socketId: '1',
-        },
-      },
-    ]);
-    return assertion;
   });
 
   it('should cancel pending methods if connection is lost', function () {
