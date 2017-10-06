@@ -19,7 +19,8 @@ export const DDP_METHOD_STATE__QUEUED = 'queued';
 export const DDP_METHOD_STATE__PENDING = 'pending';
 // NOTE: Methods do not have "ready" state, because they're usually removed from store
 //       as soon as they're completed, i.e. both "result" and "updated" messages are received.
-// export const DDP_METHOD_STATE__READY = 'ready';
+//       However, we still use it in object that represents completed method in some method selectors.
+export const DDP_METHOD_STATE__READY = 'ready';
 export const DDP_METHOD_STATE__UPDATED = 'updated';
 export const DDP_METHOD_STATE__RETURNED = 'returned';
 

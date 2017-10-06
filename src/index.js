@@ -16,6 +16,9 @@ import {
 import {
   createConnectionSelector,
 } from './modules/connection/selectors';
+import {
+  createMethodsSelector,
+} from './modules/methods/selectors';
 
 export * from './actions';
 export * from './constants';
@@ -27,5 +30,6 @@ export {
   createSubscriptionsSelector,
   createQueriesSelector,
   createConnectionSelector,
+  createMethodsSelector,
 };
 export default DDPClient;
