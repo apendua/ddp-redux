@@ -88,6 +88,7 @@ export const createMiddleware = ddpClient => (store) => {
             promise = createPromise(action.payload.id);
           }
           next(action);
+          promise.id = action.payload.id;
           return promise;
         })();
       case DDP_RESULT:
