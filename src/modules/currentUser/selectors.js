@@ -3,6 +3,7 @@ import {
 } from 'reselect';
 import {
   DEFAULT_SOCKET_ID,
+  DDP_USER_STATE__LOGGING_IN,
 } from '../../constants';
 import {
   createCollectionSelectors,
@@ -29,8 +30,7 @@ export const createCurrentUserSelectors = (Model, collection, {
     identity,
     (connectionId, state) => (connectionId
       ? state.ddp &&
-        state.ddp.currentUser[connectionId] &&
-        state.ddp.currentUser[connectionId].userId
+        state.ddp.currentUser[connectionId]
       : null
     ),
   );

@@ -50,7 +50,7 @@ export const createCollectionSelectors = (Model, collection) => {
     const selectPredicateValues = createSelector(
       createSelector(
         selectPredicate,
-        (predicate) => {
+        (predicate = constantTrue) => {
           const selector = createValuesMappingSelector(
             selectAll,
             doc => predicate(doc),
