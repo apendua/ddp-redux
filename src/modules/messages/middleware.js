@@ -57,10 +57,12 @@ export const createMiddleware = ddpClient => (store) => {
       const queue = state.ddp.messages.sockets[socketId] &&
                     state.ddp.messages.sockets[socketId].queue;
       if (queue) {
-        const threshold = getMessageThreshold(state, socketId);
+        let t = getMessageThreshold(state, socketId);
         let i = 0;
-        while (i < queue.length && threshold <= queue[i].meta.priority) {
+        while (i < queue.length && t <= queue[i].meta.priority) {
           store.dispatch(queue[i]);
+          // Note that threshold might have changed after dispatching another action.
+          t = getMessageThreshold(store.getState(), socketId);
           i += 1;
         }
       }
