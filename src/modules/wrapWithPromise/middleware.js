@@ -25,18 +25,23 @@ export const createMiddleware = ddpClient => (store) => {
    * @param {String} id
    * @returns {Promise}
    */
-  const createPromise = id => new Promise((resolve, reject) => {
-    promises[id] = {
-      fulfill: (err, res) => {
+  const createPromise = (id) => {
+    if (promises[id]) {
+      return promises[id].promise;
+    }
+    promises[id] = {};
+    promises[id].promise = new Promise((resolve, reject) => {
+      promises[id].fulfill = (err, res) => {
         delete promises[id];
         if (err) {
           reject(err);
         } else {
           resolve(res);
         }
-      },
-    };
-  });
+      };
+    });
+    return promises[id].promise;
+  };
   /**
    * Fulfill an existing promise, identified by message id.
    * @param {String} id
