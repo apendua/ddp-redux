@@ -58,18 +58,15 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_ENQUEUE:
       return (() => {
         if (action.meta.type === DDP_METHOD && action.meta.queryId) {
-          const id = action.meta.queryId;
-          const query = state[id];
-          if (query && query.state === DDP_QUERY_STATE__INITIAL) {
-            return {
-              ...state,
-              [id]: {
-                ...state[id],
-                state: DDP_QUERY_STATE__QUEUED,
-              },
-            };
-          }
-          return state;
+          const queryId = action.meta.queryId;
+          return {
+            ...state,
+            [queryId]: {
+              ...state[queryId],
+              id: queryId,
+              state: DDP_QUERY_STATE__QUEUED,
+            },
+          };
         }
         return state;
       })();

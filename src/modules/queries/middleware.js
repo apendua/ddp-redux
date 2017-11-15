@@ -4,6 +4,9 @@ import EJSON from '../../ejson';
 import {
   DEFAULT_SOCKET_ID,
 
+  DDP_QUERY_STATE__READY,
+  DDP_QUERY_STATE__PENDING,
+
   DDP_CONNECT,
   DDP_RESULT,
 
@@ -50,7 +53,12 @@ export const createMiddleware = ddpClient => (store) => {
           const socketId = action.meta && action.meta.socketId;
           const state = store.getState();
           forEach(state.ddp.queries, (query, queryId) => {
-            if (query.socketId === socketId) {
+            if (
+              query.socketId === socketId && (
+                query.state === DDP_QUERY_STATE__READY ||
+                query.state === DDP_QUERY_STATE__PENDING
+              )
+            ) {
               store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
             }
           });

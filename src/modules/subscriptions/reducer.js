@@ -27,12 +27,12 @@ export const createReducer = () => (state = {}, action) => {
         return {
           ...state,
           [action.meta.subId]: {
-            id:       sub ? sub.id : action.meta.subId,
-            state:    sub ? sub.state : DDP_SUBSCRIPTION_STATE__INITIAL,
-            name:     sub ? sub.name : action.payload.name,
-            params:   sub ? sub.params : action.payload.params,
-            users:    sub ? (sub.users || 0) + 1 : 1,
-            socketId: sub ? sub.socketId : (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
+            id:       (sub && sub.id) || action.meta.subId,
+            state:    (sub && sub.state) || DDP_SUBSCRIPTION_STATE__INITIAL,
+            name:     (sub && sub.name) || action.payload.name,
+            params:   (sub && sub.params) || action.payload.params,
+            users:    ((sub && sub.users) || 0) + 1,
+            socketId: (sub && sub.socketId) || (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
           },
         };
       })();
@@ -48,13 +48,15 @@ export const createReducer = () => (state = {}, action) => {
         : state;
     case DDP_ENQUEUE:
       return (() => {
-        const id = action.meta.subId;
-        const sub = state[id];
-        if (sub && sub.state === DDP_SUBSCRIPTION_STATE__INITIAL) {
+        if (action.meta.type === DDP_SUB) {
+          // Usually, queued actions will not have "subId" set by the middleware,
+          // so we need to extract the id directly from action payload.
+          const subId = action.payload.id;
           return {
             ...state,
-            [id]: {
-              ...state[id],
+            [subId]: {
+              ...state[subId],
+              id: subId,
               state: DDP_SUBSCRIPTION_STATE__QUEUED,
             },
           };
