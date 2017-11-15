@@ -3,7 +3,8 @@ import forEach from 'lodash/forEach';
 import EJSON from '../../ejson';
 import {
   DEFAULT_SOCKET_ID,
-
+  DDP_SUBSCRIPTION_STATE__READY,
+  DDP_SUBSCRIPTION_STATE__PENDING,
   DDP_CONNECT,
   DDP_SUB,
   DDP_UNSUB,
@@ -42,7 +43,15 @@ export const createMiddleware = ddpClient => (store) => {
           const state = store.getState();
           const socketId = action.meta && action.meta.socketId;
           forEach(state.ddp.subscriptions, (sub, id) => {
-            if (sub.socketId === socketId) {
+            // We are only restoring subscriptions that were already requested from the server.
+            // However, "pending" will not change their state to "restoring". Instead they will
+            // stay "pending" until they're really finished.
+            if (
+              sub.socketId === socketId && (
+                sub.state === DDP_SUBSCRIPTION_STATE__READY ||
+                sub.state === DDP_SUBSCRIPTION_STATE__PENDING
+              )
+            ) {
               store.dispatch({
                 type: DDP_SUB,
                 payload: {
