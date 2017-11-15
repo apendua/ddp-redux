@@ -29,11 +29,14 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_ENQUEUE:
       return (() => {
         if (action.meta.type === DDP_METHOD) {
+          // Usually, queued actions will not have "methodId" set by the middleware,
+          // so we need to extract the id directly from action payload.
+          const methodId = action.payload.id;
           return {
             ...state,
-            [id]: {
-              ...state[id],
-              id,
+            [methodId]: {
+              ...state[methodId],
+              id: methodId,
               state: DDP_METHOD_STATE__QUEUED,
             },
           };
