@@ -98,7 +98,7 @@ export const createMiddleware = ddpClient => (store) => {
               meta: {
                 socketId,
               },
-            })).catch(handleLoginError.bind(null, action.meta));
+            }), handleLoginError.bind(null, action.meta));
           }
           return result;
         })();
@@ -118,8 +118,7 @@ export const createMiddleware = ddpClient => (store) => {
                 meta: {
                   socketId: action.meta.socketId,
                 },
-              }))
-              .catch(handleLoginError.bind(null, action.meta));
+              }), handleLoginError.bind(null, action.meta));
           }
           return result;
         })();
