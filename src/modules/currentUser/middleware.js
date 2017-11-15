@@ -9,7 +9,7 @@ import {
   DDP_LOGGED_IN,
   DDP_LOGOUT,
   DDP_LOGGED_OUT,
-  DDP_CONNECTED,
+  DDP_CONNECT,
 
   LOGIN_ACTION_PRIORITY,
 } from '../../constants';
@@ -45,7 +45,7 @@ export const createMiddleware = ddpClient => (store) => {
       return next(action);
     }
     switch (action.type) {
-      case DDP_CONNECTED:
+      case DDP_CONNECT:
         return ((result) => {
           const socketId = action.meta.socketId;
           const socket = getSocket(socketId);
