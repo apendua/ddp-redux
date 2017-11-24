@@ -25,11 +25,12 @@ export const createMiddleware = ddpClient => (store) => {
    * @param {String} id
    * @returns {Promise}
    */
-  const createPromise = (id) => {
+  const createPromise = (id, meta) => {
     if (promises[id]) {
       return promises[id].promise;
     }
     promises[id] = {};
+    promises[id].meta = meta;
     promises[id].promise = new Promise((resolve, reject) => {
       promises[id].fulfill = (err, res) => {
         delete promises[id];
@@ -40,6 +41,9 @@ export const createMiddleware = ddpClient => (store) => {
         }
       };
     });
+    if (ddpClient.onPromise) {
+      ddpClient.onPromise(promises[id].promise, promises[id].meta);
+    }
     return promises[id].promise;
   };
   /**
@@ -87,13 +91,13 @@ export const createMiddleware = ddpClient => (store) => {
             switch (action.meta.type) {
               case DDP_METHOD:
               case DDP_SUB:
-                promise = createPromise(action.payload.id);
+                promise = createPromise(action.payload.id, action.meta);
                 break;
               default:
                 return next(action);
             }
           } else {
-            promise = createPromise(action.payload.id);
+            promise = createPromise(action.payload.id, action.meta);
           }
           next(action);
           promise.id = action.payload.id;
