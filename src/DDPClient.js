@@ -34,16 +34,16 @@ class DDPClient extends DDPEmitter {
     SocketConstructor,
     storage = new Storage(),
     getStorageKey = socket => socket.endpoint,
+    onPromise,
   } = {}) {
     super();
     this.SocketConstructor = SocketConstructor;
     this.sockets = {};
     this.counter = 0;
     this.defaultEndpoint = endpoint;
-    this.tokens = {};
     this.storage = storage;
     this.getStorageKey = getStorageKey;
-    this.promises = {};
+    this.onPromise = onPromise;
   }
 
   send(msg, { socketId = DEFAULT_SOCKET_ID } = {}) {
