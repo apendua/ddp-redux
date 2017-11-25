@@ -6,6 +6,7 @@ import {
   DDP_UNSUBSCRIBE,
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
+  DDP_QUERY_REFETCH,
 
   DDP_LOGIN,
   DDP_LOGOUT,
@@ -71,6 +72,15 @@ export const queryRequest = (name, params, meta) => ({
 
 export const queryRelease = (queryId, meta) => ({
   type: DDP_QUERY_RELEASE,
+  meta: {
+    ...meta,
+    queryId,
+  },
+});
+
+
+export const queryRefetch = (queryId, meta) => ({
+  type: DDP_QUERY_REFETCH,
   meta: {
     ...meta,
     queryId,
