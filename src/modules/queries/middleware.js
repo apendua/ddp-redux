@@ -6,6 +6,7 @@ import {
 
   DDP_QUERY_STATE__READY,
   DDP_QUERY_STATE__PENDING,
+  DDP_QUERY_STATE__RESTORING,
 
   DDP_CONNECT,
   DDP_RESULT,
@@ -54,9 +55,13 @@ export const createMiddleware = ddpClient => (store) => {
           const state = store.getState();
           forEach(state.ddp.queries, (query, queryId) => {
             if (
+              // NOTE: It's important to include "restoring" state as well,
+              //       because at this point reducer may already change query
+              //       state to restoring ...
               query.socketId === socketId && (
                 query.state === DDP_QUERY_STATE__READY ||
-                query.state === DDP_QUERY_STATE__PENDING
+                query.state === DDP_QUERY_STATE__PENDING ||
+                query.state === DDP_QUERY_STATE__RESTORING
               )
             ) {
               store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
