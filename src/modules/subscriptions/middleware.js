@@ -5,6 +5,7 @@ import {
   DEFAULT_SOCKET_ID,
   DDP_SUBSCRIPTION_STATE__READY,
   DDP_SUBSCRIPTION_STATE__PENDING,
+  DDP_SUBSCRIPTION_STATE__RESTORING,
   DDP_CONNECT,
   DDP_SUB,
   DDP_UNSUB,
@@ -49,7 +50,8 @@ export const createMiddleware = ddpClient => (store) => {
             if (
               sub.socketId === socketId && (
                 sub.state === DDP_SUBSCRIPTION_STATE__READY ||
-                sub.state === DDP_SUBSCRIPTION_STATE__PENDING
+                sub.state === DDP_SUBSCRIPTION_STATE__PENDING ||
+                sub.state === DDP_SUBSCRIPTION_STATE__RESTORING
               )
             ) {
               store.dispatch({
