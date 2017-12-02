@@ -115,9 +115,7 @@ export const createMiddleware = ddpClient => (store) => {
             result
               .then(() => store.dispatch({
                 type: DDP_LOGGED_OUT,
-                meta: {
-                  socketId: action.meta.socketId,
-                },
+                meta: action.meta,
               }), handleLoginError.bind(null, action.meta));
           }
           return result;
