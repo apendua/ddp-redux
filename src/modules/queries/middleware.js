@@ -111,7 +111,11 @@ export const createMiddleware = ddpClient => (store) => {
           const state = store.getState();
           const query = state.ddp.queries[queryId];
           // TODO: Explain why we want users to be positive.
-          if (query && query.users) {
+          // FIXME: If a query has no users, delete it instead of re-fetching.
+          //        This will ensure that it's actually refreshed the next time
+          //        it is requested.
+          // if (query && query.users) {
+          if (query) {
             const socketId = query.socketId;
             store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
           }
