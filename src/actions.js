@@ -1,3 +1,4 @@
+import forEach from 'lodash/forEach';
 import {
   DDP_OPEN,
   DDP_CLOSE,
@@ -86,6 +87,14 @@ export const queryRefetch = (queryId, meta) => ({
     queryId,
   },
 });
+
+// NOTE: Do not use this method in general!
+export const queryRefetchAll = () => (dispatch, getState) => {
+  const state = getState();
+  forEach(state.ddp.queries, (qyery, queryId) => {
+    dispatch(queryRefetch(queryId));
+  });
+};
 
 export const login = (params, meta) => ({
   type: DDP_LOGIN,
