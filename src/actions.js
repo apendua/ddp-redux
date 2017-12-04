@@ -148,3 +148,7 @@ export const resetPassword = ({
     method: 'resetPassword',
   },
 });
+
+export const forgotPassword = ({
+  email,
+}, meta) => callMethod('forgotPassword', [{ email }], meta);
