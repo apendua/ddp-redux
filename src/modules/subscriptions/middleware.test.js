@@ -19,6 +19,7 @@ import {
   DDP_SUB,
   DDP_UNSUB,
   DDP_CONNECT,
+  DDP_ENQUEUE,
 } from '../../constants';
 import {
   DDPClient,
@@ -99,6 +100,62 @@ describe('Test module - subscriptions - middleware', () => {
         meta: {
           subId: '1',
           socketId: 'socket/1',
+        },
+      },
+    ]);
+  });
+
+  it('should attach subId to metadata on DDP_SUB', function () {
+    const store = this.mockStore({
+      ddp: {
+        subscriptions: {
+        },
+      },
+    });
+    store.dispatch({
+      type: DDP_SUB,
+      payload: {
+        id: '1',
+      },
+    });
+    store.getActions().should.deep.equal([
+      {
+        type: DDP_SUB,
+        payload: {
+          id: '1',
+        },
+        meta: {
+          subId: '1',
+        },
+      },
+    ]);
+  });
+
+  it('should attach subId to metadata on DDP_ENQUEUE', function () {
+    const store = this.mockStore({
+      ddp: {
+        subscriptions: {
+        },
+      },
+    });
+    store.dispatch({
+      type: DDP_ENQUEUE,
+      payload: {
+        id: '1',
+      },
+      meta: {
+        type: DDP_SUB,
+      },
+    });
+    store.getActions().should.deep.equal([
+      {
+        type: DDP_ENQUEUE,
+        payload: {
+          id: '1',
+        },
+        meta: {
+          type: DDP_SUB,
+          subId: '1',
         },
       },
     ]);
@@ -331,6 +388,7 @@ describe('Test module - subscriptions - middleware', () => {
           params: [1, 2, 3],
         },
         meta: {
+          subId: '1',
           socketId: 'socket/1',
         },
       },

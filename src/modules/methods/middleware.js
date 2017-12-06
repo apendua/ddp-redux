@@ -11,6 +11,7 @@ import {
   DDP_METHOD,
   DDP_RESULT,
   DDP_UPDATED,
+  DDP_ENQUEUE,
 } from '../../constants';
 import DDPError from '../../DDPError';
 import {
@@ -124,6 +125,18 @@ export const createMiddleware = ddpClient => (store) => {
           });
           return result;
         })(next(action));
+      case DDP_ENQUEUE: {
+        if (action.meta.type === DDP_METHOD) {
+          return next({
+            ...action,
+            meta: {
+              ...action.meta,
+              methodId: action.payload.id,
+            },
+          });
+        }
+        return next(action);
+      }
       case DDP_METHOD:
         return next({
           ...action,

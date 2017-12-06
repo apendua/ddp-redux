@@ -12,6 +12,7 @@ import {
   DDP_NOSUB,
   DDP_SUBSCRIBE,
   DDP_UNSUBSCRIBE,
+  DDP_ENQUEUE,
 } from '../../constants';
 import createDelayedTask from '../../utils/createDelayedTask';
 
@@ -62,6 +63,7 @@ export const createMiddleware = ddpClient => (store) => {
                   params: sub.params,
                 },
                 meta: {
+                  subId: id,
                   socketId,
                 },
               });
@@ -81,6 +83,26 @@ export const createMiddleware = ddpClient => (store) => {
           }
           return next(action);
         })();
+      case DDP_ENQUEUE: {
+        if (action.meta.type === DDP_SUB) {
+          return next({
+            ...action,
+            meta: {
+              ...action.meta,
+              subId: action.payload.id,
+            },
+          });
+        }
+        return next(action);
+      }
+      case DDP_SUB:
+        return next({
+          ...action,
+          meta: {
+            ...action.meta,
+            subId: action.payload.id,
+          },
+        });
       case DDP_SUBSCRIBE:
         return (() => {
           const state = store.getState();
