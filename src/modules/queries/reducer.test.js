@@ -84,7 +84,7 @@ describe('Test module - queries - reducer', () => {
     });
   });
 
-  it('should change query state to "restoring" on re-fetch', function () {
+  it('should not change query state on "re-fetch" action', function () {
     this.reducer({
       1: {
         name: 'A',
@@ -97,10 +97,41 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         name: 'A',
-        state: DDP_QUERY_STATE__RESTORING,
       },
     });
   });
+
+  [
+    {
+      from: DDP_QUERY_STATE__READY,
+      to: DDP_QUERY_STATE__RESTORING,
+    },
+    {
+      from: DDP_QUERY_STATE__INITIAL,
+      to: DDP_QUERY_STATE__PENDING,
+    },
+    {
+      from: DDP_QUERY_STATE__QUEUED,
+      to: DDP_QUERY_STATE__PENDING,
+    },
+  ].forEach(({ from, to }) => it(`should change query state from ${from} to ${to} on method call`, function () {
+    this.reducer({
+      1: {
+        state: from,
+        name: 'A',
+      },
+    }, {
+      type: DDP_METHOD,
+      meta: {
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        name: 'A',
+        state: to,
+      },
+    });
+  }));
 
   it('should delete one query', function () {
     this.reducer({

@@ -15,7 +15,6 @@ import {
 
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
-  DDP_QUERY_REFETCH,
 
   DDP_QUERY_CREATE,
   DDP_QUERY_DELETE,
@@ -42,57 +41,57 @@ export const createReducer = () => (state = {}, action) => {
           },
         }
         : state;
-    case DDP_QUERY_REFETCH:
-      return (() => {
-        if (action.meta.queryId) {
-          return {
-            ...state,
-            [action.meta.queryId]: {
-              ...state[action.meta.queryId],
-              state: DDP_QUERY_STATE__RESTORING,
-            },
-          };
-        }
-        return state;
-      })();
-    case DDP_ENQUEUE:
-      return (() => {
-        if (action.meta.type === DDP_METHOD && action.meta.queryId) {
-          const queryId = action.meta.queryId;
-          return {
-            ...state,
-            [queryId]: {
-              ...state[queryId],
-              id: queryId,
-              state: DDP_QUERY_STATE__QUEUED,
-            },
-          };
-        }
-        return state;
-      })();
-    case DDP_METHOD:
-      return (() => {
-        if (action.meta.queryId) {
-          const id = action.meta.queryId;
-          const query = state[id];
-          if (
-            query && (
-              query.state === DDP_QUERY_STATE__INITIAL ||
-              query.state === DDP_QUERY_STATE__QUEUED
-            )
-          ) {
-            return {
-              ...state,
-              [id]: {
-                ...state[id],
-                state: DDP_QUERY_STATE__PENDING,
-              },
-            };
+    case DDP_ENQUEUE: {
+      if (action.meta.queryId) {
+        const queryId = action.meta.queryId;
+        const query = state[queryId];
+        if (query) {
+          switch (query.state) {
+            case DDP_QUERY_STATE__INITIAL:
+              return {
+                ...state,
+                [queryId]: {
+                  ...query,
+                  state: DDP_QUERY_STATE__QUEUED,
+                },
+              };
+            default:
+              return state;
           }
-          return state;
         }
-        return state;
-      })();
+      }
+      return state;
+    }
+    case DDP_METHOD: {
+      if (action.meta.queryId) {
+        const queryId = action.meta.queryId;
+        const query = state[queryId];
+        if (query) {
+          switch (query.state) {
+            case DDP_QUERY_STATE__INITIAL:
+            case DDP_QUERY_STATE__QUEUED:
+              return {
+                ...state,
+                [queryId]: {
+                  ...query,
+                  state: DDP_QUERY_STATE__PENDING,
+                },
+              };
+            case DDP_QUERY_STATE__READY:
+              return {
+                ...state,
+                [queryId]: {
+                  ...query,
+                  state: DDP_QUERY_STATE__RESTORING,
+                },
+              };
+            default:
+              return state;
+          }
+        }
+      }
+      return state;
+    }
     case DDP_QUERY_DELETE:
       return carefullyMapValues(state, (query, id, remove) => {
         if (id === action.meta.queryId) {

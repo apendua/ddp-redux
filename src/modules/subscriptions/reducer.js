@@ -46,43 +46,57 @@ export const createReducer = () => (state = {}, action) => {
           },
         }
         : state;
-    case DDP_ENQUEUE:
-      return (() => {
-        if (action.meta.type === DDP_SUB) {
-          // Usually, queued actions will not have "subId" set by the middleware,
-          // so we need to extract the id directly from action payload.
-          const subId = action.payload.id;
-          return {
-            ...state,
-            [subId]: {
-              ...state[subId],
-              id: subId,
-              state: DDP_SUBSCRIPTION_STATE__QUEUED,
-            },
-          };
+    case DDP_ENQUEUE: {
+      const subId = action.meta.subId;
+      if (subId) {
+        const sub = state[subId];
+        if (sub) {
+          switch (sub.state) {
+            case DDP_SUBSCRIPTION_STATE__INITIAL:
+              return {
+                ...state,
+                [subId]: {
+                  ...sub,
+                  state: DDP_SUBSCRIPTION_STATE__QUEUED,
+                },
+              };
+            default:
+              return state;
+          }
         }
-        return state;
-      })();
-    case DDP_SUB:
-      return (() => {
-        const id = action.meta.subId;
-        const sub = state[id];
-        if (
-          sub && (
-            sub.state === DDP_SUBSCRIPTION_STATE__INITIAL ||
-            sub.state === DDP_SUBSCRIPTION_STATE__QUEUED
-          )
-        ) {
-          return {
-            ...state,
-            [id]: {
-              ...state[id],
-              state: DDP_SUBSCRIPTION_STATE__PENDING,
-            },
-          };
+      }
+      return state;
+    }
+    case DDP_SUB: {
+      if (action.meta.subId) {
+        const subId = action.meta.subId;
+        const query = state[subId];
+        if (query) {
+          switch (query.state) {
+            case DDP_SUBSCRIPTION_STATE__INITIAL:
+            case DDP_SUBSCRIPTION_STATE__QUEUED:
+              return {
+                ...state,
+                [subId]: {
+                  ...query,
+                  state: DDP_SUBSCRIPTION_STATE__PENDING,
+                },
+              };
+            case DDP_SUBSCRIPTION_STATE__READY:
+              return {
+                ...state,
+                [subId]: {
+                  ...query,
+                  state: DDP_SUBSCRIPTION_STATE__RESTORING,
+                },
+              };
+            default:
+              return state;
+          }
         }
-        return state;
-      })();
+      }
+      return state;
+    }
     case DDP_UNSUB:
       return omit(state, [action.meta.subId]);
     case DDP_NOSUB:

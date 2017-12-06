@@ -17,6 +17,7 @@ import {
   DDP_CONNECTED,
   DDP_DISCONNECTED,
   DDP_CANCEL,
+  DDP_ENQUEUE,
 
   DDP_METHOD_STATE__PENDING,
 } from '../../constants';
@@ -88,6 +89,59 @@ describe('Test module - methods - middleware', () => {
             },
             undefined, // unknown method
           ],
+        },
+      },
+    ]);
+  });
+
+  it('should attach methodId to metadata on DDP_METHOD', function () {
+    const store = this.mockStore({
+      ddp: {
+        methods: {
+        },
+      },
+    });
+    store.dispatch({
+      type: DDP_METHOD,
+      payload: {
+        id: '1',
+      },
+    });
+    store.getActions().should.deep.equal([
+      {
+        type: DDP_METHOD,
+        payload: {
+          id: '1',
+        },
+        meta: {
+          methodId: '1',
+        },
+      },
+    ]);
+  });
+
+  it('should attach methodId to metadata on DDP_ENQUEUE', function () {
+    const store = this.mockStore(createInitialState('1', {
+      id: '1',
+    }));
+    store.dispatch({
+      type: DDP_ENQUEUE,
+      payload: {
+        id: '1',
+      },
+      meta: {
+        type: DDP_METHOD,
+      },
+    });
+    store.getActions().should.deep.equal([
+      {
+        type: DDP_ENQUEUE,
+        payload: {
+          id: '1',
+        },
+        meta: {
+          type: DDP_METHOD,
+          methodId: '1',
         },
       },
     ]);
