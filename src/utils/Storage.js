@@ -35,8 +35,8 @@ const has = (obj, key) => hasOwnProperty.call(obj, key);
  */
 
 /**
- * Implement a trivial in-memory-storage that will be used
- * as fallback if no other storage type is available.
+ * Implements a trivial in-memory-storage that can be used
+ * as a fallback if no other storage is available.
  * @private
  * @class
  * @implements {Storage}
