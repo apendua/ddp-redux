@@ -15,6 +15,16 @@ export const DDP_SUBSCRIPTION_STATE__PENDING = 'pending';
 export const DDP_SUBSCRIPTION_STATE__READY = 'ready';
 export const DDP_SUBSCRIPTION_STATE__RESTORING = 'restoring';
 
+// UNIVERSAL STATES
+//
+// initial
+// queued (do we need this?)
+// pending
+// ready
+// outdated (needs refresh)
+// restoring
+//
+
 export const DDP_METHOD_STATE__QUEUED = 'queued';
 export const DDP_METHOD_STATE__PENDING = 'pending';
 // NOTE: Methods do not have "ready" state, because they're usually removed from store
