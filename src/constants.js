@@ -2,6 +2,23 @@ export const DDP_PROTOCOL_VERSION = '1';
 
 export const DEFAULT_SOCKET_ID = 'default';
 
+// These states also applies to connection, but:
+//
+// 1. queued is usually void
+//    because "connect" message has highest priority so it's hardly ever waiting in queue
+// 2. pending = "connecting", and ready = "connected" of course
+// 3. now, all initial, canceled and obsolete should be mapped to "disconnected" but they
+//    all have different semantics, so "disconnected" is - after all - not sound enough
+// 4. finally, restoring = "connecting", again semantics is different
+
+export const DDP_STATE__INITIAL = 'initial';
+export const DDP_STATE__QUEUED = 'queued';
+export const DDP_STATE__PENDING = 'pending';
+export const DDP_STATE__READY = 'ready';
+export const DDP_STATE__CANCELED = 'canceled'; // can be canceled because of error/ timeout
+export const DDP_STATE__OBSOLETE = 'obsolete';
+export const DDP_STATE__RESTORING = 'restoring';
+
 export const DDP_CONNECTION_STATE__CONNECTING = 'connecting';
 export const DDP_CONNECTION_STATE__CONNECTED = 'connected';
 export const DDP_CONNECTION_STATE__DISCONNECTED = 'disconnected';
@@ -14,16 +31,6 @@ export const DDP_SUBSCRIPTION_STATE__QUEUED = 'queued';
 export const DDP_SUBSCRIPTION_STATE__PENDING = 'pending';
 export const DDP_SUBSCRIPTION_STATE__READY = 'ready';
 export const DDP_SUBSCRIPTION_STATE__RESTORING = 'restoring';
-
-// UNIVERSAL STATES
-//
-// initial
-// queued (do we need this?)
-// pending
-// ready
-// outdated (needs refresh)
-// restoring
-//
 
 export const DDP_METHOD_STATE__QUEUED = 'queued';
 export const DDP_METHOD_STATE__PENDING = 'pending';
