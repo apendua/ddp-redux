@@ -333,7 +333,10 @@ const privateCreateConnector = ({
             }
             return dispatch(
               queryRequest(request.name, request.params, {
+                // NOTE: Use selected connection by default, but allow
+                //       overwriting this value if it's explicitly defined.
                 socketId: connection.id,
+                ...request.properties,
               }),
             );
           },

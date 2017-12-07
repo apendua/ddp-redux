@@ -11,6 +11,13 @@ import {
 
 const constant = x => () => x;
 
+export const findQuery = (queries, name, params, properties) => find(
+  queries,
+  x => x.name === name &&
+       EJSON.equals(x.params, params) &&
+       EJSON.equals(x.properties, properties),
+);
+
 /**
  * Create a selector that returns a list (or object) representing
  * current state of the queries user is interested in.
@@ -29,17 +36,19 @@ export const createQueriesSelector = ({
   selectDeclaredQueries,
   selectConnectionId,
   state => state.ddp && state.ddp.queries,
-  (queries, connectionId, state) => (connectionId
-    ? stableMap(queries, y => (y
-        ? find(
-            state,
-            x => x.socketId === connectionId &&
-                 x.name === y.name &&
-                 EJSON.equals(x.params, y.params),
-          )
-        : emptyState
-      ),
-    )
-    : stableMap(queries, constant(null))
+  (declaredQueries, socketId, queries) => (socketId
+    ? stableMap(declaredQueries, y => (y
+      ? findQuery(
+        queries,
+        y.name,
+        y.params,
+        {
+          socketId,
+          ...y.properties,
+        },
+      )
+      : emptyState
+    ))
+    : stableMap(declaredQueries, constant(null))
   ),
 );
