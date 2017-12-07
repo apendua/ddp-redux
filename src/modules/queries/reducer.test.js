@@ -378,7 +378,7 @@ describe('Test module - queries - reducer', () => {
     });
   });
 
-  it('should switch to "restoring" on connect', function () {
+  it('should not switch to "restoring" on connect', function () {
     this.reducer({
       1: {
         name: 'A',
@@ -400,7 +400,7 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         name: 'A',
-        state: DDP_QUERY_STATE__RESTORING,
+        state: DDP_QUERY_STATE__READY,
         socketId: 'socket/1',
       },
       2: {

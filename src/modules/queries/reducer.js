@@ -1,6 +1,5 @@
 import has from 'lodash/has';
 import omit from 'lodash/omit';
-import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -12,7 +11,6 @@ import {
 
   DDP_METHOD,
   DDP_ENQUEUE,
-  DDP_CONNECT,
   DDP_RESULT,
 
   DDP_QUERY_REQUEST,
@@ -141,20 +139,6 @@ export const createReducer = () => (state = {}, action) => {
       }
       return state;
     }
-    case DDP_CONNECT:
-      return (() => {
-        const socketId = action.meta && action.meta.socketId;
-        return carefullyMapValues(state, (query) => {
-          // NOTE: If the state was pending, it should remain pending
-          if (query.socketId === socketId && query.state === DDP_QUERY_STATE__READY) {
-            return {
-              ...query,
-              state: DDP_QUERY_STATE__RESTORING,
-            };
-          }
-          return query;
-        });
-      })();
     default:
       return state;
   }
