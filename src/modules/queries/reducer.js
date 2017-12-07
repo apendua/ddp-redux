@@ -82,7 +82,7 @@ const queryReducer = (state = {
         id: action.meta.queryId,
         name: action.payload.name,
         params: action.payload.params,
-        socketId: (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
+        properties: action.payload.properties,
       };
     case DDP_QUERY_UPDATE:
       return {

@@ -23,6 +23,9 @@ import {
   callMethod,
 } from '../../actions';
 import createDelayedTask from '../../utils/createDelayedTask';
+import {
+  findQuery,
+} from './selectors';
 
 /**
  * Create middleware for the given ddpClient.
@@ -76,8 +79,16 @@ export const createMiddleware = ddpClient => (store) => {
             name,
             params,
           } = action.payload;
-          const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
-          const query = find(state.ddp.queries, x => x.socketId === socketId && x.name === name && EJSON.equals(x.params, params));
+          let {
+            properties = {},
+          } = action.payload;
+          if (!properties.socketId) {
+            properties = {
+              ...properties,
+              socketId: DEFAULT_SOCKET_ID,
+            };
+          }
+          const query = findQuery(state.ddp.queries, name, params, properties);
           const queryId = (query && query.id) || ddpClient.nextUniqueId();
           if (query) {
             scheduleCleanup.cancel(queryId);
@@ -87,14 +98,17 @@ export const createMiddleware = ddpClient => (store) => {
               payload: {
                 name,
                 params,
+                properties,
               },
               meta: {
                 queryId,
-                socketId,
               },
             });
             // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
-            store.dispatch(callMethod(name, params, { socketId, queryId }));
+            store.dispatch(callMethod(name, params, {
+              socketId: properties.socketId,
+              queryId,
+            }));
           }
           next({
             ...action,

@@ -62,13 +62,13 @@ export const unsubscribe = (subId, meta) => ({
   },
 });
 
-export const queryRequest = (name, params, meta) => ({
+export const queryRequest = (name, params, properties) => ({
   type: DDP_QUERY_REQUEST,
   payload: {
     name,
     params,
+    properties,
   },
-  ...meta && { meta },
 });
 
 export const queryRelease = (queryId, meta) => ({

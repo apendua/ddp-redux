@@ -66,7 +66,7 @@ describe('Test module - queries - middleware', () => {
     ]);
   });
 
-  it('should not dispatch METHOD if query does not yet exist', function () {
+  it('should create query and dispatch DDP_METHOD if query does not yet exist', function () {
     const store = this.mockStore({
       ddp: {
         queries: {
@@ -78,9 +78,9 @@ describe('Test module - queries - middleware', () => {
       payload: {
         name: 'aQuery',
         params: [1, 2, 3],
-      },
-      meta: {
-        socketId: 'socket/1',
+        properties: {
+          socketId: 'socket/1',
+        },
       },
     };
     const queryId = store.dispatch(action);
@@ -91,10 +91,12 @@ describe('Test module - queries - middleware', () => {
         payload: {
           name: 'aQuery',
           params: [1, 2, 3],
+          properties: {
+            socketId: 'socket/1',
+          },
         },
         meta: {
           queryId: '1',
-          socketId: 'socket/1',
         },
       },
       {
@@ -126,7 +128,9 @@ describe('Test module - queries - middleware', () => {
             id: '2',
             name: 'aQuery',
             params: [1, 2, 3],
-            socketId: 'socket/1',
+            properties: {
+              socketId: 'socket/1',
+            },
           },
         },
       },
@@ -136,9 +140,9 @@ describe('Test module - queries - middleware', () => {
       payload: {
         name: 'aQuery',
         params: [1, 2, 3],
-      },
-      meta: {
-        socketId: 'socket/1',
+        properties: {
+          socketId: 'socket/1',
+        },
       },
     };
     const queryId = store.dispatch(action);
@@ -147,7 +151,6 @@ describe('Test module - queries - middleware', () => {
       {
         ...action,
         meta: {
-          ...action.meta,
           queryId,
         },
       },
@@ -274,8 +277,10 @@ describe('Test module - queries - middleware', () => {
             state: DDP_QUERY_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
+            properties: {
+              socketId: DEFAULT_SOCKET_ID,
+            },
             users: 1,
-            socketId: DEFAULT_SOCKET_ID,
           },
         },
       },
@@ -291,10 +296,12 @@ describe('Test module - queries - middleware', () => {
       payload: {
         name: 'aQuery',
         params: [1, 2, 3],
+        properties: {
+          socketId: DEFAULT_SOCKET_ID,
+        },
       },
       meta: {
         queryId: '1',
-        socketId: DEFAULT_SOCKET_ID,
       },
     };
     store.dispatch(action1);

@@ -163,10 +163,12 @@ describe('Test module - queries - reducer', () => {
       payload: {
         name: 'B',
         params: 1,
+        properties: {
+          socketId: 'socket/1',
+        },
       },
       meta: {
         queryId: '2',
-        socketId: 'socket/1',
       },
     }).should.deep.equal({
       1: {
@@ -177,7 +179,9 @@ describe('Test module - queries - reducer', () => {
         name: 'B',
         params: 1,
         state: DDP_QUERY_STATE__INITIAL,
-        socketId: 'socket/1',
+        properties: {
+          socketId: 'socket/1',
+        },
       },
     });
   });
@@ -273,27 +277,6 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         state: DDP_QUERY_STATE__RESTORING,
-      },
-    });
-  });
-
-  it('should set default socketId if missing', function () {
-    this.reducer({}, {
-      type: DDP_QUERY_CREATE,
-      payload: {
-        name: 'B',
-        params: 1,
-      },
-      meta: {
-        queryId: '2',
-      },
-    }).should.deep.equal({
-      2: {
-        id: '2',
-        name: 'B',
-        params: 1,
-        state: DDP_QUERY_STATE__INITIAL,
-        socketId: DEFAULT_SOCKET_ID,
       },
     });
   });
