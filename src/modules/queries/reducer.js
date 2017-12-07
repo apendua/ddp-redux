@@ -1,3 +1,5 @@
+import has from 'lodash/has';
+import omit from 'lodash/omit';
 import carefullyMapValues from '../../utils/carefullyMapValues';
 import {
   DEFAULT_SOCKET_ID,
@@ -21,126 +23,124 @@ import {
   DDP_QUERY_UPDATE,
 } from '../../constants';
 
-export const createReducer = () => (state = {}, action) => {
+const setProperty = propName => (value) => {
+  if (typeof value === 'function') {
+    return state => ({
+      ...state,
+      [propName]: value(state[propName]),
+    });
+  }
+  return state => ({
+    ...state,
+    [propName]: value,
+  });
+};
+
+const increaseBy = value => (currentValue = 0) => currentValue + value;
+
+const increaseProperty = propName => value => setProperty(propName)(increaseBy(value));
+
+const setState = setProperty('state');
+const deleteKey = (object, key) => {
+  if (has(object, key)) {
+    return omit(object, key);
+  }
+  return object;
+};
+
+const increaseUsersByOne = increaseProperty('users')(1);
+const decreaseUsersByOne = increaseProperty('users')(-1);
+
+const queryReducer = (state = {
+  state: DDP_QUERY_STATE__INITIAL,
+}, action) => {
   switch (action.type) {
     case DDP_QUERY_REQUEST:
-      return {
-        ...state,
-        [action.meta.queryId]: {
-          ...state[action.meta.queryId],
-          users: (state[action.meta.queryId].users || 0) + 1,
-        },
-      };
+      return increaseUsersByOne(state);
     case DDP_QUERY_RELEASE:
-      return state[action.meta.queryId]
-        ? {
-          ...state,
-          [action.meta.queryId]: {
-            ...state[action.meta.queryId],
-            users: (state[action.meta.queryId].users || 0) - 1,
-          },
-        }
-        : state;
+      return decreaseUsersByOne(state);
     case DDP_ENQUEUE: {
-      if (action.meta.queryId) {
-        const queryId = action.meta.queryId;
-        const query = state[queryId];
-        if (query) {
-          switch (query.state) {
-            case DDP_QUERY_STATE__INITIAL:
-              return {
-                ...state,
-                [queryId]: {
-                  ...query,
-                  state: DDP_QUERY_STATE__QUEUED,
-                },
-              };
-            default:
-              return state;
-          }
-        }
+      switch (state.state) {
+        case DDP_QUERY_STATE__INITIAL:
+          return setState(DDP_QUERY_STATE__QUEUED)(state);
+        default:
+          return state;
       }
-      return state;
     }
     case DDP_METHOD: {
-      if (action.meta.queryId) {
-        const queryId = action.meta.queryId;
-        const query = state[queryId];
-        if (query) {
-          switch (query.state) {
-            case DDP_QUERY_STATE__INITIAL:
-            case DDP_QUERY_STATE__QUEUED:
-              return {
-                ...state,
-                [queryId]: {
-                  ...query,
-                  state: DDP_QUERY_STATE__PENDING,
-                },
-              };
-            case DDP_QUERY_STATE__READY:
-              return {
-                ...state,
-                [queryId]: {
-                  ...query,
-                  state: DDP_QUERY_STATE__RESTORING,
-                },
-              };
-            default:
-              return state;
-          }
-        }
+      switch (state.state) {
+        case DDP_QUERY_STATE__INITIAL:
+        case DDP_QUERY_STATE__QUEUED:
+          return setState(DDP_QUERY_STATE__PENDING)(state);
+        case DDP_QUERY_STATE__READY:
+          return setState(DDP_QUERY_STATE__RESTORING)(state);
+        default:
+          return state;
       }
-      return state;
     }
-    case DDP_QUERY_DELETE:
-      return carefullyMapValues(state, (query, id, remove) => {
-        if (id === action.meta.queryId) {
-          return remove(id);
-        }
-        return query;
-      });
     case DDP_QUERY_CREATE:
       return {
         ...state,
-        [action.meta.queryId]: {
-          ...state[action.meta.queryId],
-          id:       action.meta.queryId,
-          state:    DDP_QUERY_STATE__INITIAL,
-          name:     action.payload.name,
-          params:   action.payload.params,
-          socketId: (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
-        },
+        id: action.meta.queryId,
+        name: action.payload.name,
+        params: action.payload.params,
+        socketId: (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
       };
     case DDP_QUERY_UPDATE:
       return {
         ...state,
-        [action.meta.queryId]: {
-          ...state[action.meta.queryId],
-          state: DDP_QUERY_STATE__READY,
-          entities: action.payload.entities,
-        },
+        state: DDP_QUERY_STATE__READY,
+        entities: action.payload.entities,
       };
+    case DDP_RESULT: {
+      if (action.payload.error) {
+        return {
+          ...state,
+          error: action.payload.error,
+        };
+      }
+      return {
+        ...state,
+        result: action.payload.result,
+      };
+    }
+    default:
+      return state;
+  }
+};
+
+export const createReducer = () => (state = {}, action) => {
+  switch (action.type) {
+    case DDP_QUERY_REQUEST:
+    case DDP_QUERY_RELEASE:
+    case DDP_ENQUEUE:
+    case DDP_METHOD:
     case DDP_RESULT:
-      return (() => {
-        if (action.meta && action.meta.queryId) {
-          return carefullyMapValues(state, (query, id) => {
-            if (action.meta.queryId === id) {
-              if (action.payload.error) {
-                return {
-                  ...query,
-                  error: action.payload.error,
-                };
-              }
-              return {
-                ...query,
-                result: action.payload.result,
-              };
-            }
-            return query;
-          });
-        }
-        return state;
-      })();
+    case DDP_QUERY_UPDATE: {
+      const queryId = action.meta &&
+                      action.meta.queryId;
+      if (queryId) {
+        const queryState = state[queryId];
+        return {
+          ...state,
+          [queryId]: queryReducer(queryState, action),
+        };
+      }
+      return state;
+    }
+    case DDP_QUERY_DELETE:
+      return deleteKey(state, action.meta.queryId);
+    case DDP_QUERY_CREATE: {
+      const queryId = action.meta &&
+                      action.meta.queryId;
+      if (queryId) {
+        return {
+          ...state,
+          [queryId]: queryReducer(state[queryId], action),
+        };
+      }
+      return state;
+    }
     case DDP_CONNECT:
       return (() => {
         const socketId = action.meta && action.meta.socketId;
