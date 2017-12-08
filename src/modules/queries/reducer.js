@@ -5,7 +5,9 @@ import {
   DDP_STATE__QUEUED,
   DDP_STATE__PENDING,
   DDP_STATE__READY,
+  DDP_STATE__OBSOLETE,
   DDP_STATE__RESTORING,
+  DDP_STATE__CANCELED,
 
   DDP_METHOD,
   DDP_ENQUEUE,
@@ -18,19 +20,29 @@ import {
   DDP_QUERY_CREATE,
   DDP_QUERY_DELETE,
   DDP_QUERY_UPDATE,
+  DDP_QUERY_REFETCH,
 } from '../../constants';
 
 const setProperty = propName => (value) => {
   if (typeof value === 'function') {
-    return state => ({
-      ...state,
-      [propName]: value(state[propName]),
-    });
+    return (state) => {
+      const valueToSet = value(state[propName]);
+      return (state[propName] === valueToSet
+        ? state
+        : {
+          ...state,
+          [propName]: valueToSet,
+        }
+      );
+    };
   }
-  return state => ({
-    ...state,
-    [propName]: value,
-  });
+  return state => (state[propName] === value
+    ? state
+    : {
+      ...state,
+      [propName]: value,
+    }
+  );
 };
 
 const increaseBy = value => (currentValue = 0) => currentValue + value;
@@ -64,6 +76,17 @@ const queryReducer = (state = {
           return state;
       }
     }
+    case DDP_DISCONNECTED: {
+      switch (state.state) {
+        case DDP_STATE__PENDING:
+          return setState(DDP_STATE__CANCELED)(state);
+        case DDP_STATE__READY:
+        case DDP_STATE__RESTORING:
+          return setState(DDP_STATE__OBSOLETE)(state);
+        default:
+          return state;
+      }
+    }
     case DDP_METHOD: {
       switch (state.state) {
         case DDP_STATE__INITIAL:
@@ -83,6 +106,8 @@ const queryReducer = (state = {
         params: action.payload.params,
         properties: action.payload.properties,
       };
+    case DDP_QUERY_REFETCH:
+      return state.users > 0 ? state : setState(DDP_STATE__OBSOLETE)(state);
     case DDP_QUERY_UPDATE:
       return {
         ...state,
@@ -113,7 +138,9 @@ export const createReducer = () => (state = {}, action) => {
     case DDP_ENQUEUE:
     case DDP_METHOD:
     case DDP_RESULT:
-    case DDP_QUERY_UPDATE: {
+    case DDP_QUERY_UPDATE:
+    case DDP_QUERY_REFETCH:
+    case DDP_DISCONNECTED: {
       const queryId = action.meta &&
                       action.meta.queryId;
       if (queryId) {

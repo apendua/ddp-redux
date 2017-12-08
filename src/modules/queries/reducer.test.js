@@ -9,8 +9,6 @@ import {
   createReducer,
 } from './reducer';
 import {
-  DEFAULT_SOCKET_ID,
-
   DDP_ENQUEUE,
   DDP_METHOD,
   DDP_RESULT,
@@ -27,8 +25,11 @@ import {
   DDP_STATE__QUEUED,
   DDP_STATE__INITIAL,
   DDP_STATE__PENDING,
-  DDP_STATE__RESTORING,
+  DDP_STATE__CANCELED,
   DDP_STATE__READY,
+  DDP_STATE__OBSOLETE,
+  DDP_STATE__RESTORING,
+  DDP_DISCONNECTED,
 } from '../../constants';
 import {
   DDPClient,
@@ -84,7 +85,26 @@ describe('Test module - queries - reducer', () => {
     });
   });
 
-  it('should not change query state on "re-fetch" action', function () {
+  it('should not change query state on DDP_REFETCH if number of users is positive', function () {
+    this.reducer({
+      1: {
+        name: 'A',
+        users: 1,
+      },
+    }, {
+      type: DDP_QUERY_REFETCH,
+      meta: {
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        name: 'A',
+        users: 1,
+      },
+    });
+  });
+
+  it('should change state to "obsolete" on DDP_REFETCH if there are no users', function () {
     this.reducer({
       1: {
         name: 'A',
@@ -97,9 +117,11 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         name: 'A',
+        state: DDP_STATE__OBSOLETE,
       },
     });
   });
+
 
   [
     {
@@ -114,7 +136,7 @@ describe('Test module - queries - reducer', () => {
       from: DDP_STATE__QUEUED,
       to: DDP_STATE__PENDING,
     },
-  ].forEach(({ from, to }) => it(`should change query state from ${from} to ${to} on method call`, function () {
+  ].forEach(({ from, to }) => it(`should change query state from ${from} to ${to} on DDP_METHOD`, function () {
     this.reducer({
       1: {
         state: from,
@@ -132,6 +154,43 @@ describe('Test module - queries - reducer', () => {
       },
     });
   }));
+
+  [
+    {
+      from: DDP_STATE__READY,
+      to: DDP_STATE__OBSOLETE,
+    },
+    {
+      from: DDP_STATE__PENDING,
+      to: DDP_STATE__CANCELED,
+    },
+    {
+      from: DDP_STATE__RESTORING,
+      to: DDP_STATE__OBSOLETE,
+    },
+    // no changes for these states ...
+    { from: DDP_STATE__INITIAL },
+    { from: DDP_STATE__QUEUED },
+    { from: DDP_STATE__CANCELED },
+    { from: DDP_STATE__OBSOLETE },
+  ].forEach(({ from, to = from }) => it(`should change query state from ${from} to ${to} on DDP_DISCONNECTED`, function () {
+    this.reducer({
+      1: {
+        state: from,
+        name: 'A',
+      },
+    }, {
+      type: DDP_DISCONNECTED,
+      meta: {
+        queryId: '1',
+      },
+    }).should.deep.equal({
+      1: {
+        name: 'A',
+        state: to,
+      },
+    });
+  }));  
 
   it('should delete one query', function () {
     this.reducer({

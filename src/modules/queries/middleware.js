@@ -2,11 +2,7 @@ import forEach from 'lodash/forEach';
 import {
   DEFAULT_SOCKET_ID,
 
-  DDP_STATE__READY,
-  DDP_STATE__PENDING,
-  DDP_STATE__RESTORING,
-
-  DDP_CONNECT,
+  DDP_CONNECTED,
   DDP_RESULT,
 
   DDP_QUERY_REQUEST,
@@ -16,11 +12,17 @@ import {
   DDP_QUERY_CREATE,
   DDP_QUERY_DELETE,
   DDP_QUERY_UPDATE,
+
+  DDP_STATE__OBSOLETE,
+  DDP_STATE__CANCELED,
 } from '../../constants';
 import createDelayedTask from '../../utils/createDelayedTask';
 import {
   findQuery,
 } from './selectors';
+import {
+  queryRefetch,
+} from '../../actions';
 
 /**
  * Create middleware for the given ddpClient.
@@ -47,140 +49,132 @@ export const createMiddleware = ddpClient => (store) => {
       return next(action);
     }
     switch (action.type) {
-      case DDP_CONNECT: // restore all queries on re-connect
-        return ((result) => {
-          const socketId = action.meta && action.meta.socketId;
-          const state = store.getState();
-          forEach(state.ddp.queries, (query, queryId) => {
-            const querySocketId = query.properties &&
-                                  query.properties.socketId;
-            if (
-              // NOTE: It's important to include "restoring" state as well,
-              //       because at this point reducer may already change query
-              //       state to restoring ...
-              querySocketId === socketId && (
-                query.state === DDP_STATE__READY ||
-                query.state === DDP_STATE__PENDING ||
-                query.state === DDP_STATE__RESTORING
-              )
-            ) {
-              store.dispatch(ddpClient.fetch(query.name, query.params, {
-                ...query.properties,
-                queryId,
-              }));
-            }
-          });
-          return result;
-        })(next(action));
-      case DDP_QUERY_REQUEST:
-        return (() => {
-          const state = store.getState();
-          const {
-            name,
-            params,
-          } = action.payload;
-          let {
-            properties,
-          } = action.payload;
-          properties = {
-            socketId: DEFAULT_SOCKET_ID,
-            ...properties,
-          };
-          const query = findQuery(state.ddp.queries, name, params, properties);
-          const queryId = (query && query.id) || ddpClient.nextUniqueId();
-          if (query) {
-            scheduleCleanup.cancel(queryId);
-          } else {
-            store.dispatch({
-              type: DDP_QUERY_CREATE,
-              payload: {
-                name,
-                params,
-                properties,
-              },
-              meta: {
-                queryId,
-              },
-            });
-            // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
-            store.dispatch(ddpClient.fetch(name, params, {
-              ...properties,
-              queryId,
-            }));
+      case DDP_CONNECTED: {
+        const result = next(action);
+        const socketId = action.meta && action.meta.socketId;
+        const state = store.getState();
+        forEach(state.ddp.queries, (query, queryId) => {
+          const querySocketId = query.properties &&
+                                query.properties.socketId;
+          if (
+            querySocketId === socketId && (
+              query.state === DDP_STATE__OBSOLETE ||
+              query.state === DDP_STATE__CANCELED
+            )
+          ) {
+            // NOTE: We are forcing query re-fetch here, not trying to invoke the "fetch" method directly.
+            store.dispatch(queryRefetch(queryId));
           }
-          next({
+        });
+        return result;
+      }
+      case DDP_QUERY_REQUEST: {
+        const state = store.getState();
+        const {
+          name,
+          params,
+        } = action.payload;
+        let {
+          properties,
+        } = action.payload;
+        properties = {
+          socketId: DEFAULT_SOCKET_ID,
+          ...properties,
+        };
+        const query = findQuery(state.ddp.queries, name, params, properties);
+        const queryId = query ? query.id : ddpClient.nextUniqueId();
+        next({
+          ...action,
+          meta: {
+            ...action.meta,
+            queryId,
+          },
+        });
+        if (query) {
+          scheduleCleanup.cancel(queryId);
+        } else {
+          store.dispatch({
+            type: DDP_QUERY_CREATE,
+            payload: {
+              name,
+              params,
+              properties,
+            },
+            meta: {
+              queryId,
+            },
+          });
+        }
+        // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
+        if (!query ||
+             query.state === DDP_STATE__OBSOLETE ||
+             query.state === DDP_STATE__CANCELED) {
+          store.dispatch(ddpClient.fetch(name, params, {
+            ...properties,
+            queryId,
+          }));
+        }
+        return queryId;
+      }
+      case DDP_QUERY_REFETCH: {
+        const result = next(action);
+        const queryId = action.meta.queryId;
+        const state = store.getState();
+        const query = state.ddp.queries[queryId];
+        // NOTE: If query has no users, the reducer will set the query state to "obsolete",
+        //       and the next time it will be requested it will force re-fetch.
+        if (query && query.users > 0) {
+          store.dispatch(ddpClient.fetch(query.name, query.params, {
+            ...query.properties,
+            queryId,
+          }));
+        }
+        return result;
+      }
+      case DDP_RESULT: {
+        const state = store.getState();
+        const queryId = action.meta && action.meta.queryId;
+        if (queryId) {
+          const query = state.ddp.queries[queryId];
+          const result = next({
             ...action,
             meta: {
               ...action.meta,
               queryId,
             },
           });
-          return queryId;
-        })();
-      case DDP_QUERY_REFETCH:
-        return (() => {
-          const queryId = action.meta.queryId;
-          const state = store.getState();
-          const query = state.ddp.queries[queryId];
-          // TODO: Explain why we want users to be positive.
-          // FIXME: If a query has no users, delete it instead of re-fetching.
-          //        This will ensure that it's actually refreshed the next time
-          //        it is requested.
-          // if (query && query.users) {
-          if (query) {
-            store.dispatch(ddpClient.fetch(query.name, query.params, {
-              ...query.properties,
-              queryId,
-            }));
-          }
-          return next(action);
-        })();
-      case DDP_RESULT:
-        return (() => {
-          const state = store.getState();
-          const queryId = action.meta && action.meta.queryId;
-          if (queryId) {
-            const query = state.ddp.queries[queryId];
-            const result = next({
-              ...action,
-              meta: {
-                ...action.meta,
-                queryId,
+          const update = {
+            type: DDP_QUERY_UPDATE,
+            payload: {},
+            meta: { queryId },
+          };
+          if (!action.payload.error && action.payload.result && typeof action.payload.result === 'object') {
+            update.payload.entities = ddpClient.extractEntities(
+              action.payload.result,
+              {
+                name: query.name,
               },
-            });
-            const update = {
-              type: DDP_QUERY_UPDATE,
-              payload: {},
-              meta: { queryId },
-            };
-            if (!action.payload.error && action.payload.result && typeof action.payload.result === 'object') {
-              update.payload.entities = ddpClient.extractEntities(
-                action.payload.result,
-                {
-                  name: query.name,
-                },
-              );
-            }
-            if (query && query.entities) {
-              update.payload.oldEntities = query.entities;
-            }
-            store.dispatch(update);
-            return result;
+            );
           }
-          return next(action);
-        })();
-      case DDP_QUERY_RELEASE:
-        return (() => {
-          const state = store.getState();
-          const query = state.ddp.queries[action.meta.queryId];
-          // NOTE: The number of users will only be decreased after "next(action)"
-          //       so at this moment it's still taking into account the one which
-          //       is resigning.
-          if (query && query.users === 1) {
-            scheduleCleanup(query.id);
+          if (query && query.entities) {
+            update.payload.oldEntities = query.entities;
           }
-          return next(action);
-        })();
+          store.dispatch(update);
+          return result;
+        }
+        return next(action);
+      }
+      case DDP_QUERY_RELEASE: {
+        const state = store.getState();
+        const query = state.ddp.queries[action.meta.queryId];
+        // NOTE: The number of users will only be decreased after "next(action)"
+        //       so at this moment it's still taking into account the one which
+        //       is resigning.
+        if (query && query.users === 1) {
+          scheduleCleanup(query.id);
+        }
+        return next(action);
+      }
       default:
         return next(action);
     }
