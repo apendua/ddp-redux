@@ -24,11 +24,11 @@ import {
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
 
-  DDP_QUERY_STATE__QUEUED,
-  DDP_QUERY_STATE__INITIAL,
-  DDP_QUERY_STATE__PENDING,
-  DDP_QUERY_STATE__RESTORING,
-  DDP_QUERY_STATE__READY,
+  DDP_STATE__QUEUED,
+  DDP_STATE__INITIAL,
+  DDP_STATE__PENDING,
+  DDP_STATE__RESTORING,
+  DDP_STATE__READY,
 } from '../../constants';
 import {
   DDPClient,
@@ -103,16 +103,16 @@ describe('Test module - queries - reducer', () => {
 
   [
     {
-      from: DDP_QUERY_STATE__READY,
-      to: DDP_QUERY_STATE__RESTORING,
+      from: DDP_STATE__READY,
+      to: DDP_STATE__RESTORING,
     },
     {
-      from: DDP_QUERY_STATE__INITIAL,
-      to: DDP_QUERY_STATE__PENDING,
+      from: DDP_STATE__INITIAL,
+      to: DDP_STATE__PENDING,
     },
     {
-      from: DDP_QUERY_STATE__QUEUED,
-      to: DDP_QUERY_STATE__PENDING,
+      from: DDP_STATE__QUEUED,
+      to: DDP_STATE__PENDING,
     },
   ].forEach(({ from, to }) => it(`should change query state from ${from} to ${to} on method call`, function () {
     this.reducer({
@@ -178,7 +178,7 @@ describe('Test module - queries - reducer', () => {
         id: '2',
         name: 'B',
         params: 1,
-        state: DDP_QUERY_STATE__INITIAL,
+        state: DDP_STATE__INITIAL,
         properties: {
           socketId: 'socket/1',
         },
@@ -190,7 +190,7 @@ describe('Test module - queries - reducer', () => {
     this.reducer({
       1: {
         id: '1',
-        state: DDP_QUERY_STATE__INITIAL,
+        state: DDP_STATE__INITIAL,
       },
     }, {
       type: DDP_ENQUEUE,
@@ -203,7 +203,7 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         id: '1',
-        state: DDP_QUERY_STATE__QUEUED,
+        state: DDP_STATE__QUEUED,
       },
     });
   });
@@ -212,7 +212,7 @@ describe('Test module - queries - reducer', () => {
     this.reducer({
       1: {
         id: '1',
-        state: DDP_QUERY_STATE__RESTORING,
+        state: DDP_STATE__RESTORING,
       },
     }, {
       type: DDP_ENQUEUE,
@@ -225,7 +225,7 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         id: '1',
-        state: DDP_QUERY_STATE__RESTORING,
+        state: DDP_STATE__RESTORING,
       },
     });
   });
@@ -233,7 +233,7 @@ describe('Test module - queries - reducer', () => {
   it('should switch state from "initial" to "pending" on DDP_METHOD', function () {
     this.reducer({
       1: {
-        state: DDP_QUERY_STATE__INITIAL,
+        state: DDP_STATE__INITIAL,
       },
     }, {
       type: DDP_METHOD,
@@ -242,7 +242,7 @@ describe('Test module - queries - reducer', () => {
       },
     }).should.deep.equal({
       1: {
-        state: DDP_QUERY_STATE__PENDING,
+        state: DDP_STATE__PENDING,
       },
     });
   });
@@ -250,7 +250,7 @@ describe('Test module - queries - reducer', () => {
   it('should switch state from "queued" to "pending" on DDP_METHOD', function () {
     this.reducer({
       1: {
-        state: DDP_QUERY_STATE__QUEUED,
+        state: DDP_STATE__QUEUED,
       },
     }, {
       type: DDP_METHOD,
@@ -259,7 +259,7 @@ describe('Test module - queries - reducer', () => {
       },
     }).should.deep.equal({
       1: {
-        state: DDP_QUERY_STATE__PENDING,
+        state: DDP_STATE__PENDING,
       },
     });
   });
@@ -267,7 +267,7 @@ describe('Test module - queries - reducer', () => {
   it('should not change "restoring" state on DDP_METHOD', function () {
     this.reducer({
       1: {
-        state: DDP_QUERY_STATE__RESTORING,
+        state: DDP_STATE__RESTORING,
       },
     }, {
       type: DDP_METHOD,
@@ -276,7 +276,7 @@ describe('Test module - queries - reducer', () => {
       },
     }).should.deep.equal({
       1: {
-        state: DDP_QUERY_STATE__RESTORING,
+        state: DDP_STATE__RESTORING,
       },
     });
   });
@@ -302,7 +302,7 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         name: 'A',
-        state: DDP_QUERY_STATE__READY,
+        state: DDP_STATE__READY,
         entities: {
           col1: {
             1: { id: '1' },
@@ -365,12 +365,12 @@ describe('Test module - queries - reducer', () => {
     this.reducer({
       1: {
         name: 'A',
-        state: DDP_QUERY_STATE__READY,
+        state: DDP_STATE__READY,
         socketId: 'socket/1',
       },
       2: {
         name: 'B',
-        state: DDP_QUERY_STATE__READY,
+        state: DDP_STATE__READY,
         socketId: 'socket/2',
       },
     }, {
@@ -383,12 +383,12 @@ describe('Test module - queries - reducer', () => {
     }).should.deep.equal({
       1: {
         name: 'A',
-        state: DDP_QUERY_STATE__READY,
+        state: DDP_STATE__READY,
         socketId: 'socket/1',
       },
       2: {
         name: 'B',
-        state: DDP_QUERY_STATE__READY,
+        state: DDP_STATE__READY,
         socketId: 'socket/2',
       },
     });
