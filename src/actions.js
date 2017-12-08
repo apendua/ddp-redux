@@ -8,6 +8,7 @@ import {
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
   DDP_QUERY_REFETCH,
+  DDP_QUERY_UPDATE,
 
   DDP_LOGIN,
   DDP_LOGOUT,
@@ -84,6 +85,14 @@ export const queryRefetch = (queryId, meta) => ({
   type: DDP_QUERY_REFETCH,
   meta: {
     ...meta,
+    queryId,
+  },
+});
+
+export const queryUpdate = (queryId, payload) => ({
+  type: DDP_QUERY_UPDATE,
+  payload,
+  meta: {
     queryId,
   },
 });

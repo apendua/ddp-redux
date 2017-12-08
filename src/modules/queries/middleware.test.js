@@ -17,7 +17,6 @@ import {
   DEFAULT_SOCKET_ID,
 
   DDP_CONNECTED,
-  DDP_RESULT,
   DDP_METHOD,
   DDP_QUERY_CREATE,
   DDP_QUERY_DELETE,
@@ -218,7 +217,7 @@ describe('Test module - queries - middleware', () => {
     ]);
   });
 
-  it('should dispatch DDP_QUERY_UPDATE on result received', function () {
+  it('should add "entities" into the payload on DDP_QUERY_UPDATE', function () {
     const store = this.mockStore({
       ddp: {
         queries: {
@@ -227,14 +226,14 @@ describe('Test module - queries - middleware', () => {
             name: 'aQuery',
             params: [1, 2, 3],
             state: DDP_STATE__PENDING,
+            entities: {},
           },
         },
       },
     });
     const action = {
-      type: DDP_RESULT,
+      type: DDP_QUERY_UPDATE,
       payload: {
-        id: '2',
         result: {
           entities: {
             col1: {
@@ -251,18 +250,17 @@ describe('Test module - queries - middleware', () => {
     store.getActions().should.deep.equal([
       {
         ...action,
-        meta: {
-          ...action.meta,
-          queryId: '1',
-        },
-      },
-      {
-        type: DDP_QUERY_UPDATE,
-        meta: {
-          queryId: '1',
-        },
         payload: {
-          entities: action.payload.result.entities,
+          ...action.payload,
+          entities: {
+            col1: {
+              1: { id: '1' },
+            },
+          },
+          oldEntities: {},
+        },
+        meta: {
+          queryId: '1',
         },
       },
     ]);
@@ -543,5 +541,5 @@ describe('Test module - queries - middleware', () => {
     store.getActions().should.deep.equal([
       action,
     ]);
-  });  
+  });
 });

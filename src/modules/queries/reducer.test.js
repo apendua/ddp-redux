@@ -11,8 +11,6 @@ import {
 import {
   DDP_ENQUEUE,
   DDP_METHOD,
-  DDP_RESULT,
-  DDP_CONNECT,
 
   DDP_QUERY_CREATE,
   DDP_QUERY_DELETE,
@@ -136,14 +134,14 @@ describe('Test module - queries - reducer', () => {
       from: DDP_STATE__QUEUED,
       to: DDP_STATE__PENDING,
     },
-  ].forEach(({ from, to }) => it(`should change query state from ${from} to ${to} on DDP_METHOD`, function () {
+  ].forEach(({ from, to }) => it(`should change query state from ${from} to ${to} on DDP_QUERY_UPDATE with no payload`, function () {
     this.reducer({
       1: {
         state: from,
         name: 'A',
       },
     }, {
-      type: DDP_METHOD,
+      type: DDP_QUERY_UPDATE,
       meta: {
         queryId: '1',
       },
@@ -173,7 +171,7 @@ describe('Test module - queries - reducer', () => {
     { from: DDP_STATE__QUEUED },
     { from: DDP_STATE__CANCELED },
     { from: DDP_STATE__OBSOLETE },
-  ].forEach(({ from, to = from }) => it(`should change query state from ${from} to ${to} on DDP_DISCONNECTED`, function () {
+  ].forEach(({ from, to = from }) => it(`should change state from ${from} to ${to} on DDP_DISCONNECTED`, function () {
     this.reducer({
       1: {
         state: from,
@@ -190,7 +188,7 @@ describe('Test module - queries - reducer', () => {
         state: to,
       },
     });
-  }));  
+  }));
 
   it('should delete one query', function () {
     this.reducer({
@@ -267,79 +265,6 @@ describe('Test module - queries - reducer', () => {
     });
   });
 
-  it('should not switch query state from "restoring" to "queued"', function () {
-    this.reducer({
-      1: {
-        id: '1',
-        state: DDP_STATE__RESTORING,
-      },
-    }, {
-      type: DDP_ENQUEUE,
-      payload: {
-      },
-      meta: {
-        type: DDP_METHOD,
-        queryId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        id: '1',
-        state: DDP_STATE__RESTORING,
-      },
-    });
-  });
-
-  it('should switch state from "initial" to "pending" on DDP_METHOD', function () {
-    this.reducer({
-      1: {
-        state: DDP_STATE__INITIAL,
-      },
-    }, {
-      type: DDP_METHOD,
-      meta: {
-        queryId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        state: DDP_STATE__PENDING,
-      },
-    });
-  });
-
-  it('should switch state from "queued" to "pending" on DDP_METHOD', function () {
-    this.reducer({
-      1: {
-        state: DDP_STATE__QUEUED,
-      },
-    }, {
-      type: DDP_METHOD,
-      meta: {
-        queryId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        state: DDP_STATE__PENDING,
-      },
-    });
-  });
-
-  it('should not change "restoring" state on DDP_METHOD', function () {
-    this.reducer({
-      1: {
-        state: DDP_STATE__RESTORING,
-      },
-    }, {
-      type: DDP_METHOD,
-      meta: {
-        queryId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        state: DDP_STATE__RESTORING,
-      },
-    });
-  });
-
   it('should update an existing query', function () {
     this.reducer({
       1: {
@@ -348,6 +273,7 @@ describe('Test module - queries - reducer', () => {
     }, {
       type: DDP_QUERY_UPDATE,
       payload: {
+        result: { success: true },
         entities: {
           col1: {
             1: { id: '1' },
@@ -362,6 +288,7 @@ describe('Test module - queries - reducer', () => {
       1: {
         name: 'A',
         state: DDP_STATE__READY,
+        result: { success: true },
         entities: {
           col1: {
             1: { id: '1' },
@@ -372,15 +299,14 @@ describe('Test module - queries - reducer', () => {
     });
   });
 
-  it('should store related method result', function () {
+  it('should store result on DDP_QUERY_UPDATE', function () {
     this.reducer({
       1: {
         name: 'A',
       },
     }, {
-      type: DDP_RESULT,
+      type: DDP_QUERY_UPDATE,
       payload: {
-        id: '2',
         result: 123,
       },
       meta: {
@@ -390,19 +316,19 @@ describe('Test module - queries - reducer', () => {
       1: {
         name: 'A',
         result: 123,
+        state: DDP_STATE__READY,
       },
     });
   });
 
-  it('should store related method error', function () {
+  it('should store error on DDP_QUERY_UPDATE', function () {
     this.reducer({
       1: {
         name: 'A',
       },
     }, {
-      type: DDP_RESULT,
+      type: DDP_QUERY_UPDATE,
       payload: {
-        id: '2',
         error: {
           error: 'Error',
         },
@@ -416,39 +342,7 @@ describe('Test module - queries - reducer', () => {
         error: {
           error: 'Error',
         },
-      },
-    });
-  });
-
-  it('should not switch to "restoring" on connect', function () {
-    this.reducer({
-      1: {
-        name: 'A',
-        state: DDP_STATE__READY,
-        socketId: 'socket/1',
-      },
-      2: {
-        name: 'B',
-        state: DDP_STATE__READY,
-        socketId: 'socket/2',
-      },
-    }, {
-      type: DDP_CONNECT,
-      payload: {
-      },
-      meta: {
-        socketId: 'socket/1',
-      },
-    }).should.deep.equal({
-      1: {
-        name: 'A',
-        state: DDP_STATE__READY,
-        socketId: 'socket/1',
-      },
-      2: {
-        name: 'B',
-        state: DDP_STATE__READY,
-        socketId: 'socket/2',
+        state: DDP_STATE__CANCELED,
       },
     });
   });

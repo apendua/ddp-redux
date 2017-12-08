@@ -3,7 +3,6 @@ import {
   DEFAULT_SOCKET_ID,
 
   DDP_CONNECTED,
-  DDP_RESULT,
 
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
@@ -159,32 +158,34 @@ export const createMiddleware = ddpClient => (store) => {
         }
         return result;
       }
-      case DDP_RESULT: {
+      case DDP_QUERY_UPDATE: {
         const state = store.getState();
         const queryId = action.meta && action.meta.queryId;
-        if (queryId) {
-          const query = state.ddp.queries[queryId];
-          const result = next(setQueryId(action, queryId));
-          const update = {
-            type: DDP_QUERY_UPDATE,
-            payload: {},
-            meta: { queryId },
-          };
-          if (!action.payload.error && action.payload.result && typeof action.payload.result === 'object') {
-            update.payload.entities = ddpClient.extractEntities(
-              action.payload.result,
-              {
-                name: query.name,
-              },
-            );
-          }
-          if (query && query.entities) {
-            update.payload.oldEntities = query.entities;
-          }
-          store.dispatch(update);
-          return result;
+        const query = queryId && state.ddp.queries[queryId];
+        if (!query) {
+          return next(action);
         }
-        return next(action);
+        const newAction = {
+          ...action,
+          payload: {
+            ...action.payload,
+            oldEntities: query.entities,
+          },
+        };
+        if (action.payload &&
+            action.payload.result &&
+            typeof action.payload.result === 'object'
+        ) {
+          newAction.payload.entities = ddpClient.extractEntities(
+            action.payload.result,
+            {
+              name: query.name,
+              params: query.params,
+              properties: query.properties,
+            },
+          );
+        }
+        return next(newAction);
       }
       default:
         return next(action);
