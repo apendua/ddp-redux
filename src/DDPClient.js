@@ -17,6 +17,7 @@ import * as methods from './modules/methods';
 import * as queries from './modules/queries';
 import * as subscriptions from './modules/subscriptions';
 import * as wrapWithPromise from './modules/wrapWithPromise';
+import * as thunk from './modules/thunk';
 import { callMethod } from './actions';
 
 /**
@@ -128,13 +129,7 @@ class DDPClient extends DDPEmitter {
 
   middleware() {
     const middlewares = [
-      {
-        createMiddleware: () =>
-          store => next => action => (typeof action === 'function'
-            ? action(store.dispatch, store.getState)
-            : next(action)
-          ),
-      },
+      thunk,
       connection,
       messages,
       wrapWithPromise, // needs to go after messages, because id must be set

@@ -12,6 +12,7 @@ import {
 import {
   DDPClient,
 } from './common.test';
+import * as thunk from '../thunk';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -45,6 +46,7 @@ describe('Test module - queries - middleware', () => {
     this.ddpClient.send = this.send;
     this.middleware = createMiddleware(this.ddpClient);
     this.mockStore = configureStore([
+      thunk.createMiddleware(),
       this.middleware,
     ]);
   });
