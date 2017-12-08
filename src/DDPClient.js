@@ -17,6 +17,7 @@ import * as methods from './modules/methods';
 import * as queries from './modules/queries';
 import * as subscriptions from './modules/subscriptions';
 import * as wrapWithPromise from './modules/wrapWithPromise';
+import { callMethod } from './actions';
 
 /**
  * @class
@@ -92,6 +93,10 @@ class DDPClient extends DDPEmitter {
     }
   }
 
+  fetch(name, params, properties = {}) {
+    return this.constructor.fetch(name, params, properties);
+  }
+
   clearResumeToken(socket) {
     return this.storage.del(this.getStorageKey(socket));
   }
@@ -123,6 +128,13 @@ class DDPClient extends DDPEmitter {
 
   middleware() {
     const middlewares = [
+      {
+        createMiddleware: () =>
+          store => next => action => (typeof action === 'function'
+            ? action(store.dispatch, store.getState)
+            : next(action)
+          ),
+      },
       connection,
       messages,
       wrapWithPromise, // needs to go after messages, because id must be set
@@ -202,6 +214,17 @@ class DDPClient extends DDPEmitter {
 
   static defaultExtractEntities(result) {
     return result.entities;
+  }
+
+  static fetch(name, params, properties) {
+    const {
+      queryId,
+      socketId,
+    } = properties;
+    return callMethod(name, params, {
+      queryId,
+      socketId,
+    });
   }
 }
 
