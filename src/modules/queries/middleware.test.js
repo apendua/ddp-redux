@@ -15,7 +15,7 @@ import {
 import {
   DEFAULT_SOCKET_ID,
 
-  DDP_CONNECT,
+  DDP_CONNECTED,
   DDP_RESULT,
   DDP_METHOD,
   DDP_QUERY_CREATE,
@@ -26,7 +26,10 @@ import {
   DDP_QUERY_REFETCH,
 
   DDP_STATE__READY,
+  DDP_STATE__QUEUED,
   DDP_STATE__PENDING,
+  DDP_STATE__OBSOLETE,
+  DDP_STATE__CANCELED,
 } from '../../constants';
 
 chai.should();
@@ -66,7 +69,7 @@ describe('Test module - queries - middleware', () => {
     ]);
   });
 
-  it('should create query and dispatch DDP_METHOD if query does not yet exist', function () {
+  it('should dispatch DDP_QUERY_CREATE and DDP_METHOD if query does not yet exist', function () {
     const store = this.mockStore({
       ddp: {
         queries: {
@@ -86,6 +89,13 @@ describe('Test module - queries - middleware', () => {
     const queryId = store.dispatch(action);
     queryId.should.equal(DDPClient.defaultUniqueId);
     store.getActions().should.deep.equal([
+      {
+        ...action,
+        meta: {
+          ...action.meta,
+          queryId,
+        },
+      },
       {
         type: DDP_QUERY_CREATE,
         payload: {
@@ -110,17 +120,65 @@ describe('Test module - queries - middleware', () => {
           socketId: 'socket/1',
         },
       },
-      {
-        ...action,
-        meta: {
-          ...action.meta,
-          queryId,
-        },
-      },
     ]);
   });
 
-  it('should not create query if it already exists', function () {
+  [
+    DDP_STATE__CANCELED,
+    DDP_STATE__OBSOLETE,
+  ].forEach((state) => {
+    it(`should dispatch DDP_METHOD if query exists, but it is "${state}"`, function () {
+      const store = this.mockStore({
+        ddp: {
+          queries: {
+            1: {
+              id: '1',
+              name: 'aQuery',
+              params: [1, 2, 3],
+              properties: {
+                socketId: 'socket/1',
+              },
+              state,
+            },
+          },
+        },
+      });
+      const action = {
+        type: DDP_QUERY_REQUEST,
+        payload: {
+          name: 'aQuery',
+          params: [1, 2, 3],
+          properties: {
+            socketId: 'socket/1',
+          },
+        },
+      };
+      const queryId = store.dispatch(action);
+      queryId.should.equal(DDPClient.defaultUniqueId);
+      store.getActions().should.deep.equal([
+        {
+          ...action,
+          meta: {
+            ...action.meta,
+            queryId,
+          },
+        },
+        {
+          type: DDP_METHOD,
+          payload: {
+            method: 'aQuery',
+            params: [1, 2, 3],
+          },
+          meta: {
+            queryId: '1',
+            socketId: 'socket/1',
+          },
+        },
+      ]);
+    });
+  });
+
+  it('should not dispatch DDP_QUERY_CREATE nor DDP_METHOD if query already exists', function () {
     const store = this.mockStore({
       ddp: {
         queries: {
@@ -131,6 +189,7 @@ describe('Test module - queries - middleware', () => {
             properties: {
               socketId: 'socket/1',
             },
+            state: DDP_STATE__READY,
           },
         },
       },
@@ -354,7 +413,7 @@ describe('Test module - queries - middleware', () => {
         queries: {
           1: {
             id: '1',
-            state: DDP_STATE__READY,
+            state: DDP_STATE__OBSOLETE,
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {
@@ -364,7 +423,17 @@ describe('Test module - queries - middleware', () => {
           },
           2: {
             id: '2',
-            state: DDP_STATE__READY,
+            state: DDP_STATE__QUEUED,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            properties: {
+              socketId: 'socket/1',
+            },
+            users: 1,
+          },
+          3: {
+            id: '3',
+            state: DDP_STATE__OBSOLETE,
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {
@@ -376,7 +445,7 @@ describe('Test module - queries - middleware', () => {
       },
     });
     const action = {
-      type: DDP_CONNECT,
+      type: DDP_CONNECTED,
       payload: {},
       meta: {
         socketId: 'socket/1',
@@ -385,6 +454,12 @@ describe('Test module - queries - middleware', () => {
     store.dispatch(action);
     store.getActions().should.deep.equal([
       action,
+      {
+        type: DDP_QUERY_REFETCH,
+        meta: {
+          queryId: '1',
+        },
+      },
       {
         type: DDP_METHOD,
         payload: {
@@ -424,6 +499,7 @@ describe('Test module - queries - middleware', () => {
     };
     store.dispatch(action);
     store.getActions().should.deep.equal([
+      action,
       {
         type: DDP_METHOD,
         payload: {
@@ -435,7 +511,35 @@ describe('Test module - queries - middleware', () => {
           socketId: 'socket/1',
         },
       },
-      action,
     ]);
   });
+
+  it('should not dispatch method call on DDP_QUERY_REFETCH if query has no users', function () {
+    const store = this.mockStore({
+      ddp: {
+        queries: {
+          1: {
+            id: '1',
+            state: DDP_STATE__READY,
+            name: 'aQuery',
+            params: [1, 2, 3],
+            properties: {
+              socketId: 'socket/1',
+            },
+            users: 0,
+          },
+        },
+      },
+    });
+    const action = {
+      type: DDP_QUERY_REFETCH,
+      meta: {
+        queryId: '1',
+      },
+    };
+    store.dispatch(action);
+    store.getActions().should.deep.equal([
+      action,
+    ]);
+  });  
 });
