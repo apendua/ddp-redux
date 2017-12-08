@@ -1,6 +1,4 @@
-import find from 'lodash/find';
 import forEach from 'lodash/forEach';
-import EJSON from '../../ejson';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -19,9 +17,6 @@ import {
   DDP_QUERY_DELETE,
   DDP_QUERY_UPDATE,
 } from '../../constants';
-import {
-  callMethod,
-} from '../../actions';
 import createDelayedTask from '../../utils/createDelayedTask';
 import {
   findQuery,
@@ -57,17 +52,22 @@ export const createMiddleware = ddpClient => (store) => {
           const socketId = action.meta && action.meta.socketId;
           const state = store.getState();
           forEach(state.ddp.queries, (query, queryId) => {
+            const querySocketId = query.properties &&
+                                  query.properties.socketId;
             if (
               // NOTE: It's important to include "restoring" state as well,
               //       because at this point reducer may already change query
               //       state to restoring ...
-              query.socketId === socketId && (
+              querySocketId === socketId && (
                 query.state === DDP_QUERY_STATE__READY ||
                 query.state === DDP_QUERY_STATE__PENDING ||
                 query.state === DDP_QUERY_STATE__RESTORING
               )
             ) {
-              store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
+              store.dispatch(ddpClient.fetch(query.name, query.params, {
+                ...query.properties,
+                queryId,
+              }));
             }
           });
           return result;
@@ -80,14 +80,12 @@ export const createMiddleware = ddpClient => (store) => {
             params,
           } = action.payload;
           let {
-            properties = {},
+            properties,
           } = action.payload;
-          if (!properties.socketId) {
-            properties = {
-              ...properties,
-              socketId: DEFAULT_SOCKET_ID,
-            };
-          }
+          properties = {
+            socketId: DEFAULT_SOCKET_ID,
+            ...properties,
+          };
           const query = findQuery(state.ddp.queries, name, params, properties);
           const queryId = (query && query.id) || ddpClient.nextUniqueId();
           if (query) {
@@ -105,8 +103,8 @@ export const createMiddleware = ddpClient => (store) => {
               },
             });
             // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
-            store.dispatch(callMethod(name, params, {
-              socketId: properties.socketId,
+            store.dispatch(ddpClient.fetch(name, params, {
+              ...properties,
               queryId,
             }));
           }
@@ -130,8 +128,10 @@ export const createMiddleware = ddpClient => (store) => {
           //        it is requested.
           // if (query && query.users) {
           if (query) {
-            const socketId = query.socketId;
-            store.dispatch(callMethod(query.name, query.params, { queryId, socketId }));
+            store.dispatch(ddpClient.fetch(query.name, query.params, {
+              ...query.properties,
+              queryId,
+            }));
           }
           return next(action);
         })();

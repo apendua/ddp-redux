@@ -63,9 +63,6 @@ export const createMiddleware = ddpClient => (store) => {
     }
   };
   return next => (action) => {
-    if (typeof action === 'function') {
-      return action(store.dispatch, store.getState);
-    }
     if (!action || typeof action !== 'object') {
       return next(action);
     }

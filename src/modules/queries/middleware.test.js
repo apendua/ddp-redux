@@ -165,7 +165,6 @@ describe('Test module - queries - middleware', () => {
             id: '1',
             name: 'aQuery',
             params: [1, 2, 3],
-            socketId: 'socket/1',
             state: DDP_QUERY_STATE__PENDING,
           },
         },
@@ -358,16 +357,20 @@ describe('Test module - queries - middleware', () => {
             state: DDP_QUERY_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
+            properties: {
+              socketId: 'socket/1',
+            },
             users: 1,
-            socketId: 'socket/1',
           },
           2: {
             id: '2',
             state: DDP_QUERY_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
+            properties: {
+              socketId: 'socket/2',
+            },
             users: 1,
-            socketId: 'socket/2',
           },
         },
       },
@@ -405,8 +408,10 @@ describe('Test module - queries - middleware', () => {
             state: DDP_QUERY_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
+            properties: {
+              socketId: 'socket/1',
+            },
             users: 1,
-            socketId: 'socket/1',
           },
         },
       },
@@ -415,7 +420,6 @@ describe('Test module - queries - middleware', () => {
       type: DDP_QUERY_REFETCH,
       meta: {
         queryId: '1',
-        socketId: 'socket/1',
       },
     };
     store.dispatch(action);
