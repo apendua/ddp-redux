@@ -24,23 +24,50 @@ import {
   queryRefetch,
 } from '../../actions';
 
+const setQueryId = (action, queryId) => ({
+  ...action,
+  meta: {
+    ...action.meta,
+    queryId,
+  },
+});
+
+const createQuery = (queryId, name, params, properties) => ({
+  type: DDP_QUERY_CREATE,
+  payload: {
+    name,
+    params,
+    properties,
+  },
+  meta: {
+    queryId,
+  },
+});
+
+const deleteQuery = queryId => (dispatch, getState) => {
+  const state = getState();
+  const query = state.ddp.queries[queryId];
+  if (!query) {
+    return;
+  }
+  dispatch({
+    type: DDP_QUERY_DELETE,
+    payload: {
+      entities: query.entities,
+    },
+    meta: {
+      queryId,
+    },
+  });
+};
+
 /**
  * Create middleware for the given ddpClient.
  * @param {DDPClient} ddpClient
  */
 export const createMiddleware = ddpClient => (store) => {
   const scheduleCleanup = createDelayedTask((queryId) => {
-    const state = store.getState();
-    const query = state.ddp.queries[queryId];
-    store.dispatch({
-      type: DDP_QUERY_DELETE,
-      payload: {
-        entities: query.entities,
-      },
-      meta: {
-        queryId,
-      },
-    });
+    store.dispatch(deleteQuery(queryId));
   }, {
     getTimeout: () => ddpClient.getQueryCleanupTimeout(),
   });
@@ -68,6 +95,17 @@ export const createMiddleware = ddpClient => (store) => {
         });
         return result;
       }
+      case DDP_QUERY_RELEASE: {
+        const state = store.getState();
+        const query = state.ddp.queries[action.meta.queryId];
+        // NOTE: The number of users will only be decreased after "next(action)"
+        //       so at this moment it's still taking into account the one which
+        //       is resigning.
+        if (query && query.users === 1) {
+          scheduleCleanup(query.id);
+        }
+        return next(action);
+      }
       case DDP_QUERY_REQUEST: {
         const state = store.getState();
         const {
@@ -83,36 +121,24 @@ export const createMiddleware = ddpClient => (store) => {
         };
         const query = findQuery(state.ddp.queries, name, params, properties);
         const queryId = query ? query.id : ddpClient.nextUniqueId();
-        next({
-          ...action,
-          meta: {
-            ...action.meta,
-            queryId,
-          },
-        });
+
+        next(setQueryId(action, queryId));
+
         if (query) {
           scheduleCleanup.cancel(queryId);
         } else {
-          store.dispatch({
-            type: DDP_QUERY_CREATE,
-            payload: {
-              name,
-              params,
-              properties,
-            },
-            meta: {
-              queryId,
-            },
-          });
+          store.dispatch(createQuery(queryId, name, params, properties));
         }
         // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
         if (!query ||
              query.state === DDP_STATE__OBSOLETE ||
              query.state === DDP_STATE__CANCELED) {
-          store.dispatch(ddpClient.fetch(name, params, {
-            ...properties,
-            queryId,
-          }));
+          store.dispatch(
+            ddpClient.fetch(name, params, {
+              ...properties,
+              queryId,
+            }),
+          );
         }
         return queryId;
       }
@@ -124,10 +150,12 @@ export const createMiddleware = ddpClient => (store) => {
         // NOTE: If query has no users, the reducer will set the query state to "obsolete",
         //       and the next time it will be requested it will force re-fetch.
         if (query && query.users > 0) {
-          store.dispatch(ddpClient.fetch(query.name, query.params, {
-            ...query.properties,
-            queryId,
-          }));
+          store.dispatch(
+            ddpClient.fetch(query.name, query.params, {
+              ...query.properties,
+              queryId,
+            }),
+          );
         }
         return result;
       }
@@ -136,13 +164,7 @@ export const createMiddleware = ddpClient => (store) => {
         const queryId = action.meta && action.meta.queryId;
         if (queryId) {
           const query = state.ddp.queries[queryId];
-          const result = next({
-            ...action,
-            meta: {
-              ...action.meta,
-              queryId,
-            },
-          });
+          const result = next(setQueryId(action, queryId));
           const update = {
             type: DDP_QUERY_UPDATE,
             payload: {},
@@ -161,17 +183,6 @@ export const createMiddleware = ddpClient => (store) => {
           }
           store.dispatch(update);
           return result;
-        }
-        return next(action);
-      }
-      case DDP_QUERY_RELEASE: {
-        const state = store.getState();
-        const query = state.ddp.queries[action.meta.queryId];
-        // NOTE: The number of users will only be decreased after "next(action)"
-        //       so at this moment it's still taking into account the one which
-        //       is resigning.
-        if (query && query.users === 1) {
-          scheduleCleanup(query.id);
         }
         return next(action);
       }
