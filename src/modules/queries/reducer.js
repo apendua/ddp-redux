@@ -9,9 +9,7 @@ import {
   DDP_STATE__RESTORING,
   DDP_STATE__CANCELED,
 
-  DDP_METHOD,
   DDP_ENQUEUE,
-  DDP_RESULT,
   DDP_DISCONNECTED,
 
   DDP_QUERY_REQUEST,
@@ -87,17 +85,6 @@ const queryReducer = (state = {
           return state;
       }
     }
-    case DDP_METHOD: {
-      switch (state.state) {
-        case DDP_STATE__INITIAL:
-        case DDP_STATE__QUEUED:
-          return setState(DDP_STATE__PENDING)(state);
-        case DDP_STATE__READY:
-          return setState(DDP_STATE__RESTORING)(state);
-        default:
-          return state;
-      }
-    }
     case DDP_QUERY_CREATE:
       return {
         ...state,
@@ -108,22 +95,35 @@ const queryReducer = (state = {
       };
     case DDP_QUERY_REFETCH:
       return state.users > 0 ? state : setState(DDP_STATE__OBSOLETE)(state);
-    case DDP_QUERY_UPDATE:
-      return {
-        ...state,
-        state: DDP_STATE__READY,
-        entities: action.payload.entities,
-      };
-    case DDP_RESULT: {
-      if (action.payload.error) {
+    case DDP_QUERY_UPDATE: {
+      if (!action.payload) {
+        switch (state.state) {
+          case DDP_STATE__INITIAL:
+          case DDP_STATE__QUEUED:
+            return setState(DDP_STATE__PENDING)(state);
+          case DDP_STATE__READY:
+            return setState(DDP_STATE__RESTORING)(state);
+          default:
+            return state;
+        }
+      }
+      const {
+        error,
+        result,
+        entities,
+      } = action.payload;
+      if (error) {
         return {
           ...state,
-          error: action.payload.error,
+          error,
+          state: DDP_STATE__CANCELED,
         };
       }
       return {
         ...state,
-        result: action.payload.result,
+        ...entities !== undefined && { entities },
+        result,
+        state: DDP_STATE__READY,
       };
     }
     default:
@@ -133,11 +133,9 @@ const queryReducer = (state = {
 
 export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
+    case DDP_ENQUEUE:
     case DDP_QUERY_REQUEST:
     case DDP_QUERY_RELEASE:
-    case DDP_ENQUEUE:
-    case DDP_METHOD:
-    case DDP_RESULT:
     case DDP_QUERY_UPDATE:
     case DDP_QUERY_REFETCH:
     case DDP_DISCONNECTED: {

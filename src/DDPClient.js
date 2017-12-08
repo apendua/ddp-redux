@@ -18,7 +18,10 @@ import * as queries from './modules/queries';
 import * as subscriptions from './modules/subscriptions';
 import * as wrapWithPromise from './modules/wrapWithPromise';
 import * as thunk from './modules/thunk';
-import { callMethod } from './actions';
+import {
+  callMethod,
+  queryUpdate,
+} from './actions';
 
 /**
  * @class
@@ -185,10 +188,9 @@ class DDPClient extends DDPEmitter {
       queries,
       subscriptions,
     }, module => module.createReducer(this));
-    return (state = {}, action) => {
+    return (state = {}, action) =>
       // TODO: Filter relevant actions; do nothing if action is unknown.
-      return carefullyMapValues(reducers, (reducer, key) => reducer(state[key], action));
-    };
+      carefullyMapValues(reducers, (reducer, key) => reducer(state[key], action));
   }
 
   static registerModel(Model, collection) {
@@ -216,10 +218,19 @@ class DDPClient extends DDPEmitter {
       queryId,
       socketId,
     } = properties;
-    return callMethod(name, params, {
-      queryId,
-      socketId,
-    });
+    return (dispatch) => {
+      dispatch(queryUpdate(queryId, null));
+      dispatch(
+        callMethod(name, params, {
+          queryId,
+          socketId,
+        }),
+      ).then((result) => {
+        dispatch(queryUpdate(queryId, { result }));
+      }).catch((error) => {
+        dispatch(queryUpdate(queryId, { error }));
+      });
+    };
   }
 }
 
