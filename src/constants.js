@@ -41,12 +41,6 @@ export const DDP_METHOD_STATE__READY = 'ready';
 export const DDP_METHOD_STATE__UPDATED = 'updated';
 export const DDP_METHOD_STATE__RETURNED = 'returned';
 
-export const DDP_QUERY_STATE__INITIAL = 'initial';
-export const DDP_QUERY_STATE__QUEUED = 'queued';
-export const DDP_QUERY_STATE__PENDING = 'pending';
-export const DDP_QUERY_STATE__READY = 'ready';
-export const DDP_QUERY_STATE__RESTORING = 'restoring';
-
 export const DDP_FAILED = '@DDP.IN.FAILED';
 export const DDP_ERROR = '@DDP.IN.ERROR';
 

@@ -2,9 +2,9 @@ import forEach from 'lodash/forEach';
 import {
   DEFAULT_SOCKET_ID,
 
-  DDP_QUERY_STATE__READY,
-  DDP_QUERY_STATE__PENDING,
-  DDP_QUERY_STATE__RESTORING,
+  DDP_STATE__READY,
+  DDP_STATE__PENDING,
+  DDP_STATE__RESTORING,
 
   DDP_CONNECT,
   DDP_RESULT,
@@ -59,9 +59,9 @@ export const createMiddleware = ddpClient => (store) => {
               //       because at this point reducer may already change query
               //       state to restoring ...
               querySocketId === socketId && (
-                query.state === DDP_QUERY_STATE__READY ||
-                query.state === DDP_QUERY_STATE__PENDING ||
-                query.state === DDP_QUERY_STATE__RESTORING
+                query.state === DDP_STATE__READY ||
+                query.state === DDP_STATE__PENDING ||
+                query.state === DDP_STATE__RESTORING
               )
             ) {
               store.dispatch(ddpClient.fetch(query.name, query.params, {

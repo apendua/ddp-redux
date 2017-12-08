@@ -1,17 +1,16 @@
 import has from 'lodash/has';
 import omit from 'lodash/omit';
 import {
-  DEFAULT_SOCKET_ID,
-
-  DDP_QUERY_STATE__INITIAL,
-  DDP_QUERY_STATE__QUEUED,
-  DDP_QUERY_STATE__PENDING,
-  DDP_QUERY_STATE__READY,
-  DDP_QUERY_STATE__RESTORING,
+  DDP_STATE__INITIAL,
+  DDP_STATE__QUEUED,
+  DDP_STATE__PENDING,
+  DDP_STATE__READY,
+  DDP_STATE__RESTORING,
 
   DDP_METHOD,
   DDP_ENQUEUE,
   DDP_RESULT,
+  DDP_DISCONNECTED,
 
   DDP_QUERY_REQUEST,
   DDP_QUERY_RELEASE,
@@ -50,7 +49,7 @@ const increaseUsersByOne = increaseProperty('users')(1);
 const decreaseUsersByOne = increaseProperty('users')(-1);
 
 const queryReducer = (state = {
-  state: DDP_QUERY_STATE__INITIAL,
+  state: DDP_STATE__INITIAL,
 }, action) => {
   switch (action.type) {
     case DDP_QUERY_REQUEST:
@@ -59,19 +58,19 @@ const queryReducer = (state = {
       return decreaseUsersByOne(state);
     case DDP_ENQUEUE: {
       switch (state.state) {
-        case DDP_QUERY_STATE__INITIAL:
-          return setState(DDP_QUERY_STATE__QUEUED)(state);
+        case DDP_STATE__INITIAL:
+          return setState(DDP_STATE__QUEUED)(state);
         default:
           return state;
       }
     }
     case DDP_METHOD: {
       switch (state.state) {
-        case DDP_QUERY_STATE__INITIAL:
-        case DDP_QUERY_STATE__QUEUED:
-          return setState(DDP_QUERY_STATE__PENDING)(state);
-        case DDP_QUERY_STATE__READY:
-          return setState(DDP_QUERY_STATE__RESTORING)(state);
+        case DDP_STATE__INITIAL:
+        case DDP_STATE__QUEUED:
+          return setState(DDP_STATE__PENDING)(state);
+        case DDP_STATE__READY:
+          return setState(DDP_STATE__RESTORING)(state);
         default:
           return state;
       }
@@ -87,7 +86,7 @@ const queryReducer = (state = {
     case DDP_QUERY_UPDATE:
       return {
         ...state,
-        state: DDP_QUERY_STATE__READY,
+        state: DDP_STATE__READY,
         entities: action.payload.entities,
       };
     case DDP_RESULT: {

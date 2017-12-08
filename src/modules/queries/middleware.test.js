@@ -25,8 +25,8 @@ import {
   DDP_QUERY_RELEASE,
   DDP_QUERY_REFETCH,
 
-  DDP_QUERY_STATE__READY,
-  DDP_QUERY_STATE__PENDING,
+  DDP_STATE__READY,
+  DDP_STATE__PENDING,
 } from '../../constants';
 
 chai.should();
@@ -165,7 +165,7 @@ describe('Test module - queries - middleware', () => {
             id: '1',
             name: 'aQuery',
             params: [1, 2, 3],
-            state: DDP_QUERY_STATE__PENDING,
+            state: DDP_STATE__PENDING,
           },
         },
       },
@@ -232,7 +232,7 @@ describe('Test module - queries - middleware', () => {
         queries: {
           1: {
             id: '1',
-            state: DDP_QUERY_STATE__READY,
+            state: DDP_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
             users: 1,
@@ -273,7 +273,7 @@ describe('Test module - queries - middleware', () => {
         queries: {
           1: {
             id: '1',
-            state: DDP_QUERY_STATE__READY,
+            state: DDP_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {
@@ -323,7 +323,7 @@ describe('Test module - queries - middleware', () => {
         queries: {
           1: {
             id: '1',
-            state: DDP_QUERY_STATE__READY,
+            state: DDP_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
             users: 2,
@@ -354,7 +354,7 @@ describe('Test module - queries - middleware', () => {
         queries: {
           1: {
             id: '1',
-            state: DDP_QUERY_STATE__READY,
+            state: DDP_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {
@@ -364,7 +364,7 @@ describe('Test module - queries - middleware', () => {
           },
           2: {
             id: '2',
-            state: DDP_QUERY_STATE__READY,
+            state: DDP_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {
@@ -405,7 +405,7 @@ describe('Test module - queries - middleware', () => {
         queries: {
           1: {
             id: '1',
-            state: DDP_QUERY_STATE__READY,
+            state: DDP_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {

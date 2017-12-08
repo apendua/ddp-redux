@@ -9,8 +9,8 @@ import {
   DDP_SUBSCRIPTION_STATE__READY,
   DDP_SUBSCRIPTION_STATE__RESTORING,
   DDP_CONNECTION_STATE__CONNECTED,
-  DDP_QUERY_STATE__READY,
-  DDP_QUERY_STATE__RESTORING,
+  DDP_STATE__READY,
+  DDP_STATE__RESTORING,
   DDP_METHOD_STATE__READY,
   createCurrentUserSelectors,
   createCollectionSelectors,
@@ -103,8 +103,8 @@ const connectDDP = ({
         selectQueriesState,
         queries => every(queries, query =>
           query && (
-            query.state !== DDP_QUERY_STATE__READY ||
-            query.state !== DDP_QUERY_STATE__RESTORING
+            query.state !== DDP_STATE__READY ||
+            query.state !== DDP_STATE__RESTORING
           ),
         ),
       ),
