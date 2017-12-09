@@ -62,7 +62,8 @@ export const DDP_PING = '@DDP.IN.PING';
 export const DDP_PONG = '@DDP.OUT.PONG';
 export const DDP_CONNECTED = '@DDP.IN.CONNECTED';
 export const DDP_CONNECT = '@DDP.OUT.CONNECT';
-export const DDP_ENQUEUE = '@DDP.SOCKET.ENQUEUE';
+export const DDP_ENQUEUE = '@DDP.QUEUE.ENQUEUE';
+export const DDP_QUEUE_RESET = '@DDP.QUEUE.RESET';
 export const DDP_OPEN = '@DDP.SOCKET.OPEN';
 export const DDP_CLOSE = '@DDP.SOCKET.CLOSE';
 // TODO: We could use this one to allow cleaning up given connection
