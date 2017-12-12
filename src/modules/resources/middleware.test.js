@@ -9,9 +9,6 @@ import configureStore from 'redux-mock-store';
 import {
   createMiddleware,
 } from './middleware';
-import {
-  DDPClient,
-} from './common.test';
 import * as thunk from '../thunk';
 import {
   DEFAULT_SOCKET_ID,
@@ -35,15 +32,11 @@ chai.use(chaiAsPromised);
 
 const constant = x => () => x;
 const FETCH_RESOURCE = '@TEST/FETCH.RESOURCE';
+const UNIQUE_ID = '1';
 
 describe('Test module - resources - middleware', () => {
   beforeEach(function () {
-    this.send = sinon.spy();
-    this.onError = sinon.spy();
-    this.ddpClient = new DDPClient();
-    this.ddpClient.on('error', this.onError);
-    this.ddpClient.send = this.send;
-    this.middleware = createMiddleware(this.ddpClient, {
+    this.middleware = createMiddleware({
       resourceType: 'generic',
       fetchResource: (name, params, { resourceId, socketId }) => ({
         type: FETCH_RESOURCE,
@@ -56,6 +49,7 @@ describe('Test module - resources - middleware', () => {
           resourceId,
         },
       }),
+      nextUniqueId: constant(UNIQUE_ID),
       getCleanupTimeout: constant(1000),
       createGetResources: getState => () => getState().ddp.resources,
     });
@@ -106,7 +100,7 @@ describe('Test module - resources - middleware', () => {
       },
     };
     const resourceId = store.dispatch(action);
-    resourceId.should.equal(DDPClient.defaultUniqueId);
+    resourceId.should.equal(UNIQUE_ID);
     store.getActions().should.deep.equal([
       {
         ...action,
@@ -178,7 +172,7 @@ describe('Test module - resources - middleware', () => {
         },
       };
       const resourceId = store.dispatch(action);
-      resourceId.should.equal(DDPClient.defaultUniqueId);
+      resourceId.should.equal(UNIQUE_ID);
       store.getActions().should.deep.equal([
         {
           ...action,
