@@ -20,14 +20,14 @@ import {
 } from './selectors';
 
 /**
- * Create middleware for the given ddpClient.
- * @param {DDPClient} ddpClient
+ * Create resources middleware.
  */
-export const createMiddleware = (ddpClient, {
+export const createMiddleware = ({
   resourceType,
   fetchResource,
   createGetResources,
   getCleanupTimeout,
+  nextUniqueId,
 }) => (store) => {
   const getResources = createGetResources(store.getState);
 
@@ -123,20 +123,20 @@ export const createMiddleware = (ddpClient, {
           socketId: DEFAULT_SOCKET_ID,
           ...properties,
         };
-        const query = findResource(getResources(), name, params, properties);
-        const resourceId = query ? query.id : ddpClient.nextUniqueId();
+        const resource = findResource(getResources(), name, params, properties);
+        const resourceId = resource ? resource.id : nextUniqueId();
 
         next(setResourceMeta(action, resourceId));
 
-        if (query) {
+        if (resource) {
           scheduleCleanup.cancel(resourceId);
         } else {
           store.dispatch(createResource(resourceId, name, params, properties));
         }
-        // NOTE: Theoretically, there can me multiple methods calls to evaluate this query.
-        if (!query ||
-             query.state === DDP_STATE__OBSOLETE ||
-             query.state === DDP_STATE__CANCELED) {
+        // NOTE: Theoretically, there can me multiple methods calls to evaluate this resource.
+        if (!resource ||
+             resource.state === DDP_STATE__OBSOLETE ||
+             resource.state === DDP_STATE__CANCELED) {
           store.dispatch(
             fetchResource(name, params, {
               ...properties,

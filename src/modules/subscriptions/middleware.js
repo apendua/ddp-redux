@@ -16,6 +16,16 @@ import {
 } from '../../constants';
 import createDelayedTask from '../../utils/createDelayedTask';
 
+// export const createMiddleware = ddpClient => (store) => {
+//   const resourcesMiddleware = createResourcesMiddleware(ddpClient, {
+//     ...
+//   })(store);
+//   const middleware = next => action => {
+//     ...
+//   };
+//   return next => resourcesMiddleware(middleware(next));
+// };
+
 /**
  * Create middleware for the given ddpClient.
  * @param {DDPClient} ddpClient
