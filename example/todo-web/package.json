@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "ddp-client": "file:../..",
+    "ddp-redux": "file:../../ddp-redux",
+    "ddp-connector": "file:../../ddp-connector",
     "flat": "^4.0.0",
     "lodash.some": "^4.6.0",
     "react": "^15.6.1",

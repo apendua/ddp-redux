@@ -12,7 +12,7 @@ import {
 } from 'recompose';
 import {
   callMethod,
-} from 'ddp-client/lib/actions';
+} from 'ddp-redux/lib/actions';
 import ddp from '../common/ddp-connector';
 import {
   insert,
