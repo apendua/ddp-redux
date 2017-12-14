@@ -13,7 +13,7 @@ import {
 import {
   callMethod,
 } from 'ddp-client/lib/actions';
-import ddp from '../common/utils/ddp';
+import ddp from '../common/ddp-connector';
 import {
   insert,
   allLists,

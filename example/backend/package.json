@@ -7,6 +7,7 @@
   "dependencies": {
     "babel-runtime": "^6.25.0",
     "flat": "^2.0.1",
+    "lodash": "^4.17.4",
     "meteor-node-stubs": "~0.2.4",
     "react": "^15.6.1",
     "reselect": "^3.0.1",
