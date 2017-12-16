@@ -51,9 +51,15 @@ export const createCurrentUserSelectors = (Model, collection, {
     state => !!(state && state.state === DDP_USER_STATE__LOGGING_IN),
   );
 
+  // Example usage would be:
+  //
+  // current(User).user()
+  // current(User).userId()
+  // current(User).isLoggingIn()
+
   return {
-    selectCurrent,
-    selectCurrentUserId,
-    selectIsLoggingIn,
+    user: constant(selectCurrent),
+    userId: constant(selectCurrentUserId),
+    isLoggingIn: constant(selectIsLoggingIn),
   };
 };

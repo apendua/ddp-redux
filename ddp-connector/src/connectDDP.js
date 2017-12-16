@@ -95,7 +95,7 @@ const connectDDP = ({
     });
 
     selectorCreators.select = createSelectorsCreator(createCollectionSelectors);
-    selectorCreators.selectUser = createSelectorsCreator((Model, collection) =>
+    selectorCreators.current = createSelectorsCreator((Model, collection) =>
       createCurrentUserSelectors(Model, collection, { selectConnectionId }),
     );
 
