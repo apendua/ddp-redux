@@ -66,8 +66,8 @@ const List = compose(
     selectors: ({
       select,
     }) => ({
-      list: select(TodoList).selectOne('listId'),
-      todos: select(Todo).find(
+      list: select(TodoList).one('listId'),
+      todos: select(Todo).where(
         createSelector(
           getListId,
           listId => todo => todo.getListId() === listId,

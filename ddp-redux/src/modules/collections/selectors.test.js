@@ -106,7 +106,7 @@ describe('Test module - collections - selectors', () => {
   });
 
   it('should select a document by id', function () {
-    const selector = this.selectors.col1.selectOne(constant('1'));
+    const selector = this.selectors.col1.one(constant('1'));
     const expected = {
       _id: '1',
       a: 1,
@@ -118,12 +118,12 @@ describe('Test module - collections - selectors', () => {
     const doc2 = selector(this.state2);
     doc1.should.deep.equal(expected);
     doc2.should.equal(doc1);
-    this.selectors.col1.selectAll.recomputations().should.equal(2);
+    this.selectors.col1.all().recomputations().should.equal(2);
   });
 
   it('should find all documents', function () {
     const predicate = constant(true);
-    const selector = this.selectors.col1.find(() => predicate);
+    const selector = this.selectors.col1.where(() => predicate);
     const doc1 = {
       _id: '1',
       a: 1,
@@ -149,7 +149,7 @@ describe('Test module - collections - selectors', () => {
 
   it('should find all matching documents', function () {
     const predicate = x => x.c === 3;
-    const selector = this.selectors.col1.find(() => predicate);
+    const selector = this.selectors.col1.where(() => predicate);
     const doc1 = {
       _id: '1',
       a: 1,
@@ -169,7 +169,7 @@ describe('Test module - collections - selectors', () => {
 
   it('should find one matching document', function () {
     const predicate = x => x.c === 3;
-    const selector = this.selectors.col1.findOne(() => predicate);
+    const selector = this.selectors.col1.one.where(() => predicate);
     const doc1 = {
       _id: '1',
       a: 1,
