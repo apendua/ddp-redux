@@ -27,13 +27,10 @@ const Lists = compose(
     subscriptions: [
       allLists.withParams(),
     ],
-    models: [
-      TodoList,
-    ],
     selectors: ({
-      TodoLists,
+      select,
     }) => ({
-      lists: TodoLists.find(),
+      lists: select(TodoList).find(),
     }),
     loader: Loader,
   }),

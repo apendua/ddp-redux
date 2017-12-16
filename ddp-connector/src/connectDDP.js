@@ -1,4 +1,7 @@
+import isPlainObject from 'lodash/isPlainObject';
+import isArray from 'lodash/isArray';
 import forEach from 'lodash/forEach';
+import memoize from 'lodash/memoize';
 import every from 'lodash/every';
 import {
   createSelector,
@@ -21,7 +24,6 @@ import {
 } from 'ddp-redux';
 
 const connectDDP = ({
-  User,
   models,
   createSelectors,
   selectDeclaredMutations,
@@ -55,38 +57,50 @@ const connectDDP = ({
       selectMethodsIds: selectDeclaredMutations,
     });
 
-    // NOTE: Even if User model is not present, some selectors may still be of interest, e.g. selectCurrentUserId.
-    const currentUserSelectors = createCurrentUserSelectors(User, User && User.collection, {
-      selectConnectionId,
-    });
-
-    const createSelectorsForModel = (Model) => {
-      const selectors = createCollectionSelectors(Model, Model.collection);
-      if (User && User.collection === Model.collection) {
-        selectors.current = currentUserSelectors.selectCurrent;
-      }
-      return selectors;
-    };
-
-    // TODO: We should probably memoize these selector createors.
-    selectorCreators.collection = (Model) => {
-      if (typeof Model === 'string') {
-        // Model is collection name in this case
-        return createCollectionSelectors(null, Model);
-      }
-      return createCollectionSelectors(Model, Model.collection);
-    };
-
-    forEach(models, (Model) => {
-      selectorCreators[Model.collection] = createSelectorsForModel(Model);
-    });
-    if (User && !selectorCreators[User.collection]) {
-      selectorCreators[User.collection] = createSelectorsForModel(User);
+    const modelsDictionary = {};
+    if (isArray(models)) {
+      forEach(models, (Model) => {
+        if (Model.collection) {
+          modelsDictionary[Model.collection] = Model;
+        } else {
+          console.warn(`Model ${Model.name} does not have "collection" property`);
+        }
+      });
+    } else if (isPlainObject(models)) {
+      Object.assign(modelsDictionary, models);
+    } else {
+      console.warn('DDP connector expects "models" to be either array or a plain object');
     }
+
+    const createSelectorsCreator = createForCollection => memoize((collectionOrModel) => {
+      let Model = collectionOrModel;
+      let collection;
+      if (typeof Model === 'string') {
+        collection = Model;
+        Model = modelsDictionary[Model];
+      } else if (typeof Model === 'function') {
+        collection = Model.collection;
+      } else {
+        throw new Error('Model must be a constructor');
+      }
+      if (!collection) {
+        throw new Error('Collection not specified; please check if your Model has "collection" property');
+      }
+      return createForCollection(Model, collection);
+    }, (collectionOrModel) => {
+      if (typeof collectionOrModel === 'string') {
+        return modelsDictionary[collectionOrModel] || collectionOrModel;
+      }
+      return collectionOrModel;
+    });
+
+    selectorCreators.select = createSelectorsCreator(createCollectionSelectors);
+    selectorCreators.selectUser = createSelectorsCreator((Model, collection) =>
+      createCurrentUserSelectors(Model, collection, { selectConnectionId }),
+    );
 
     return createStructuredSelector({
       ...createSelectors && createSelectors(selectorCreators),
-      userId: currentUserSelectors.selectCurrentUserId,
 
       mutations:     selectMutationsState,
       subscriptions: selectSubscriptionsState,

@@ -63,16 +63,11 @@ const List = compose(
       oneList.withParams({ listId }),
       todosInList.withParams({ listId }),
     ],
-    models: [
-      Todo,
-      TodoList,
-    ],
     selectors: ({
-      Todos,
-      TodoLists,
+      select,
     }) => ({
-      list: TodoLists.selectOne(getListId),
-      todos: Todos.find(
+      list: select(TodoList).selectOne('listId'),
+      todos: select(Todo).find(
         createSelector(
           getListId,
           listId => todo => todo.getListId() === listId,
