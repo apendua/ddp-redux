@@ -1,3 +1,4 @@
+import every from 'lodash/every';
 import mapValues from 'lodash/mapValues';
 import values from 'lodash/values';
 import forEach from 'lodash/forEach';
@@ -10,6 +11,10 @@ import createValuesMappingSelector from '../../utils/createValuesMappingSelector
 const identity = x => x;
 const constant = x => () => x;
 const constantTrue = constant(true);
+
+const createPropSelector = propName => (state, props) => props[propName];
+const createMatch = properties => object =>
+  every(properties, (value, key) => object[key] === value);
 
 export const createCollectionSelectors = (Model, collection) => {
   const selectCollectionById = state =>
@@ -40,20 +45,36 @@ export const createCollectionSelectors = (Model, collection) => {
     },
   );
 
-  const selectOne = selectId => createSelector(
-    selectId,
-    selectAll,
-    (id, docs) => docs && docs[id],
-  );
+  const selectOne = (selectId) => {
+    let idSelector = selectId;
+    if (typeof selectId === 'string') {
+      idSelector = createPropSelector(selectId);
+    }
+    return createSelector(
+      idSelector,
+      selectAll,
+      (id, docs) => docs && docs[id],
+    );
+  };
 
   const find = (selectPredicate = constant(constantTrue)) => {
+    let predicateSelector = selectPredicate;
+    if (typeof selectPredicate !== 'function') {
+      predicateSelector = constant(selectPredicate);
+    }
     const selectPredicateValues = createSelector(
       createSelector(
-        selectPredicate,
-        (predicate = constantTrue) => {
+        predicateSelector,
+        (predicate) => {
+          let compiled = predicate;
+          if (typeof predicate === 'object') {
+            compiled = createMatch(predicate);
+          } else if (typeof predicate !== 'function') {
+            throw new Error('Find selector expects predicate to be an object or a function');
+          }
           const selector = createValuesMappingSelector(
             selectAll,
-            doc => predicate(doc),
+            (doc, id) => compiled(doc, id),
           );
           return selector;
         },

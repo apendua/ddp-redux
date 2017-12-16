@@ -7,9 +7,9 @@ const defaultIsEqual = (a, b) => a === b;
 
 const createValuesMappingSelector = (selectObject, mapOneValue, isEqual = defaultIsEqual) => {
   let recomputations = 0;
-  const memoizedMapValues = memoizeValuesMapping((...args) => {
+  const memoizedMapValues = memoizeValuesMapping((value, key) => {
     recomputations += 1;
-    return mapOneValue(...args);
+    return mapOneValue(value, key);
   }, isEqual);
   const selector = defaultMemoize((...args) => memoizedMapValues(selectObject(...args)));
   selector.recomputations = () => recomputations;
