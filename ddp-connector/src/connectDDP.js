@@ -18,7 +18,7 @@ import {
   createQueriesSelector,
   createConnectionSelector,
   createMethodsSelector,
-} from '../../ddp-client';
+} from 'ddp-redux';
 
 const connectDDP = ({
   User,
@@ -66,6 +66,15 @@ const connectDDP = ({
         selectors.current = currentUserSelectors.selectCurrent;
       }
       return selectors;
+    };
+
+    // TODO: We should probably memoize these selector createors.
+    selectorCreators.collection = (Model) => {
+      if (typeof Model === 'string') {
+        // Model is collection name in this case
+        return createCollectionSelectors(null, Model);
+      }
+      return createCollectionSelectors(Model, Model.collection);
     };
 
     forEach(models, (Model) => {

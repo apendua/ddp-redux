@@ -7,7 +7,7 @@ import {
   createStore,
   applyMiddleware,
 } from 'redux';
-import DDPClient from 'ddp-client';
+import DDPClient from 'ddp-redux';
 import React from 'react';
 import ReactDOM from 'react-dom';
 // NOTE: It's important that it goes before we load actuall components

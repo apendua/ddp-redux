@@ -36,7 +36,7 @@ export const createCollectionSelectors = (Model, collection) => {
       if (methodsOrder && methodsOrder.length > 0) {
         Object.assign(rawObject, ...map(methodsOrder, id => methods[id]));
       }
-      return new Model(rawObject);
+      return Model ? new Model(rawObject) : rawObject;
     },
   );
 

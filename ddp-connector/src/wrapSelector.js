@@ -2,7 +2,7 @@ import {
   createSelectorCreator,
   defaultMemoize,
 } from 'reselect';
-import { EJSON } from '../../ddp-client';
+import { EJSON } from 'ddp-redux';
 
 const identity = x => x;
 const constant = x => () => x;

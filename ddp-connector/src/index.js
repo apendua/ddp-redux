@@ -1,7 +1,7 @@
 import React from 'react';
 import mapValues from 'lodash/mapValues';
 import isArray from 'lodash/isArray';
-import createConnector from './src/createConnector';
+import createConnector from './createConnector';
 
 const identity = x => x;
 
@@ -21,7 +21,7 @@ const ddp = createConnector({
       return mapResult(query.result);
     });
   },
-  defaultLoader: () => <span>Loading ...</span>,
+  defaultLoader: () => React.createElement('span', {}, 'Loading ...'),
   defaultDebounceReady: 100,
 });
 
@@ -29,3 +29,5 @@ export {
   ddp,
   createConnector,
 };
+
+export default ddp;

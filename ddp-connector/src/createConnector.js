@@ -24,7 +24,7 @@ import {
   openSocket,
   closeSocket,
   callMethod,
-} from '../../ddp-client';
+} from 'ddp-redux';
 import debounceProps from './debounceProps';
 import connectDDP from './connectDDP';
 import wrapSelector from './wrapSelector';
@@ -412,11 +412,9 @@ const privateCreateConnector = ({
             !props.mutationsReady
           )
         ) {
-          return <Loader />;
+          return React.createElement(Loader);
         }
-        return (
-          <BaseComponent {...props} />
-        );
+        return React.createElement(BaseComponent, props);
       }
     }
 

@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.25.0",
+    "ddp-redux": "file:../../ddp-redux",
     "flat": "^2.0.1",
     "lodash": "^4.17.4",
     "meteor-node-stubs": "~0.2.4",

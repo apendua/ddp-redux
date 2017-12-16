@@ -1,31 +1,31 @@
 {
-  "name": "ddp-client",
-  "version": "0.0.1",
-  "description": "A Meteor-independent DDP protocol client",
+  "name": "ddp-redux",
+  "version": "0.0.4",
+  "description": "A redux based DDP client",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --compilers js:babel-core/register 'src/**/*.test.*'",
-    "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*' 'examples/**/*.test.js'",
-    "flow": "flow",
+    "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*'",
     "build": "babel src/ -d lib/",
     "build-watch": "watch 'npm run build' ./src",
     "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apendua/ddp-client.git"
+    "url": "git+https://github.com/apendua/ddp.git"
   },
   "keywords": [
     "meteor",
     "ddp",
+    "redux",
     "websocket"
   ],
   "author": "apendua",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apendua/ddp-client/issues"
+    "url": "https://github.com/apendua/ddp/issues"
   },
-  "homepage": "https://github.com/apendua/ddp-client#readme",
+  "homepage": "https://github.com/apendua/ddp#readme",
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.25.0",
@@ -54,11 +54,6 @@
   "dependencies": {
     "base64-js": "^1.2.1",
     "lodash": "^4.17.4",
-    "prop-types": "^15.5.10",
-    "react": "^15.6.1",
-    "react-redux": "^5.0.6",
-    "recompose": "^0.24.0",
-    "redux": "^3.7.2",
     "reselect": "^3.0.1",
     "shallowequal": "^1.0.2"
   }

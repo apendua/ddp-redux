@@ -12,8 +12,8 @@ import {
 } from 'recompose';
 import {
   callMethod,
-} from 'ddp-client/lib/actions';
-import ddp from '../common/ddp-connector';
+} from 'ddp-redux/lib/actions';
+import ddp from 'ddp-connector';
 import {
   insert,
   allLists,
