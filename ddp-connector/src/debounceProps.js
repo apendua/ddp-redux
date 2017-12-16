@@ -67,7 +67,7 @@ const debounceProps = (names, {
         forEach(names, (name) => {
           props[name] = this.state[name];
         });
-        return <BaseComponent {...props} />;
+        return React.createElement(BaseComponent, props);
       }
     }
     return Container;

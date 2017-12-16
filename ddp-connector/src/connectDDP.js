@@ -18,7 +18,7 @@ import {
   createQueriesSelector,
   createConnectionSelector,
   createMethodsSelector,
-} from '../../ddp-client';
+} from 'ddp-redux';
 
 const connectDDP = ({
   User,

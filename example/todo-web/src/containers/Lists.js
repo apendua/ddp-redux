@@ -13,7 +13,7 @@ import {
 import {
   callMethod,
 } from 'ddp-redux/lib/actions';
-import ddp from '../common/ddp-connector';
+import ddp from 'ddp-connector';
 import {
   insert,
   allLists,

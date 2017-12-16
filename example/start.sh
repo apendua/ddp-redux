@@ -1,6 +1,10 @@
 #!/bin/bash
 (
-  cd ..
+  cd ../ddp-connector
+  npm run build
+)
+(
+  cd ../ddp-redux
   npm run build
 )
 tmux new-session -d -n "example" -s example
