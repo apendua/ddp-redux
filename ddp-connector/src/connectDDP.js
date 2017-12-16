@@ -68,6 +68,15 @@ const connectDDP = ({
       return selectors;
     };
 
+    // TODO: We should probably memoize these selector createors.
+    selectorCreators.collection = (Model) => {
+      if (typeof Model === 'string') {
+        // Model is collection name in this case
+        return createCollectionSelectors(null, Model);
+      }
+      return createCollectionSelectors(Model, Model.collection);
+    };
+
     forEach(models, (Model) => {
       selectorCreators[Model.collection] = createSelectorsForModel(Model);
     });
