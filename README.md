@@ -1,5 +1,7 @@
 # ddp
 
+[![Build Status][travis-svg]][travis-url]
+
 An example is worth a thousand words
 ```javascript
 import ddp from 'ddp-connector';
@@ -88,3 +90,6 @@ ReactDOM.render(
   document.getElementById('root'),
 );
 ```
+
+[travis-svg]: https://travis-ci.org/apendua/ddp.svg?branch=master
+[travis-url]: https://travis-ci.org/apendua/ddp
