@@ -4,8 +4,8 @@
   "description": "A redux based DDP client",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register 'src/**/*.test.*'",
-    "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test": "mocha --require src/shim.js --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test-watch": "mocha --require src/shim.js --watch --compilers js:babel-core/register 'src/**/*.test.*'",
     "test-lib": "mocha --require lib/shim.js 'lib/**/*.test.*'",
     "build": "babel src/ -d lib/",
     "build-watch": "watch 'npm run build' ./src",

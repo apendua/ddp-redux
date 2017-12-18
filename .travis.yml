@@ -2,7 +2,7 @@ language: node_js
 install:
   - (cd ddp-redux && npm install)
 script:
-  - (cd ddp-redux && npm run test)
+  - (cd ddp-redux && npm run test && npm run test-lib)
 node_js:
   - "4"
   - "6"
