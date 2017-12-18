@@ -21,8 +21,9 @@ please make sure that you pass a valid Model and collection name to createCollec
 export const createCurrentUserSelectors = (Model, collection, {
   selectConnectionId = constant(DEFAULT_SOCKET_ID),
 } = {}) => {
-  const userSelectorCreators = Model && collection
-    ? createCollectionSelectors(Model, collection)
+  const usersCollection = collection || (Model && Model.collection);
+  const userSelectorCreators = usersCollection
+    ? createCollectionSelectors(Model, usersCollection)
     : null;
 
   const selectCurrentUserState = createSelector(
@@ -41,7 +42,7 @@ export const createCurrentUserSelectors = (Model, collection, {
   );
 
   const selectCurrent = userSelectorCreators
-    ? userSelectorCreators.selectOne(
+    ? userSelectorCreators.one(
       selectCurrentUserId,
     )
     : noModelSpecified;
