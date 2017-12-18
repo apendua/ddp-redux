@@ -4,8 +4,8 @@ import isEmpty from 'lodash/isEmpty';
 import carefullyMapValues from './carefullyMapValues';
 
 /**
- * Contruct a function that can be used for removing document snapshots
- * from ddp.collections state.
+ * Create a function that can be used for removing document snapshots
+ * from ddp.collections.
  * @param {string} itemsFieldName
  * @param {string} orderFieldName
  */
@@ -49,7 +49,8 @@ const createRemoveEntities = (itemsFieldName, orderFieldName) => {
     if (!entities || isEmpty(entities)) {
       return state;
     }
-    return carefullyMapValues(state, (collection, name) => removeFromCollection(collection, dataSourceId, entities[name]));
+    return carefullyMapValues(state, (collection, name) =>
+      removeFromCollection(collection, dataSourceId, entities[name]));
   };
 
   return removeEntities;
