@@ -52,7 +52,6 @@ const ListItem = withHandlers({
   </li>
 ));
 
-const getListId = (state, { listId }) => listId;
 const List = compose(
   withState('name', 'setName', ''),
   withProps(({ match: { params: { listId } } }) => ({
@@ -64,12 +63,13 @@ const List = compose(
       todosInList.withParams({ listId }),
     ],
     selectors: ({
+      prop,
       select,
     }) => ({
       list: select(TodoList).one('listId'),
       todos: select(Todo).where(
         createSelector(
-          getListId,
+          prop('listId'),
           listId => todo => todo.getListId() === listId,
         ),
       ),

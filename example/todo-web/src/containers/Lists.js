@@ -30,7 +30,7 @@ const Lists = compose(
     selectors: ({
       select,
     }) => ({
-      lists: select(TodoList).all.list(),
+      lists: select(TodoList).all(),
     }),
     loader: Loader,
   }),

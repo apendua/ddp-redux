@@ -47,6 +47,24 @@ export const createCollectionSelectors = (Model, collection) => {
     },
   );
 
+  const createSelectOne = selectDocs => (selectId) => {
+    let idSelector = selectId;
+    if (typeof idSelector === 'string') {
+      idSelector = createPropSelector(idSelector);
+    }
+    if (!idSelector) {
+      idSelector = createSelector(
+        selectDocs,
+        docs => Object.keys(docs)[0],
+      );
+    }
+    return createSelector(
+      idSelector,
+      selectDocs,
+      (id, docs) => (id ? docs && docs[id] : null),
+    );
+  };
+
   const filter = (selectDocs, selectPredicate = constant(constantTrue)) => {
     let predicateSelector = selectPredicate;
     if (typeof selectPredicate !== 'function') {
@@ -91,81 +109,56 @@ export const createCollectionSelectors = (Model, collection) => {
     const selector = createSelector(
       selectDocs,
       selectSorter,
-      (docs, sorter) => (sorter ? sortBy(values(docs), sorter) : values(docs)),
+      (docs, sorter) =>
+        (sorter ? sortBy(values(docs), sorter) : values(docs)),
     );
     Object.assign(selector, {
-      all() {
-        return selectDocs;
-      },
-      sort(newSelectSorter) {
-        return createList(selectDocs, createSelector(
+      one: () => createSelectOne(selectDocs)(),
+      byId: () => selectDocs,
+      where: selectPredicate => createList(filter(selectDocs, selectPredicate)),
+      sort(selectAnotherSorter) {
+        const selectCombinedSorters = createSelector(
           selectSorter,
-          newSelectSorter,
+          selectAnotherSorter,
           (sorter, newSorter) => {
             if (!sorter) {
               return newSorter;
             }
             return (isArray(sorter) ? sorter : [sorter]).concat(newSorter);
           },
-        ));
-      },
-      where(selectPredicate) {
-        return createList(filter(selectDocs, selectPredicate));
+        );
+        return createList(selectDocs, selectCombinedSorters);
       },
     });
     return selector;
   };
 
-  const createWhere = selectDocs => selectPredicate =>
-    createList(filter(selectDocs, selectPredicate));
-
   const createOne = (selectDocs) => {
-    const selectorCreator = (selectId) => {
-      let idSelector = selectId;
-      if (typeof idSelector === 'string') {
-        idSelector = createPropSelector(idSelector);
-      }
-      if (!idSelector) {
-        idSelector = createSelector(
-          selectDocs,
-          docs => Object.keys(docs)[0],
-        );
-      }
-      return createSelector(
-        idSelector,
-        selectDocs,
-        (id, docs) => (id ? docs && docs[id] : null),
-      );
-    };
+    const selectorCreator = createSelectOne(selectDocs);
     Object.assign(selectorCreator, {
       where: selectPredicate => createOne(filter(selectDocs, selectPredicate))(),
     });
     return selectorCreator;
   };
 
-  const createAll = (selectDocs) => {
-    const selectorCreator = constant(selectDocs);
-    Object.assign(selectorCreator, {
-      list: () => createList(selectDocs),
-      where: selectPredicate => createAll(filter(selectDocs, selectPredicate)),
-    });
-    return selectorCreator;
-  };
+  const createWhere = selectDocs => selectPredicate =>
+    createList(filter(selectDocs, selectPredicate));
 
   // Example usage:
   //
   // select(Todo).one()
-  // select(Todo).where()
-  // select(Todo).all()
-  // select(Todo).all.where()
   // select(Todo).one.where()
+  // select(Todo).where()
+  // select(Todo).where().byId()
   // select(Todo).where().sort().limit()
   // select(Todo).where().join()
 
   return {
-    all: createAll(selectAll),
     one: createOne(selectAll),
     where: createWhere(selectAll),
+    all() {
+      return this.where();
+    },
   };
 };
 

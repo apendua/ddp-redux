@@ -99,6 +99,8 @@ const connectDDP = ({
       createCurrentUserSelectors(Model, collection, { selectConnectionId }),
     );
 
+    selectorCreators.prop = propName => (state, props) => props[propName];
+
     return createStructuredSelector({
       ...createSelectors && createSelectors(selectorCreators),
 
