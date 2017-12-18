@@ -6,6 +6,7 @@
   "scripts": {
     "test": "mocha --compilers js:babel-core/register 'src/**/*.test.*'",
     "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test-lib": "mocha --require lib/shim.js 'lib/**/*.test.*'",
     "build": "babel src/ -d lib/",
     "build-watch": "watch 'npm run build' ./src",
     "prepublish": "npm run build"
@@ -55,6 +56,7 @@
   "dependencies": {
     "base64-js": "^1.2.1",
     "lodash": "^4.17.4",
+    "regexp.prototype.flags": "^1.2.0",
     "reselect": "^3.0.1",
     "shallowequal": "^1.0.2"
   }
