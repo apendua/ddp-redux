@@ -66,6 +66,7 @@ const privateCreateConnector = ({
   connection:    selectConnection,
   selectors:     createSelectors,
   loader:        Loader,
+  handlers,
   mapQueries,
   mapMutations,
   mapSubscriptions,
@@ -134,7 +135,7 @@ const privateCreateConnector = ({
       declaredQueries: null,
       requestedMethodsIds: null,
       setRequestedMethodsIds: null,
-      mutations: [],
+      mutations: {},
     };
 
     class Container extends React.Component {

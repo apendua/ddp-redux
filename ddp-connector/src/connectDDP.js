@@ -68,7 +68,7 @@ const connectDDP = ({
       });
     } else if (isPlainObject(models)) {
       Object.assign(modelsDictionary, models);
-    } else {
+    } else if (models) {
       console.warn('DDP connector expects "models" to be either array or a plain object');
     }
 

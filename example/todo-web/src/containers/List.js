@@ -18,7 +18,7 @@ import ddp from 'ddp-connector';
 import {
   insert,
   update,
-  remove,
+  // remove,
   todosInList,
 } from '../common/api/Todos';
 import {
