@@ -12,7 +12,6 @@ import createValuesMappingSelector from '../../utils/createValuesMappingSelector
 
 const identity = x => x;
 const constant = x => () => x;
-const constantTrue = constant(true);
 
 const createPropSelector = propName => (state, props) => props[propName];
 const createMatch = properties => object =>
@@ -65,7 +64,10 @@ export const createCollectionSelectors = (Model, collection) => {
     );
   };
 
-  const filter = (selectDocs, selectPredicate = constant(constantTrue)) => {
+  const filter = (selectDocs, selectPredicate) => {
+    if (!selectPredicate) {
+      return selectDocs;
+    }
     let predicateSelector = selectPredicate;
     if (typeof selectPredicate !== 'function') {
       predicateSelector = constant(selectPredicate);

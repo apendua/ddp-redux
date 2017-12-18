@@ -118,7 +118,7 @@ describe('Test module - collections - selectors', () => {
     const doc2 = selector(this.state2);
     doc1.should.deep.equal(expected);
     doc2.should.equal(doc1);
-    this.selectors.col1.all().recomputations().should.equal(2);
+    this.selectors.col1.all().byId().recomputations().should.equal(2);
   });
 
   it('should find all documents', function () {
