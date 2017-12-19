@@ -24,9 +24,9 @@ const TodoList = ddp({
       listId: props.listId,
     }],
   }],
-  selectors: ({ select, prop }) => ({
-    todoList: select('TodoLists').one('listId'),
-    todos: select('Todos').where(
+  selectors: ({ from, prop }) => ({
+    todoList: from('TodoLists').select.one('listId'),
+    todos: from('Todos').select.where(
       createSelector(
         prop('listId'),
         listId => todo => todo.listId === listId,
