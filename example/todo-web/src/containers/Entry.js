@@ -3,9 +3,10 @@ import {
   Form,
   Field,
 } from 'react-final-form';
+import { Link } from 'react-router-dom';
 import ddp from 'ddp-connector';
 import {
-  login,
+  loginWithPassword,
   createUser,
 } from 'ddp-redux';
 
@@ -16,9 +17,9 @@ const required = value => (value ? undefined : 'Value is required');
 
 const Entry = ddp({
   selectors: ({
-    current,
+    from,
   }) => ({
-    user: current('users').user(),
+    user: from('users').select.currentUser(),
   }),
   mutations: {
     onSubmit: ({
@@ -29,18 +30,27 @@ const Entry = ddp({
       createNew,
     }) => (createNew
       ? dispatch(createUser({ email, password }))
-      : dispatch(login({ email, password }))
+      : dispatch(loginWithPassword({ email, password }))
     )
   },
 })(({
-  reset,
-  pristine,
-  submitting,
+  user,
   onSubmit,
-}) => (
-  <Form
+}) => (user
+  ? <div>
+    <p>You are logged in!</p>
+    <Link to='/lists'>
+      click here to continue
+    </Link>
+  </div>
+  : <Form
     onSubmit={onSubmit}
-    render={({ handleSubmit }) => (
+    render={({
+      handleSubmit,
+      reset,
+      pristine,
+      submitting,
+    }) => (
       <form onSubmit={handleSubmit}>
         <Field name="email" validate={required}>
           {({ input, meta }) => (
@@ -60,7 +70,7 @@ const Entry = ddp({
             </div>
           )}
         </Field>    
-        <Field name="createNew" validate={required}>
+        <Field name="createNew">
           {({ input, meta }) => (
             <div>
               <label>Create new account?</label>
