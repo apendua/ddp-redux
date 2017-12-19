@@ -23,7 +23,10 @@ import {
   createMethodsSelector,
 } from 'ddp-redux';
 
+const constant = x => () => x;
+
 const connectDDP = ({
+  User,
   models,
   createSelectors,
   selectDeclaredMutations,
@@ -72,6 +75,8 @@ const connectDDP = ({
       console.warn('DDP connector expects "models" to be either array or a plain object');
     }
 
+    const currentUserSelectors = createCurrentUserSelectors(User);
+
     const createSelectorsCreator = createForCollection => memoize((collectionOrModel) => {
       let Model = collectionOrModel;
       let collection;
@@ -86,7 +91,11 @@ const connectDDP = ({
       if (!collection) {
         throw new Error('Collection not specified; please check if your Model has "collection" property');
       }
-      return createForCollection(Model, collection);
+      const select = createForCollection(Model, collection);
+      select.currentUser = constant(select.one(currentUserSelectors.userId()));
+      return {
+        select,
+      };
     }, (collectionOrModel) => {
       if (typeof collectionOrModel === 'string') {
         return modelsDictionary[collectionOrModel] || collectionOrModel;
@@ -94,10 +103,10 @@ const connectDDP = ({
       return collectionOrModel;
     });
 
-    selectorCreators.select = createSelectorsCreator(createCollectionSelectors);
-    selectorCreators.current = createSelectorsCreator((Model, collection) =>
-      createCurrentUserSelectors(Model, collection, { selectConnectionId }),
-    );
+    selectorCreators.from = createSelectorsCreator(createCollectionSelectors);
+    selectorCreators.select = {
+      ...currentUserSelectors,
+    };
 
     selectorCreators.prop = propName => (state, props) => props[propName];
 

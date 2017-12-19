@@ -1,7 +1,6 @@
 /* eslint no-underscore-dangle: "off" */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { connect } from 'react-redux';
 import {
   compose,
   withState,
@@ -11,6 +10,9 @@ import {
   callMethod,
 } from 'ddp-redux/lib/actions';
 import ddp from 'ddp-connector';
+import {
+  logout,
+} from 'ddp-redux';
 import {
   insert,
   allLists,
@@ -25,21 +27,21 @@ const Lists = compose(
       allLists.withParams(),
     ],
     selectors: ({
-      select,
+      from,
     }) => ({
-      lists: select(TodoList).all(),
+      lists: from(TodoList).select.all(),
     }),
     loader: Loader,
   }),
-  connect(
-    null,
-    (dispatch, { title, setTitle }) => ({
-      onAddList: () =>
-        dispatch(callMethod(insert.name, [{ title }]))
-          .then(() => setTitle('')),
-    }),
-  ),
   withHandlers({
+    onLogout: ({ dispatch }) => () => dispatch(logout()),
+    onAddList: ({
+      title,
+      setTitle,
+      dispatch,
+    }) => () =>
+      dispatch(callMethod(insert.name, [{ title }]))
+        .then(() => setTitle('')),    
     onChangeTitle: ({
       setTitle,
     }) => e => setTitle(e.currentTarget.value),
@@ -47,10 +49,12 @@ const Lists = compose(
 )(({
   lists,
   title,
+  onLogout,
   onAddList,
   onChangeTitle,
 }) => (
   <div>
+    <button onClick={onLogout}>Logout</button>
     <ul>
       {lists.map(list => (
         <li key={list._id}>

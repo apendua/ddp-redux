@@ -64,10 +64,10 @@ const List = compose(
     ],
     selectors: ({
       prop,
-      select,
+      from,
     }) => ({
-      list: select(TodoList).one('listId'),
-      todos: select(Todo).where(
+      list: from(TodoList).select.one('listId'),
+      todos: from(Todo).select.where(
         createSelector(
           prop('listId'),
           listId => todo => todo.getListId() === listId,
