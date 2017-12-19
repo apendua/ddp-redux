@@ -7,6 +7,8 @@
     "test": "mocha --require src/shim.js --compilers js:babel-core/register 'src/**/*.test.*'",
     "test-watch": "mocha --require src/shim.js --watch --compilers js:babel-core/register 'src/**/*.test.*'",
     "test-lib": "mocha --require lib/shim.js 'lib/**/*.test.*'",
+    "coverage": "babel-node $(npm bin)/isparta cover _mocha -- 'src/**/*.test.js'",
+    "coverage-report": "http-server ./coverage/lcov-report",
     "build": "babel src/ -d lib/",
     "build-watch": "watch 'npm run build' ./src",
     "prepublish": "npm run build"
