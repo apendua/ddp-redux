@@ -17,6 +17,7 @@ function errors(methodOptions) {
 
 const implement = (method, { mixins = [], onServer, ...options } = {}) => {
   const adjustedOptions = { ...options };
+  const name = method.getName();
   if (onServer) {
     let func = () => {};
     if (Meteor.isServer) {
@@ -29,11 +30,14 @@ const implement = (method, { mixins = [], onServer, ...options } = {}) => {
       throw new Error('When "onServer" is provided, "run" is not allowed');
     }
     adjustedOptions.run = function (...args) {
+      if (!this.userId) {
+        throw new Meteor.Error(`${name}.notAllowed`, 'You must be logged in');
+      }
       return func(this, ...args);
     };
   }
   return new ValidatedMethod({
-    name: method.getName(),
+    name,
     validate: method.getValidator(ValidationError),
     mixins: [
       ...mixins,

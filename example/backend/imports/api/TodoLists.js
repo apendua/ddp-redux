@@ -7,7 +7,10 @@ implement(api.insert, {
   run({
     title,
   }) {
-    return TodoLists.insert({ title });
+    return TodoLists.insert({
+      title,
+      userId: this.userId,
+    });
   },
 });
 
@@ -16,7 +19,10 @@ implement(api.update, {
     listId,
     title,
   }) {
-    return TodoLists.update({ _id: listId }, {
+    return TodoLists.update({
+      _id: listId,
+      userId: this.userId,
+    }, {
       $set: {
         title,
       },
@@ -28,19 +34,27 @@ implement(api.remove, {
   run({
     listId,
   }) {
-    return TodoLists.remove({ _id: listId });
+    return TodoLists.remove({
+      _id: listId,
+      userId: this.userId,
+    });
   },
 });
 
 publish(api.allLists, {
   run() {
-    return TodoLists.find({});
+    return TodoLists.find({
+      userId: this.userId,
+    });
   },
 });
 
 publish(api.oneList, {
   run({ listId }) {
-    return TodoLists.find({ _id: listId });
+    return TodoLists.find({
+      _id: listId,
+      userId: this.userId,
+    });
   },
 });
 

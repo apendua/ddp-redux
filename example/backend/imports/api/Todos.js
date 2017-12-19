@@ -13,6 +13,7 @@ implement(api.insert, {
       name,
       done,
       listId,
+      userId: this.userId,
     });
   },
 });
@@ -33,6 +34,7 @@ implement(api.update, {
     }
     Todos.update({
       _id: todoId,
+      userId: this.userId,
     }, mutation);
   },
 });
@@ -41,13 +43,19 @@ implement(api.remove, {
   run({
     todoId,
   }) {
-    Todos.remove({ _id: todoId });
+    Todos.remove({
+      _id: todoId,
+      userId: this.userId,
+    });
   },
 });
 
 publish(api.todosInList, {
   run({ listId }) {
-    return Todos.find({ listId });
+    return Todos.find({
+      listId,
+      userId: this.userId,
+    });
   },
 });
 

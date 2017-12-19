@@ -8,6 +8,7 @@ const Todos = new Mongo.Collection(Todo.collection, {
 });
 
 Todos.schema = new SimpleSchema([CreatedUpdatedSchema, {
+  userId: { type: String, regEx: SimpleSchema.RegEx.Id },
   listId: { type: String, regEx: SimpleSchema.RegEx.Id },
   name:   { type: String },
   done:   { type: Boolean, optional: true },
