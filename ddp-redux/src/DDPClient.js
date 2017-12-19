@@ -93,15 +93,15 @@ class DDPClient extends DDPEmitter {
   }
 
   clearResumeToken(socket) {
-    return this.storage.del(this.getStorageKey(socket));
+    return Promise.resolve(this.storage.del(this.getStorageKey(socket)));
   }
 
   setResumeToken(socket, token) {
-    return this.storage.set(this.getStorageKey(socket), token);
+    return Promise.resolve(this.storage.set(this.getStorageKey(socket), token));
   }
 
   getResumeToken(socket) {
-    return this.storage.get(this.getStorageKey(socket));
+    return Promise.resolve(this.storage.get(this.getStorageKey(socket)));
   }
 
   getFlushTimeout() {

@@ -19,6 +19,11 @@ import './store/registerModels';
 const ddpClient = new DDPClient({
   endpoint: process.env.REACT_APP_ENDPOINT,
   SocketConstructor: WebSocket,
+  storage: {
+    set: (key, value) => localStorage.setItem(key, value),
+    del: key => localStorage.removeItem(key),
+    get: key => localStorage.getItem(key),
+  },
 });
 
 const enhancer = compose(
