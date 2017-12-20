@@ -10,20 +10,26 @@ import {
 import DDPClient from 'ddp-redux';
 import React from 'react';
 import ReactDOM from 'react-dom';
-// NOTE: It's important that it goes before we load actuall components
+import notification from 'antd/lib/notification';
 import App from './containers/App';
 import registerServiceWorker from './registerServiceWorker';
 import rootReducer from './store/rootReducer';
-import './store/registerModels';
+import storage from './storage';
+import './index.css';
 
 const ddpClient = new DDPClient({
   endpoint: process.env.REACT_APP_ENDPOINT,
   SocketConstructor: WebSocket,
-  storage: {
-    set: (key, value) => localStorage.setItem(key, value),
-    del: key => localStorage.removeItem(key),
-    get: key => localStorage.getItem(key),
-  },
+  storage,
+});
+
+ddpClient.onPromise = ((promise) => {
+  promise.catch((err) => {
+    notification.error({
+      message: 'Error',
+      description: err.reason || err.message,
+    });
+  });
 });
 
 const enhancer = compose(
