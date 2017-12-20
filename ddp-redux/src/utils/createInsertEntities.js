@@ -31,6 +31,7 @@ const createInsertEntities = (itemsFieldName, orderFieldName) => {
     return {
       ...state,
       nextById,
+      needsUpdate: true,
     };
   };
 

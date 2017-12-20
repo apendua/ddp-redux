@@ -42,6 +42,7 @@ const createRemoveEntities = (itemsFieldName, orderFieldName) => {
     return {
       ...state,
       nextById,
+      needsUpdate: true,
     };
   };
 

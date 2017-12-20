@@ -7,6 +7,7 @@ import {
   DDP_CHANGED,
   DDP_REMOVED,
   DDP_FLUSH,
+  DDP_QUERY_UPDATE,
 } from '../../constants';
 
 /**
@@ -38,6 +39,7 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_CHANGED:
       case DDP_REMOVED:
       case DDP_METHOD:
+      case DDP_QUERY_UPDATE:
         scheduleFlush();
         return next(action);
       case DDP_READY:
