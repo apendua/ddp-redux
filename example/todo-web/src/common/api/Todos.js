@@ -32,3 +32,8 @@ export const todosInList = new ApiSpec({
     listId: { type: String, regEx: Schema.RegEx.Id },
   }),
 });
+
+export const getStats = new ApiSpec({
+  name: 'api.Todos.getStats',
+  schema: new Schema(),
+});
