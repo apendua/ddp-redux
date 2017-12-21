@@ -1,6 +1,6 @@
 {
   "name": "ddp-redux",
-  "version": "0.0.4",
+  "version": "0.5.0",
   "description": "A redux based DDP client",
   "main": "lib/index.js",
   "scripts": {
