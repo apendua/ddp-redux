@@ -8,7 +8,8 @@ const TodoLists = new Mongo.Collection(TodoList.collection, {
 });
 
 TodoLists.schema = new SimpleSchema([CreatedUpdatedSchema, {
-  title: { type: String },
+  userId: { type: String, regEx: SimpleSchema.RegEx.Id },
+  title:  { type: String },
 }]);
 
 TodoLists.attachSchema(TodoLists.schema);

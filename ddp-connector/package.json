@@ -1,6 +1,6 @@
 {
   "name": "ddp-connector",
-  "version": "0.0.4",
+  "version": "0.5.0",
   "description": "Connect ddp-redux client to react components",
   "main": "lib/index.js",
   "scripts": {
@@ -51,6 +51,7 @@
     "eslint-import-resolver-meteor": "^0.4.0",
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^5.1.1",
-    "eslint-plugin-react": "^7.1.0"
+    "eslint-plugin-react": "^7.1.0",
+    "watch": "^1.0.2"
   }
 }

@@ -19,6 +19,7 @@ import {
 import {
   createMethodsSelector,
 } from './modules/methods/selectors';
+import './shim';
 
 export * from './actions';
 export * from './constants';

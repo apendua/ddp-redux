@@ -3,8 +3,7 @@ import without from 'lodash/without';
 import isEmpty from 'lodash/isEmpty';
 
 /**
- * Contruct a function that can be used for inseting document snapshots
- * into ddp.collections state.
+ * Create a function that can be used for inseting document snapshots into ddp.collections.
  * @param {string} itemsFieldName
  * @param {string} orderFieldName
  */
@@ -32,6 +31,7 @@ const createInsertEntities = (itemsFieldName, orderFieldName) => {
     return {
       ...state,
       nextById,
+      needsUpdate: true,
     };
   };
 

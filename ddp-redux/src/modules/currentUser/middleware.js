@@ -51,7 +51,7 @@ export const createMiddleware = ddpClient => (store) => {
           const socket = getSocket(socketId);
           ddpClient
             .getResumeToken(socket)
-            .then(resume => store.dispatch({
+            .then(resume => resume && store.dispatch({
               type: DDP_LOGIN,
               payload: [{ resume }],
               meta: {

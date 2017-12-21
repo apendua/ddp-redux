@@ -1,11 +1,14 @@
 {
   "name": "ddp-redux",
-  "version": "0.0.4",
+  "version": "0.5.0",
   "description": "A redux based DDP client",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register 'src/**/*.test.*'",
-    "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test": "mocha --require src/shim.js --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test-watch": "mocha --require src/shim.js --watch --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test-lib": "mocha --require lib/shim.js 'lib/**/*.test.*'",
+    "coverage": "babel-node $(npm bin)/isparta cover _mocha -- 'src/**/*.test.js'",
+    "coverage-report": "http-server ./coverage/lcov-report",
     "build": "babel src/ -d lib/",
     "build-watch": "watch 'npm run build' ./src",
     "prepublish": "npm run build"
@@ -46,6 +49,7 @@
     "flow-bin": "^0.52.0",
     "isparta": "^4.0.0",
     "mocha": "^3.5.0",
+    "redux": "^3.7.2",
     "redux-mock-store": "^1.2.3",
     "sinon": "^2.4.1",
     "sinon-chai": "^2.12.0",
@@ -54,6 +58,7 @@
   "dependencies": {
     "base64-js": "^1.2.1",
     "lodash": "^4.17.4",
+    "regexp.prototype.flags": "^1.2.0",
     "reselect": "^3.0.1",
     "shallowequal": "^1.0.2"
   }

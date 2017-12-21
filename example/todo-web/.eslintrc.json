@@ -1,0 +1,22 @@
+{
+  "extends": "airbnb",
+  "rules": {
+    "import/prefer-default-export": "off",
+    "react/jsx-filename-extension": "off"
+  },
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 7,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    }
+  },
+  "env": {
+    "es6": true,
+    "browser": true,
+    "node": true
+  },
+  "plugins": [],
+  "settings": {}
+}

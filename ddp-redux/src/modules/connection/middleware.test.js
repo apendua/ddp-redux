@@ -157,7 +157,7 @@ describe('Test module - connection - middleware', () => {
     }]);
   });
 
-  it('should dispatch CONNECT action when socet emits "open"', function () {
+  it('should dispatch CONNECT action when socket emits "open"', function () {
     const store = this.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__DISCONNECTED }));
     const ddpMessage = {
       support: ['1'],

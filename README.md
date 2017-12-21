@@ -1,10 +1,16 @@
 # ddp
 
+[![Build Status][travis-svg]][travis-url]
+
+`ddp-redux` is a brand new ddp client that will allow you to fetch resources from your ddp server
+in a completely declarative way. Subscriptions/ methods (queries) parameters are evaluated by
+selectors and all you need to do is to extract collection data from the redux store.
+This approach was highly inspired by [apollo-client][apollo-client-url], but the DDP protocol
+is the first class citizen in our case.
+
 An example is worth a thousand words
 ```javascript
 import ddp from 'ddp-connector';
-
-const getListId = (state, props) => props.listId;
 
 const TodoList = ddp({
   subscriptions: (state, props) => [{
@@ -18,11 +24,11 @@ const TodoList = ddp({
       listId: props.listId,
     }],
   }],
-  selectors: ({ collection }) => ({
-    todoList: collection('TodoLists').selectOne(getListId),
-    todos: collection('Todos').find(
+  selectors: ({ from, prop }) => ({
+    todoList: from('TodoLists').select.one('listId'),
+    todos: from('Todos').select.where(
       createSelector(
-        getListId,
+        prop('listId'),
         listId => todo => todo.listId === listId,
       ),
     ),
@@ -36,6 +42,28 @@ const TodoList = ddp({
   </div>
 ))
 ```
+Most typical DDP "commands" are accessible by simply dispatching a redux action, e.g.
+```javascript
+import { callMethod } from 'ddp-redux';
+
+// ...
+
+store.dispatch(
+  callMethod(
+    'myTestMethod',
+    param1,
+    param2,
+    param3,
+  ))
+  .then(/* ... */)
+  .catch(/* ... */)
+);
+```
+
+## Disclaimer
+
+The project is still in a pretty early stage and it does not have proper documentation yet,
+as some parts of the api are very likely to change, e.g. documents selectors.
 
 ## Running example app
 
@@ -43,6 +71,11 @@ Assuming yoy have `tmux@2.x` installed you only need to run
 ```
 cd example
 ./start.sh
+```
+If you want to play with the code and need to ensure that the libraries
+are rebuilding automatically use
+```
+./start-develop.sh
 ```
 
 ## Installation
@@ -88,3 +121,18 @@ ReactDOM.render(
   document.getElementById('root'),
 );
 ```
+
+## Features
+
+- [x] Supports Meteor standard authentication methods
+- [x] Meteor subscriptions
+- [x] Fetch data via meteor methods
+- [x] Aggregate data from multiple ddp connections
+- [x] Basic support for optimistic updates
+- [ ] Sync local ids generator with server
+- [ ] Out-of-the-box support for client-side joins
+- [ ] Offline first
+
+[travis-svg]: https://travis-ci.org/apendua/ddp.svg?branch=master
+[travis-url]: https://travis-ci.org/apendua/ddp
+[apollo-client-url]: https://github.com/apollographql/apollo-client

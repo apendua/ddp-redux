@@ -14,11 +14,14 @@ import {
 import {
   callMethod,
 } from 'ddp-redux/lib/actions';
+import Input from 'antd/lib/input';
+import Checkbox from 'antd/lib/checkbox';
+import Button from 'antd/lib/button';
 import ddp from 'ddp-connector';
 import {
   insert,
   update,
-  remove,
+  // remove,
   todosInList,
 } from '../common/api/Todos';
 import {
@@ -29,30 +32,33 @@ import TodoList from '../common/models/TodoList';
 import Loader from '../components/Loader';
 
 const ListItem = withHandlers({
-  onUpdate: ({
+  onChange: ({
     todo,
     onUpdate,
-  }) => () => onUpdate({
+  }) => event => onUpdate({
     todoId: todo._id,
-    done: !todo.isDone(),
+    done: !!event.target.checked,
     name: todo.getName(),
   }),
 })(({
   todo,
-  onUpdate,
+  onChange,
 }) => (
   <li
     key={todo._id}
-    onClick={onUpdate}
-    style={{
-      ...todo.isDone() && { textDecoration: 'line-through' },
-    }}
   >
-    {todo.name}
+    <Checkbox
+      checked={todo.isDone()}
+      onChange={onChange}
+      style={{
+        ...todo.isDone() && { textDecoration: 'line-through' },
+      }}
+    >
+      {todo.name}
+    </Checkbox>
   </li>
 ));
 
-const getListId = (state, { listId }) => listId;
 const List = compose(
   withState('name', 'setName', ''),
   withProps(({ match: { params: { listId } } }) => ({
@@ -63,18 +69,14 @@ const List = compose(
       oneList.withParams({ listId }),
       todosInList.withParams({ listId }),
     ],
-    models: [
-      Todo,
-      TodoList,
-    ],
     selectors: ({
-      Todos,
-      TodoLists,
+      prop,
+      from,
     }) => ({
-      list: TodoLists.selectOne(getListId),
-      todos: Todos.find(
+      list: from(TodoList).select.one('listId'),
+      todos: from(Todo).select.where(
         createSelector(
-          getListId,
+          prop('listId'),
           listId => todo => todo.getListId() === listId,
         ),
       ),
@@ -118,20 +120,29 @@ const List = compose(
   onChangeName,
   onUpdateTodo,
 }) => (
-  <div>
-    <Link to="/lists/">Back</Link>
+  <div className="container">
+    <Link to="/lists/">&lt; Back</Link>
     <h1>{list && list.getTitle()}</h1>
     <ul>
       {todos.map(todo => (
         <ListItem key={todo._id} todo={todo} onUpdate={onUpdateTodo} />
       ))}
       <li>
-        <input value={name} onChange={onChangeName} />
-        <button onClick={onAddTodo}>
-          Add
-        </button>
+        <Input
+          onChange={onChangeName}
+          value={name}
+          placeholder="Please enter item description"
+        />
       </li>
     </ul>
+    <p style={{ textAlign: 'right' }}>
+      <Button
+        onClick={onAddTodo}
+        type="primary"
+      >
+        Add
+      </Button>
+    </p>
   </div>
 ));
 
