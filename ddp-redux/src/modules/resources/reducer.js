@@ -25,26 +25,27 @@ const setProperty = propName => (value) => {
   if (typeof value === 'function') {
     return (state) => {
       const valueToSet = value(state[propName]);
-      return (state[propName] === valueToSet
-        ? state
-        : {
-          ...state,
-          [propName]: valueToSet,
-        }
+      return (
+        state[propName] === valueToSet
+          ? state
+          : {
+            ...state,
+            [propName]: valueToSet,
+          }
       );
     };
   }
-  return state => (state[propName] === value
-    ? state
-    : {
-      ...state,
-      [propName]: value,
-    }
+  return state => (
+    state[propName] === value
+      ? state
+      : {
+        ...state,
+        [propName]: value,
+      }
   );
 };
 
 const increaseBy = value => (currentValue = 0) => currentValue + value;
-
 const increaseProperty = propName => value => setProperty(propName)(increaseBy(value));
 
 const setState = setProperty('state');
@@ -89,7 +90,6 @@ const resourceReducer = (state = {
       return {
         ...state,
         id: action.meta.resourceId,
-        type: action.meta.resourceType,
         name: action.payload.name,
         params: action.payload.params,
         properties: action.payload.properties,
@@ -130,9 +130,7 @@ const resourceReducer = (state = {
   }
 };
 
-export const createReducer = ({
-  resourceType: expectedResourceType,
-}) => (state = {}, action) => {
+export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
     case DDP_ENQUEUE:
     case DDP_RESOURCE_REQUEST:
@@ -142,9 +140,7 @@ export const createReducer = ({
     case DDP_DISCONNECTED: {
       const resourceId = action.meta &&
                          action.meta.resourceId;
-      const resourceType = action.meta &&
-                           action.meta.resourceType;
-      if (resourceId && resourceType === expectedResourceType) {
+      if (resourceId) {
         const resourceState = state[resourceId];
         return {
           ...state,
@@ -158,9 +154,7 @@ export const createReducer = ({
     case DDP_RESOURCE_CREATE: {
       const resourceId = action.meta &&
                          action.meta.resourceId;
-      const resourceType = action.meta &&
-                           action.meta.resourceType;
-      if (resourceId && resourceType === expectedResourceType) {
+      if (resourceId) {
         return {
           ...state,
           [resourceId]: resourceReducer(state[resourceId], action),

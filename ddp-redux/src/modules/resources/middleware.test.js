@@ -37,7 +37,6 @@ const UNIQUE_ID = '1';
 describe('Test module - resources - middleware', () => {
   beforeEach(function () {
     this.middleware = createMiddleware({
-      resourceType: 'generic',
       fetchResource: (name, params, { resourceId, socketId }) => ({
         type: FETCH_RESOURCE,
         payload: {
@@ -51,7 +50,6 @@ describe('Test module - resources - middleware', () => {
       }),
       nextUniqueId: constant(UNIQUE_ID),
       getCleanupTimeout: constant(1000),
-      createGetResources: getState => () => getState().ddp.resources,
     });
     this.mockStore = configureStore([
       thunk.createMiddleware(),
@@ -95,9 +93,6 @@ describe('Test module - resources - middleware', () => {
           socketId: 'socket/1',
         },
       },
-      meta: {
-        resourceType: 'generic',
-      },
     };
     const resourceId = store.dispatch(action);
     resourceId.should.equal(UNIQUE_ID);
@@ -107,7 +102,6 @@ describe('Test module - resources - middleware', () => {
         meta: {
           ...action.meta,
           resourceId,
-          resourceType: 'generic',
         },
       },
       {
@@ -121,7 +115,6 @@ describe('Test module - resources - middleware', () => {
         },
         meta: {
           resourceId: '1',
-          resourceType: 'generic',
         },
       },
       {
@@ -142,7 +135,7 @@ describe('Test module - resources - middleware', () => {
     DDP_STATE__CANCELED,
     DDP_STATE__OBSOLETE,
   ].forEach((state) => {
-    it(`should dispatch FETCH_RESOURCE if resource exists, but it is "${state}"`, function () {
+    it(`should dispatch FETCH_RESOURCE if resource exists but it is "${state}"`, function () {
       const store = this.mockStore({
         ddp: {
           resources: {
@@ -166,9 +159,6 @@ describe('Test module - resources - middleware', () => {
           properties: {
             socketId: 'socket/1',
           },
-        },
-        meta: {
-          resourceType: 'generic',
         },
       };
       const resourceId = store.dispatch(action);
@@ -221,9 +211,6 @@ describe('Test module - resources - middleware', () => {
           socketId: 'socket/1',
         },
       },
-      meta: {
-        resourceType: 'generic',
-      },
     };
     const resourceId = store.dispatch(action);
     resourceId.should.equal('2');
@@ -232,7 +219,6 @@ describe('Test module - resources - middleware', () => {
         ...action,
         meta: {
           resourceId,
-          resourceType: 'generic',
         },
       },
     ]);
@@ -275,7 +261,6 @@ describe('Test module - resources - middleware', () => {
       type: DDP_RESOURCE_RELEASE,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     };
     store.dispatch(action);
@@ -290,7 +275,6 @@ describe('Test module - resources - middleware', () => {
         type: DDP_RESOURCE_DELETE,
         meta: {
           resourceId: '1',
-          resourceType: 'generic',
         },
       },
     ]);
@@ -317,7 +301,6 @@ describe('Test module - resources - middleware', () => {
       type: DDP_RESOURCE_RELEASE,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     };
     const action2 = {
@@ -331,7 +314,6 @@ describe('Test module - resources - middleware', () => {
       },
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     };
     store.dispatch(action1);
@@ -430,7 +412,6 @@ describe('Test module - resources - middleware', () => {
         type: DDP_RESOURCE_REFRESH,
         meta: {
           resourceId: '1',
-          resourceType: 'generic',
         },
       },
       {
@@ -468,7 +449,6 @@ describe('Test module - resources - middleware', () => {
       type: DDP_RESOURCE_REFRESH,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     };
     store.dispatch(action);

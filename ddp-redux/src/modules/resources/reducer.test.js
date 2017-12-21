@@ -36,9 +36,7 @@ chai.use(chaiAsPromised);
 
 describe('Test module - resources - reducer', () => {
   beforeEach(function () {
-    this.reducer = createReducer({
-      resourceType: 'generic',
-    });
+    this.reducer = createReducer();
   });
 
   it('should initialize state', function () {
@@ -54,30 +52,11 @@ describe('Test module - resources - reducer', () => {
       type: DDP_RESOURCE_REQUEST,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
         name: 'A',
         users: 1,
-      },
-    });
-  });
-
-  it('should not do anything if resource is of a different type', function () {
-    this.reducer({
-      1: {
-        name: 'A',
-      },
-    }, {
-      type: DDP_RESOURCE_REQUEST,
-      meta: {
-        resourceId: '1',
-        resourceType: 'different type of resources',
-      },
-    }).should.deep.equal({
-      1: {
-        name: 'A',
       },
     });
   });
@@ -92,7 +71,6 @@ describe('Test module - resources - reducer', () => {
       type: DDP_RESOURCE_RELEASE,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -112,7 +90,6 @@ describe('Test module - resources - reducer', () => {
       type: DDP_RESOURCE_REFRESH,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -131,7 +108,6 @@ describe('Test module - resources - reducer', () => {
       type: DDP_RESOURCE_REFRESH,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -164,7 +140,6 @@ describe('Test module - resources - reducer', () => {
       type: DDP_RESOURCE_UPDATE,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -202,7 +177,6 @@ describe('Test module - resources - reducer', () => {
       type: DDP_DISCONNECTED,
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -248,7 +222,6 @@ describe('Test module - resources - reducer', () => {
       },
       meta: {
         resourceId: '2',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -256,7 +229,6 @@ describe('Test module - resources - reducer', () => {
       },
       2: {
         id: '2',
-        type: 'generic',
         name: 'B',
         params: 1,
         state: DDP_STATE__INITIAL,
@@ -280,7 +252,6 @@ describe('Test module - resources - reducer', () => {
       meta: {
         type: DDP_METHOD,
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -308,7 +279,6 @@ describe('Test module - resources - reducer', () => {
       },
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -337,7 +307,6 @@ describe('Test module - resources - reducer', () => {
       },
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {
@@ -362,7 +331,6 @@ describe('Test module - resources - reducer', () => {
       },
       meta: {
         resourceId: '1',
-        resourceType: 'generic',
       },
     }).should.deep.equal({
       1: {

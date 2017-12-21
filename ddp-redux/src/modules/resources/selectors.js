@@ -14,8 +14,8 @@ const constant = x => () => x;
 export const findResource = (resources, name, params, properties) => find(
   resources,
   x => x.name === name &&
-       EJSON.equals(x.params, params) &&
-       EJSON.equals(x.properties, properties),
+       EJSON.equals(x.properties, properties) &&
+       EJSON.equals(x.params, params),
 );
 
 /**
@@ -29,7 +29,6 @@ export const findResource = (resources, name, params, properties) => find(
  */
 export const createResourcesSelector = ({
   selectDeclaredResources,
-  selectResources,
   selectConnectionId = constant(DEFAULT_SOCKET_ID),
   emptyState = {
     state: DDP_STATE__READY,
@@ -37,7 +36,7 @@ export const createResourcesSelector = ({
 }) => createSelector(
   selectDeclaredResources,
   selectConnectionId,
-  selectResources,
+  state => state.ddp && state.ddp.resources,
   (declaredResources, socketId, resources) => (socketId
     ? stableMap(declaredResources, y => (y
       ? findResource(

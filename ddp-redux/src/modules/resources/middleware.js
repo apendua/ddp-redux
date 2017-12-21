@@ -23,24 +23,25 @@ import {
  * Create resources middleware.
  */
 export const createMiddleware = ({
-  resourceType,
   fetchResource,
-  createGetResources,
   getCleanupTimeout,
   nextUniqueId,
 }) => (store) => {
-  const getResources = createGetResources(store.getState);
+  const getResources = () => {
+    const state = store.getState();
+    return state.ddp &&
+           state.ddp.resources;
+  }
 
   const setResourceMeta = (action, resourceId) => ({
     ...action,
     meta: {
       ...action.meta,
       resourceId,
-      resourceType,
     },
   });
 
-  const createResource = (resourceId, name, params, properties) => ({
+  const createResource = (resourceId, name, params, properties, meta) => ({
     type: DDP_RESOURCE_CREATE,
     payload: {
       name,
@@ -48,8 +49,8 @@ export const createMiddleware = ({
       properties,
     },
     meta: {
+      ...meta,
       resourceId,
-      resourceType,
     },
   });
 
@@ -57,7 +58,6 @@ export const createMiddleware = ({
     type: DDP_RESOURCE_DELETE,
     meta: {
       resourceId,
-      resourceType,
     },
   });
 
@@ -65,7 +65,6 @@ export const createMiddleware = ({
     type: DDP_RESOURCE_REFRESH,
     meta: {
       resourceId,
-      resourceType,
     },
   });
 
@@ -95,19 +94,17 @@ export const createMiddleware = ({
       });
       return result;
     }
-    // From now on, we are only interested in actions that correspond
-    // to the specified resourceType.
-    if (!action.meta || action.meta.resourceType !== resourceType) {
-      return next(action);
-    }
     switch (action.type) {
       case DDP_RESOURCE_RELEASE: {
-        const resource = getResources()[action.meta.resourceId];
-        // NOTE: The number of users will only be decreased after "next(action)"
-        //       so at this moment it's still taking into account the one which
-        //       is resigning.
-        if (resource && resource.users === 1) {
-          scheduleCleanup(resource.id);
+        const resourceId = action.meta && action.meta.resourceId;
+        if (resourceId) {
+          const resource = getResources()[resourceId];
+          // NOTE: The number of users will only be decreased after "next(action)"
+          //       so at this moment it's still taking into account the one which
+          //       is resigning.
+          if (resource && resource.users === 1) {
+            scheduleCleanup(resourceId);
+          }
         }
         return next(action);
       }
@@ -131,9 +128,9 @@ export const createMiddleware = ({
         if (resource) {
           scheduleCleanup.cancel(resourceId);
         } else {
-          store.dispatch(createResource(resourceId, name, params, properties));
+          store.dispatch(createResource(resourceId, name, params, properties, action.meta));
         }
-        // NOTE: Theoretically, there can me multiple methods calls to evaluate this resource.
+
         if (!resource ||
              resource.state === DDP_STATE__OBSOLETE ||
              resource.state === DDP_STATE__CANCELED) {
@@ -141,7 +138,6 @@ export const createMiddleware = ({
             fetchResource(name, params, {
               ...properties,
               resourceId,
-              resourceType,
             }),
           );
         }
@@ -149,18 +145,19 @@ export const createMiddleware = ({
       }
       case DDP_RESOURCE_REFRESH: {
         const result = next(action);
-        const resourceId = action.meta.resourceId;
-        const resource = getResources()[resourceId];
-        // NOTE: If resource has no users, the reducer will set the resource state to "obsolete",
-        //       and the next time it will be requested it will force re-fetch.
-        if (resource && resource.users > 0) {
-          store.dispatch(
-            fetchResource(resource.name, resource.params, {
-              ...resource.properties,
-              resourceId,
-              resourceType,
-            }),
-          );
+        const resourceId = action.meta && action.meta.resourceId;
+        if (resourceId) {
+          const resource = getResources()[resourceId];
+          // NOTE: If resource has no users, the reducer will set the resource state to "obsolete",
+          //       and the next time it will be requested it will force re-fetch.
+          if (resource && resource.users > 0) {
+            store.dispatch(
+              fetchResource(resource.name, resource.params, {
+                ...resource.properties,
+                resourceId,
+              }),
+            );
+          }
         }
         return result;
       }
