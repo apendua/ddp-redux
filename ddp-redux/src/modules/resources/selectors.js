@@ -24,7 +24,6 @@ export const findResource = (resources, name, params, properties) => find(
  * @param {Object} options
  * @param {Function} options.selectDeclaredResources
  * @param {Function} options.selectConnectionId
- * @param {Function} options.selectResources
  * @param {Function} options.emptyState
  */
 export const createResourcesSelector = ({

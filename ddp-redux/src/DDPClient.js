@@ -234,13 +234,6 @@ class DDPClient extends DDPEmitter {
   }
 }
 
-DDPClient.models = {};
-DDPClient.UnknownModel = class UnknownModel {
-  constructor(doc) {
-    Object.assign(this, doc);
-  }
-};
-
 DDPClient.defaultFlushTimeout = 100;
 DDPClient.defaultQueryCleanupTimeout = 30000;
 DDPClient.defaultSubscriptionCleanupTimeout = 30000;

@@ -22,16 +22,12 @@ import {
 /**
  * Create resources middleware.
  */
-export const createMiddleware = ({
-  fetchResource,
-  getCleanupTimeout,
-  nextUniqueId,
-}) => (store) => {
+export const createMiddleware = ddpClient => (store) => {
   const getResources = () => {
     const state = store.getState();
     return state.ddp &&
            state.ddp.resources;
-  }
+  };
 
   const setResourceMeta = (action, resourceId) => ({
     ...action,
@@ -71,7 +67,7 @@ export const createMiddleware = ({
   const scheduleCleanup = createDelayedTask((resourceId) => {
     store.dispatch(deleteResource(resourceId));
   }, {
-    getTimeout: getCleanupTimeout,
+    getTimeout: ddpClient.getCleanupTimeout.bind(ddpClient),
   });
   return next => (action) => {
     if (!action || typeof action !== 'object') {
@@ -121,7 +117,7 @@ export const createMiddleware = ({
           ...properties,
         };
         const resource = findResource(getResources(), name, params, properties);
-        const resourceId = resource ? resource.id : nextUniqueId();
+        const resourceId = resource ? resource.id : ddpClient.nextUniqueId();
 
         next(setResourceMeta(action, resourceId));
 
@@ -135,7 +131,7 @@ export const createMiddleware = ({
              resource.state === DDP_STATE__OBSOLETE ||
              resource.state === DDP_STATE__CANCELED) {
           store.dispatch(
-            fetchResource(name, params, {
+            ddpClient.fetchResource(name, params, {
               ...properties,
               resourceId,
             }),
@@ -152,7 +148,7 @@ export const createMiddleware = ({
           //       and the next time it will be requested it will force re-fetch.
           if (resource && resource.users > 0) {
             store.dispatch(
-              fetchResource(resource.name, resource.params, {
+              ddpClient.fetchResource(resource.name, resource.params, {
                 ...resource.properties,
                 resourceId,
               }),
