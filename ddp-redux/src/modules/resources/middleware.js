@@ -6,18 +6,24 @@ import {
 
   DDP_RESOURCE_REQUEST,
   DDP_RESOURCE_RELEASE,
-  DDP_RESOURCE_REFRESH,
-
-  DDP_RESOURCE_CREATE,
-  DDP_RESOURCE_DELETE,
 
   DDP_STATE__OBSOLETE,
   DDP_STATE__CANCELED,
+
+  DDP_RESOURCE_CREATE,
+  DDP_RESOURCE_DEPRECATE,
 } from '../../constants';
 import createDelayedTask from '../../utils/createDelayedTask';
 import {
   findResource,
 } from './selectors';
+import {
+  createResource,
+  deleteResource,
+  deprecateResource,
+  fetchResource,
+  refetchResource,
+} from '../../actions';
 
 /**
  * Create resources middleware.
@@ -29,37 +35,10 @@ export const createMiddleware = ddpClient => (store) => {
            state.ddp.resources;
   };
 
-  const setResourceMeta = (action, resourceId) => ({
+  const setResourceId = (action, resourceId) => ({
     ...action,
     meta: {
       ...action.meta,
-      resourceId,
-    },
-  });
-
-  const createResource = (resourceId, name, params, properties, meta) => ({
-    type: DDP_RESOURCE_CREATE,
-    payload: {
-      name,
-      params,
-      properties,
-    },
-    meta: {
-      ...meta,
-      resourceId,
-    },
-  });
-
-  const deleteResource = resourceId => ({
-    type: DDP_RESOURCE_DELETE,
-    meta: {
-      resourceId,
-    },
-  });
-
-  const refreshResource = resourceId => ({
-    type: DDP_RESOURCE_REFRESH,
-    meta: {
       resourceId,
     },
   });
@@ -85,7 +64,7 @@ export const createMiddleware = ddpClient => (store) => {
             resource.state === DDP_STATE__CANCELED
           )
         ) {
-          store.dispatch(refreshResource(resourceId));
+          store.dispatch(deprecateResource(resourceId));
         }
       });
       return result;
@@ -104,6 +83,16 @@ export const createMiddleware = ddpClient => (store) => {
         }
         return next(action);
       }
+      case DDP_RESOURCE_CREATE: {
+        const resourceId = ddpClient.nextUniqueId();
+        next(
+          setResourceId(
+            action,
+            resourceId,
+          ),
+        );
+        return resourceId;
+      }
       case DDP_RESOURCE_REQUEST: {
         const {
           name,
@@ -117,29 +106,36 @@ export const createMiddleware = ddpClient => (store) => {
           ...properties,
         };
         const resource = findResource(getResources(), name, params, properties);
-        const resourceId = resource ? resource.id : ddpClient.nextUniqueId();
 
-        next(setResourceMeta(action, resourceId));
-
+        let resourceId;
         if (resource) {
+          resourceId = resource.id;
           scheduleCleanup.cancel(resourceId);
         } else {
-          store.dispatch(createResource(resourceId, name, params, properties, action.meta));
+          resourceId = store.dispatch(createResource(name, params, properties));
         }
+
+        next(
+          setResourceId(
+            action,
+            resourceId,
+          ),
+        );
 
         if (!resource ||
              resource.state === DDP_STATE__OBSOLETE ||
              resource.state === DDP_STATE__CANCELED) {
           store.dispatch(
-            ddpClient.fetchResource(name, params, {
-              ...properties,
-              resourceId,
+            fetchResource(resourceId, {
+              name,
+              params,
+              properties,
             }),
           );
         }
         return resourceId;
       }
-      case DDP_RESOURCE_REFRESH: {
+      case DDP_RESOURCE_DEPRECATE: {
         const result = next(action);
         const resourceId = action.meta && action.meta.resourceId;
         if (resourceId) {
@@ -147,10 +143,16 @@ export const createMiddleware = ddpClient => (store) => {
           // NOTE: If resource has no users, the reducer will set the resource state to "obsolete",
           //       and the next time it will be requested it will force re-fetch.
           if (resource && resource.users > 0) {
+            const {
+              name,
+              params,
+              properties,
+            } = resource;
             store.dispatch(
-              ddpClient.fetchResource(resource.name, resource.params, {
-                ...resource.properties,
-                resourceId,
+              refetchResource(resourceId, {
+                name,
+                params,
+                properties,
               }),
             );
           }

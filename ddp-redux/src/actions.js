@@ -10,6 +10,12 @@ import {
   DDP_QUERY_REFETCH,
   DDP_QUERY_UPDATE,
 
+  DDP_RESOURCE_FETCH,
+  DDP_RESOURCE_CREATE,
+  DDP_RESOURCE_DELETE,
+  DDP_RESOURCE_REFETCH,
+  DDP_RESOURCE_DEPRECATE,
+
   DDP_LOGIN,
   DDP_LOGOUT,
 } from './constants';
@@ -104,6 +110,47 @@ export const queryRefetchAll = () => (dispatch, getState) => {
     dispatch(queryRefetch(queryId));
   });
 };
+
+// RESOURCES
+
+export const fetchResource = (resourceId, payload) => ({
+  type: DDP_RESOURCE_FETCH,
+  payload,
+  meta: {
+    resourceId,
+  },
+});
+
+export const refetchResource = (resourceId, payload) => ({
+  type: DDP_RESOURCE_REFETCH,
+  payload,
+  meta: {
+    resourceId,
+  },
+});
+
+export const createResource = (name, params, properties) => ({
+  type: DDP_RESOURCE_CREATE,
+  payload: {
+    name,
+    params,
+    properties,
+  },
+});
+
+export const deleteResource = resourceId => ({
+  type: DDP_RESOURCE_DELETE,
+  meta: {
+    resourceId,
+  },
+});
+
+export const deprecateResource = resourceId => ({
+  type: DDP_RESOURCE_DEPRECATE,
+  meta: {
+    resourceId,
+  },
+});
 
 export const login = (params, meta) => ({
   type: DDP_LOGIN,

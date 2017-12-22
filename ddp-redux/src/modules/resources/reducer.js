@@ -2,23 +2,23 @@ import has from 'lodash/has';
 import omit from 'lodash/omit';
 import {
   DDP_STATE__INITIAL,
-  DDP_STATE__QUEUED,
   DDP_STATE__PENDING,
   DDP_STATE__READY,
   DDP_STATE__OBSOLETE,
   DDP_STATE__RESTORING,
   DDP_STATE__CANCELED,
 
-  DDP_ENQUEUE,
   DDP_DISCONNECTED,
 
   DDP_RESOURCE_REQUEST,
   DDP_RESOURCE_RELEASE,
-  DDP_RESOURCE_REFRESH,
+  DDP_RESOURCE_REFETCH,
+  DDP_RESOURCE_FETCH,
 
   DDP_RESOURCE_CREATE,
   DDP_RESOURCE_DELETE,
   DDP_RESOURCE_UPDATE,
+  DDP_RESOURCE_DEPRECATE,
 } from '../../constants';
 
 const setProperty = propName => (value) => {
@@ -67,14 +67,6 @@ const resourceReducer = (state = {
       return increaseUsersByOne(state);
     case DDP_RESOURCE_RELEASE:
       return decreaseUsersByOne(state);
-    case DDP_ENQUEUE: {
-      switch (state.state) {
-        case DDP_STATE__INITIAL:
-          return setState(DDP_STATE__QUEUED)(state);
-        default:
-          return state;
-      }
-    }
     case DDP_DISCONNECTED: {
       switch (state.state) {
         case DDP_STATE__PENDING:
@@ -94,19 +86,22 @@ const resourceReducer = (state = {
         params: action.payload.params,
         properties: action.payload.properties,
       };
-    case DDP_RESOURCE_REFRESH:
+    case DDP_RESOURCE_DEPRECATE:
       return state.users > 0 ? state : setState(DDP_STATE__OBSOLETE)(state);
+    case DDP_RESOURCE_REFETCH:
+    case DDP_RESOURCE_FETCH: {
+      switch (state.state) {
+        case DDP_STATE__INITIAL:
+          return setState(DDP_STATE__PENDING)(state);
+        case DDP_STATE__READY:
+          return setState(DDP_STATE__RESTORING)(state);
+        default:
+          return state;
+      }
+    }
     case DDP_RESOURCE_UPDATE: {
       if (!action.payload) {
-        switch (state.state) {
-          case DDP_STATE__INITIAL:
-          case DDP_STATE__QUEUED:
-            return setState(DDP_STATE__PENDING)(state);
-          case DDP_STATE__READY:
-            return setState(DDP_STATE__RESTORING)(state);
-          default:
-            return state;
-        }
+        return state;
       }
       const {
         error,
@@ -132,11 +127,12 @@ const resourceReducer = (state = {
 
 export const createReducer = () => (state = {}, action) => {
   switch (action.type) {
-    case DDP_ENQUEUE:
     case DDP_RESOURCE_REQUEST:
     case DDP_RESOURCE_RELEASE:
     case DDP_RESOURCE_UPDATE:
-    case DDP_RESOURCE_REFRESH:
+    case DDP_RESOURCE_REFETCH:
+    case DDP_RESOURCE_DEPRECATE:
+    case DDP_RESOURCE_FETCH:
     case DDP_DISCONNECTED: {
       const resourceId = action.meta &&
                          action.meta.resourceId;

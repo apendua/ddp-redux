@@ -18,7 +18,9 @@ import {
   DDP_RESOURCE_DELETE,
   DDP_RESOURCE_REQUEST,
   DDP_RESOURCE_RELEASE,
-  DDP_RESOURCE_REFRESH,
+  DDP_RESOURCE_DEPRECATE,
+  DDP_RESOURCE_REFETCH,
+  DDP_RESOURCE_FETCH,
 
   DDP_STATE__READY,
   DDP_STATE__QUEUED,
@@ -31,23 +33,11 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const constant = x => () => x;
-const FETCH_RESOURCE = '@TEST/FETCH.RESOURCE';
 const UNIQUE_ID = '1';
 
 describe('Test module - resources - middleware', () => {
   beforeEach(function () {
     this.middleware = createMiddleware({
-      fetchResource: (name, params, { resourceId, socketId }) => ({
-        type: FETCH_RESOURCE,
-        payload: {
-          name,
-          params,
-        },
-        meta: {
-          socketId,
-          resourceId,
-        },
-      }),
       nextUniqueId: constant(UNIQUE_ID),
       getCleanupTimeout: constant(1000),
     });
@@ -98,13 +88,6 @@ describe('Test module - resources - middleware', () => {
     resourceId.should.equal(UNIQUE_ID);
     store.getActions().should.deep.equal([
       {
-        ...action,
-        meta: {
-          ...action.meta,
-          resourceId,
-        },
-      },
-      {
         type: DDP_RESOURCE_CREATE,
         payload: {
           name: 'aQuery',
@@ -118,13 +101,22 @@ describe('Test module - resources - middleware', () => {
         },
       },
       {
-        type: FETCH_RESOURCE,
+        ...action,
+        meta: {
+          ...action.meta,
+          resourceId,
+        },
+      },
+      {
+        type: DDP_RESOURCE_FETCH,
         payload: {
           name: 'aQuery',
           params: [1, 2, 3],
+          properties: {
+            socketId: 'socket/1',
+          },
         },
         meta: {
-          socketId: 'socket/1',
           resourceId: '1',
         },
       },
@@ -135,7 +127,7 @@ describe('Test module - resources - middleware', () => {
     DDP_STATE__CANCELED,
     DDP_STATE__OBSOLETE,
   ].forEach((state) => {
-    it(`should dispatch FETCH_RESOURCE if resource exists but it is "${state}"`, function () {
+    it(`should dispatch DDP_RESOURCE_FETCH if resource exists but it is "${state}"`, function () {
       const store = this.mockStore({
         ddp: {
           resources: {
@@ -172,21 +164,23 @@ describe('Test module - resources - middleware', () => {
           },
         },
         {
-          type: FETCH_RESOURCE,
+          type: DDP_RESOURCE_FETCH,
           payload: {
             name: 'aQuery',
             params: [1, 2, 3],
+            properties: {
+              socketId: 'socket/1',
+            },
           },
           meta: {
             resourceId: '1',
-            socketId: 'socket/1',
           },
         },
       ]);
     });
   });
 
-  it('should not dispatch DDP_RESOURCE_CREATE nor FETCH_RESOURCE if resource already exists', function () {
+  it('should not dispatch DDP_RESOURCE_CREATE nor DDP_RESOURCE_FETCH if resource already exists', function () {
     const store = this.mockStore({
       ddp: {
         resources: {
@@ -361,7 +355,7 @@ describe('Test module - resources - middleware', () => {
     ]);
   });
 
-  it('should refresh resources on re-connect', function () {
+  it('should deprecate resources on re-connect', function () {
     const store = this.mockStore({
       ddp: {
         resources: {
@@ -409,26 +403,28 @@ describe('Test module - resources - middleware', () => {
     store.getActions().should.deep.equal([
       action,
       {
-        type: DDP_RESOURCE_REFRESH,
+        type: DDP_RESOURCE_DEPRECATE,
         meta: {
           resourceId: '1',
         },
       },
       {
-        type: FETCH_RESOURCE,
+        type: DDP_RESOURCE_REFETCH,
         payload: {
           name: 'aQuery',
           params: [1, 2, 3],
+          properties: {
+            socketId: 'socket/1',
+          },
         },
         meta: {
           resourceId: '1',
-          socketId: 'socket/1',
         },
       },
     ]);
   });
 
-  it('should dispatch FETCH_RESOURCE on DDP_RESOURCE_REFRESH', function () {
+  it('should dispatch DDP_RESOURCE_REFETCH on DDP_RESOURCE_DEPRECATE', function () {
     const store = this.mockStore({
       ddp: {
         resources: {
@@ -446,7 +442,7 @@ describe('Test module - resources - middleware', () => {
       },
     });
     const action = {
-      type: DDP_RESOURCE_REFRESH,
+      type: DDP_RESOURCE_DEPRECATE,
       meta: {
         resourceId: '1',
       },
@@ -455,20 +451,22 @@ describe('Test module - resources - middleware', () => {
     store.getActions().should.deep.equal([
       action,
       {
-        type: FETCH_RESOURCE,
+        type: DDP_RESOURCE_REFETCH,
         payload: {
           name: 'aQuery',
           params: [1, 2, 3],
+          properties: {
+            socketId: 'socket/1',
+          },
         },
         meta: {
           resourceId: '1',
-          socketId: 'socket/1',
         },
       },
     ]);
   });
 
-  it('should not dispatch FETCH_RESOURCE on DDP_RESOURCE_REFRESH if resource has no users', function () {
+  it('should not dispatch DDP_RESOURCE_FETCH on DDP_RESOURCE_REFETCH if resource has no users', function () {
     const store = this.mockStore({
       ddp: {
         resources: {
@@ -486,7 +484,7 @@ describe('Test module - resources - middleware', () => {
       },
     });
     const action = {
-      type: DDP_RESOURCE_REFRESH,
+      type: DDP_RESOURCE_REFETCH,
       meta: {
         resourceId: '1',
       },

@@ -9,18 +9,15 @@ import {
   createReducer,
 } from './reducer';
 import {
-  DDP_ENQUEUE,
-  DDP_METHOD,
-
   DDP_RESOURCE_CREATE,
   DDP_RESOURCE_DELETE,
   DDP_RESOURCE_UPDATE,
 
-  DDP_RESOURCE_REFRESH,
+  DDP_RESOURCE_DEPRECATE,
   DDP_RESOURCE_REQUEST,
   DDP_RESOURCE_RELEASE,
+  DDP_RESOURCE_FETCH,
 
-  DDP_STATE__QUEUED,
   DDP_STATE__INITIAL,
   DDP_STATE__PENDING,
   DDP_STATE__CANCELED,
@@ -80,14 +77,14 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should not change resource state on DDP_RESOURCE_REFRESH if number of users is positive', function () {
+  it('should not change resource state on DDP_RESOURCE_DEPRECATE if number of users is positive', function () {
     this.reducer({
       1: {
         name: 'A',
         users: 1,
       },
     }, {
-      type: DDP_RESOURCE_REFRESH,
+      type: DDP_RESOURCE_DEPRECATE,
       meta: {
         resourceId: '1',
       },
@@ -99,13 +96,13 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should change state to "obsolete" on DDP_RESOURCE_REFRESH if there are no users', function () {
+  it('should change state to "obsolete" on DDP_RESOURCE_DEPRECATE if there are no users', function () {
     this.reducer({
       1: {
         name: 'A',
       },
     }, {
-      type: DDP_RESOURCE_REFRESH,
+      type: DDP_RESOURCE_DEPRECATE,
       meta: {
         resourceId: '1',
       },
@@ -126,18 +123,14 @@ describe('Test module - resources - reducer', () => {
       from: DDP_STATE__INITIAL,
       to: DDP_STATE__PENDING,
     },
-    {
-      from: DDP_STATE__QUEUED,
-      to: DDP_STATE__PENDING,
-    },
-  ].forEach(({ from, to }) => it(`should change resource state from ${from} to ${to} on DDP_RESOURCE_UPDATE with no payload`, function () {
+  ].forEach(({ from, to }) => it(`should change resource state from ${from} to ${to} on DDP_RESOURCE_FETCH with no payload`, function () {
     this.reducer({
       1: {
         state: from,
         name: 'A',
       },
     }, {
-      type: DDP_RESOURCE_UPDATE,
+      type: DDP_RESOURCE_FETCH,
       meta: {
         resourceId: '1',
       },
@@ -164,7 +157,6 @@ describe('Test module - resources - reducer', () => {
     },
     // no changes for these states ...
     { from: DDP_STATE__INITIAL },
-    { from: DDP_STATE__QUEUED },
     { from: DDP_STATE__CANCELED },
     { from: DDP_STATE__OBSOLETE },
   ].forEach(({ from, to = from }) => it(`should change state from ${from} to ${to} on DDP_DISCONNECTED`, function () {
@@ -239,24 +231,23 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should switch resource state from "initial" to "queued"', function () {
+  it('should switch resource state from "initial" to "pending"', function () {
     this.reducer({
       1: {
         id: '1',
         state: DDP_STATE__INITIAL,
       },
     }, {
-      type: DDP_ENQUEUE,
+      type: DDP_RESOURCE_FETCH,
       payload: {
       },
       meta: {
-        type: DDP_METHOD,
         resourceId: '1',
       },
     }).should.deep.equal({
       1: {
         id: '1',
-        state: DDP_STATE__QUEUED,
+        state: DDP_STATE__PENDING,
       },
     });
   });
