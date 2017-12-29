@@ -6,6 +6,10 @@ import {
 
   DDP_RESOURCE_REQUEST,
   DDP_RESOURCE_RELEASE,
+  DDP_RESOURCE_DELETE,
+  DDP_RESOURCE_UPDATE,
+  DDP_RESOURCE_FETCH,
+  DDP_RESOURCE_REFETCH,
 
   DDP_STATE__OBSOLETE,
   DDP_STATE__CANCELED,
@@ -20,7 +24,6 @@ import {
 import {
   createResource,
   deleteResource,
-  deprecateResource,
   fetchResource,
   refetchResource,
 } from '../../actions';
@@ -62,9 +65,21 @@ export const createMiddleware = ddpClient => (store) => {
           resourceSocketId === socketId && (
             resource.state === DDP_STATE__OBSOLETE ||
             resource.state === DDP_STATE__CANCELED
-          )
+          ) &&
+          resource.users > 0
         ) {
-          store.dispatch(deprecateResource(resourceId));
+          const {
+            name,
+            params,
+            properties,
+          } = resource;
+          store.dispatch(
+            refetchResource(resourceId, {
+              name,
+              params,
+              properties,
+            }),
+          );
         }
       });
       return result;
@@ -79,6 +94,32 @@ export const createMiddleware = ddpClient => (store) => {
           //       is resigning.
           if (resource && resource.users === 1) {
             scheduleCleanup(resourceId);
+          }
+        }
+        return next(action);
+      }
+      case DDP_RESOURCE_UPDATE:
+      case DDP_RESOURCE_DELETE:
+      case DDP_RESOURCE_FETCH:
+      case DDP_RESOURCE_REFETCH: {
+        const resourceId = action.meta && action.meta.resourceId;
+        if (resourceId) {
+          const resource = getResources()[resourceId];
+          if (resource) {
+            const {
+              name,
+              params,
+              properties,
+            } = resource;
+            return next({
+              ...action,
+              payload: {
+                name,
+                params,
+                properties,
+                ...action.payload,
+              },
+            });
           }
         }
         return next(action);

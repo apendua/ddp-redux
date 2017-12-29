@@ -15,6 +15,7 @@ import {
   DDP_RESOURCE_DELETE,
   DDP_RESOURCE_REFETCH,
   DDP_RESOURCE_DEPRECATE,
+  DDP_RESOURCE_UPDATE,
 
   DDP_LOGIN,
   DDP_LOGOUT,
@@ -140,6 +141,14 @@ export const createResource = (name, params, properties) => ({
 
 export const deleteResource = resourceId => ({
   type: DDP_RESOURCE_DELETE,
+  meta: {
+    resourceId,
+  },
+});
+
+export const updateResource = (resourceId, payload) => ({
+  type: DDP_RESOURCE_UPDATE,
+  payload,
   meta: {
     resourceId,
   },

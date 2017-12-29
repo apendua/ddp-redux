@@ -246,6 +246,9 @@ describe('Test module - resources - middleware', () => {
             state: DDP_STATE__READY,
             name: 'aQuery',
             params: [1, 2, 3],
+            properties: {
+              socketId: 'socket/1',
+            },
             users: 1,
           },
         },
@@ -267,6 +270,13 @@ describe('Test module - resources - middleware', () => {
       action,
       {
         type: DDP_RESOURCE_DELETE,
+        payload: {
+          name: 'aQuery',
+          params: [1, 2, 3],
+          properties: {
+            socketId: 'socket/1',
+          },
+        },
         meta: {
           resourceId: '1',
         },
@@ -403,12 +413,6 @@ describe('Test module - resources - middleware', () => {
     store.getActions().should.deep.equal([
       action,
       {
-        type: DDP_RESOURCE_DEPRECATE,
-        meta: {
-          resourceId: '1',
-        },
-      },
-      {
         type: DDP_RESOURCE_REFETCH,
         payload: {
           name: 'aQuery',
@@ -466,7 +470,7 @@ describe('Test module - resources - middleware', () => {
     ]);
   });
 
-  it('should not dispatch DDP_RESOURCE_FETCH on DDP_RESOURCE_REFETCH if resource has no users', function () {
+  it('should not dispatch DDP_RESOURCE_REFETCH on DDP_RESOURCE_DEPRECATE if resource has no users', function () {
     const store = this.mockStore({
       ddp: {
         resources: {
@@ -484,7 +488,7 @@ describe('Test module - resources - middleware', () => {
       },
     });
     const action = {
-      type: DDP_RESOURCE_REFETCH,
+      type: DDP_RESOURCE_DEPRECATE,
       meta: {
         resourceId: '1',
       },
