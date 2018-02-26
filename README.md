@@ -133,6 +133,6 @@ ReactDOM.render(
 - [ ] Out-of-the-box support for client-side joins
 - [ ] Offline first
 
-[travis-svg]: https://travis-ci.org/apendua/ddp.svg?branch=master
-[travis-url]: https://travis-ci.org/apendua/ddp
+[travis-svg]: https://travis-ci.org/apendua/ddp-redux.svg?branch=develop
+[travis-url]: https://travis-ci.org/apendua/ddp-redux
 [apollo-client-url]: https://github.com/apollographql/apollo-client
