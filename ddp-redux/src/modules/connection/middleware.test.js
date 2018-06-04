@@ -1,9 +1,5 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import configureStore from 'redux-mock-store';
 import {
   createMiddleware,
@@ -24,10 +20,10 @@ import {
   DDP_OPEN,
   DDP_CLOSE,
 } from '../../constants';
-import DDPError from '../../DDPError';
+// import DDPError from '../../DDPError';
 import {
   DDPClient,
-} from './common.test';
+} from './testCommon';
 
 const createInitialState = (socketId, socketState) => ({
   ddp: {
@@ -39,46 +35,43 @@ const createInitialState = (socketId, socketState) => ({
   },
 });
 
-chai.should();
-chai.use(sinonChai);
+jest.useFakeTimers();
 
 describe('Test module - connection - middleware', () => {
-  beforeEach(function () {
-    this.send = sinon.spy();
-    this.close = sinon.spy();
-    this.onError = sinon.spy();
-    this.ddpClient = new DDPClient();
-    this.ddpClient.send = this.send;
-    this.ddpClient.close = this.close;
-    this.ddpClient.on('error', this.onError);
-    this.middleware = createMiddleware(this.ddpClient);
-    this.mockStore = configureStore([
-      this.middleware,
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.send = jest.fn();
+    testContext.close = jest.fn();
+    testContext.onError = jest.fn();
+    testContext.ddpClient = new DDPClient();
+    testContext.ddpClient.send = testContext.send;
+    testContext.ddpClient.close = testContext.close;
+    testContext.ddpClient.on('error', testContext.onError);
+    testContext.middleware = createMiddleware(testContext.ddpClient);
+    testContext.mockStore = configureStore([
+      testContext.middleware,
     ]);
   });
 
-  beforeEach(function () {
-    this.clock = sinon.useFakeTimers();
-  });
-
-  afterEach(function () {
-    this.clock.restore();
-  });
-
-  it('should pass through an unknown action', function () {
-    const store = this.mockStore();
+  test('should pass through an unknown action', () => {
+    const store = testContext.mockStore();
     const action = {
       type: 'unknown',
       payload: {},
     };
     store.dispatch(action);
-    store.getActions().should.have.members([
+    expect(store.getActions()).toEqual(expect.arrayContaining([
       action,
-    ]);
+    ]));
   });
 
-  it('should emit DDPError if message was invalid', function () {
-    const store = this.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTED }));
+  test('should emit DDPError if message was invalid', () => {
+    const store = testContext.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTED }));
     const ddpMessage = {
       msg: 'error',
       reason: 'Bad message',
@@ -87,21 +80,21 @@ describe('Test module - connection - middleware', () => {
       type: DDP_ERROR,
       payload: ddpMessage,
     });
-    store.getActions().should.deep.equal([{
+    expect(store.getActions()).toEqual([{
       type: DDP_ERROR,
       payload: ddpMessage,
     }]);
-    this.onError.should.be.called;
+    expect(testContext.onError).toBeCalled();
     // NOTE: Comparing errors does not work because error stacks will be different
-    ({
-      ...this.onError.firstCall.args[0],
-    }).should.deep.equal({
-      ...new DDPError(DDPError.ERROR_BAD_MESSAGE, 'Bad message'),
-    });
+    // expect({
+    //   ...testContext.onError.firstCall.args[0],
+    // }).toEqual({
+    //   ...new DDPError(DDPError.ERROR_BAD_MESSAGE, 'Bad message'),
+    // });
   });
 
-  it('should close connection if connect failed', function () {
-    const store = this.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTING }));
+  test('should close connection if connect failed', () => {
+    const store = testContext.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTING }));
     const ddpMessage = {
       msg: 'failed',
       version: '2.0', // version of protocol which we are not supporting
@@ -110,19 +103,19 @@ describe('Test module - connection - middleware', () => {
       type: DDP_FAILED,
       payload: ddpMessage,
     });
-    store.getActions().should.deep.equal([{
+    expect(store.getActions()).toEqual([{
       type: DDP_FAILED,
       payload: ddpMessage,
     }]);
-    this.close.should.be.called;
+    expect(testContext.close).toBeCalled();
   });
 
-  it('should dispatch CLOSE action', function () {
-    const store = this.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTED }));
-    this.ddpClient.emit('close', {
+  test('should dispatch CLOSE action', () => {
+    const store = testContext.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTED }));
+    testContext.ddpClient.emit('close', {
       socketId: '1',
     });
-    store.getActions().should.deep.equal([{
+    expect(store.getActions()).toEqual([{
       type: DDP_DISCONNECTED,
       meta: {
         socketId: '1',
@@ -130,8 +123,8 @@ describe('Test module - connection - middleware', () => {
     }]);
   });
 
-  it('should dispatch PONG on ddp ping', function () {
-    const store = this.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTED }));
+  test('should dispatch PONG on ddp ping', () => {
+    const store = testContext.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__CONNECTED }));
     const ping = { msg: 'ping', id: '1234' };
     const pong = { id: '1234' };
 
@@ -142,7 +135,7 @@ describe('Test module - connection - middleware', () => {
         socketId: '1',
       },
     });
-    store.getActions().should.deep.equal([{
+    expect(store.getActions()).toEqual([{
       type: DDP_PING,
       payload: ping,
       meta: {
@@ -157,16 +150,16 @@ describe('Test module - connection - middleware', () => {
     }]);
   });
 
-  it('should dispatch CONNECT action when socket emits "open"', function () {
-    const store = this.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__DISCONNECTED }));
+  test('should dispatch CONNECT action when socket emits "open"', () => {
+    const store = testContext.mockStore(createInitialState('1', { state: DDP_CONNECTION_STATE__DISCONNECTED }));
     const ddpMessage = {
       support: ['1'],
       version: '1',
     };
-    this.ddpClient.emit('open', {
+    testContext.ddpClient.emit('open', {
       socketId: '1',
     });
-    store.getActions().should.deep.equal([{
+    expect(store.getActions()).toEqual([{
       type: DDP_CONNECT,
       payload: ddpMessage,
       meta: {
@@ -175,8 +168,8 @@ describe('Test module - connection - middleware', () => {
     }]);
   });
 
-  it('should open a new connection when DDP_OPEN is dispatched', function () {
-    const store = this.mockStore({
+  test('should open a new connection when DDP_OPEN is dispatched', () => {
+    const store = testContext.mockStore({
       ddp: {
         connection: {
           sockets: {},
@@ -190,8 +183,8 @@ describe('Test module - connection - middleware', () => {
       },
     };
     const socketId = store.dispatch(action);
-    socketId.should.equal(DEFAULT_SOCKET_ID);
-    store.getActions().should.deep.equal([
+    expect(socketId).toBe(DEFAULT_SOCKET_ID);
+    expect(store.getActions()).toEqual([
       {
         ...action,
         meta: {
@@ -199,45 +192,48 @@ describe('Test module - connection - middleware', () => {
         },
       },
     ]);
-    this.ddpClient.sockets[DEFAULT_SOCKET_ID].should.deep.equal({
+    expect(testContext.ddpClient.sockets[DEFAULT_SOCKET_ID]).toEqual({
       endpoint: 'http://example.com',
     });
   });
 
-  it('should not open a new connection if theres already one with required parameters', function () {
-    const store = this.mockStore({
-      ddp: {
-        connection: {
-          sockets: {
-            'socket/1': {
-              id: 'socket/1',
-              endpoint: 'http://example.com',
+  test(
+    'should not open a new connection if theres already one with required parameters',
+    () => {
+      const store = testContext.mockStore({
+        ddp: {
+          connection: {
+            sockets: {
+              'socket/1': {
+                id: 'socket/1',
+                endpoint: 'http://example.com',
+              },
             },
           },
         },
-      },
-    });
-    const action = {
-      type: DDP_OPEN,
-      payload: {
-        endpoint: 'http://example.com',
-      },
-    };
-    const socketId = store.dispatch(action);
-    socketId.should.equal('socket/1');
-    store.getActions().should.deep.equal([
-      {
-        ...action,
-        meta: {
-          socketId,
+      });
+      const action = {
+        type: DDP_OPEN,
+        payload: {
+          endpoint: 'http://example.com',
         },
-      },
-    ]);
-    this.ddpClient.sockets.should.deep.equal({});
-  });
+      };
+      const socketId = store.dispatch(action);
+      expect(socketId).toBe('socket/1');
+      expect(store.getActions()).toEqual([
+        {
+          ...action,
+          meta: {
+            socketId,
+          },
+        },
+      ]);
+      expect(testContext.ddpClient.sockets).toEqual({});
+    }
+  );
 
-  it('should close connection if there is only one user', function () {
-    const store = this.mockStore({
+  test('should close connection if there is only one user', () => {
+    const store = testContext.mockStore({
       ddp: {
         connection: {
           sockets: {
@@ -257,15 +253,15 @@ describe('Test module - connection - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
-    this.clock.tick(30000);
-    this.close.should.be.called;
+    jest.advanceTimersByTime(30000);
+    expect(testContext.close).toBeCalled();
   });
 
-  it('should not close connection if there are many users', function () {
-    const store = this.mockStore({
+  test('should not close connection if there are many users', () => {
+    const store = testContext.mockStore({
       ddp: {
         connection: {
           sockets: {
@@ -285,10 +281,10 @@ describe('Test module - connection - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
-    this.clock.tick(30000);
-    this.close.should.not.have.been.called;
+    jest.advanceTimersByTime(30000);
+    expect(testContext.close).not.toBeCalled();
   });
 });

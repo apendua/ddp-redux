@@ -1,10 +1,10 @@
 import chai from 'chai';
 
 const test = {
-  isTrue:   chai.assert.isTrue,
-  isFalse:  chai.assert.isFalse,
-  equal:    chai.assert.deepEqual,
-  throws:   chai.assert.throws,
+  isTrue: chai.assert.isTrue,
+  isFalse: chai.assert.isFalse,
+  equal: chai.assert.deepEqual,
+  throws: chai.assert.throws,
   notEqual: chai.assert.notDeepEqual,
 };
 

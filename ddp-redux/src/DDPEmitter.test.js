@@ -1,43 +1,42 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import DDPEmitter from './DDPEmitter';
 
-chai.should();
-chai.use(sinonChai);
-
 describe('Test DDPEmitter', () => {
-  beforeEach(function () {
-    this.emitter = new DDPEmitter();
-    this.m1 = sinon.spy();
-    this.m2 = sinon.spy();
-    this.m3 = sinon.spy();
-    this.emitter.on('m1', this.m1);
-    this.emitter.on('m2', this.m2);
-    this.emitter.on('m2', this.m3);
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  it('should not do anyghing there are no listeners', function () {
-    this.emitter.emit('mx');
-    this.m1.should.not.be.called;
-    this.m2.should.not.be.called;
-    this.m3.should.not.be.called;
+  beforeEach(() => {
+    testContext.emitter = new DDPEmitter();
+    testContext.m1 = jest.fn();
+    testContext.m2 = jest.fn();
+    testContext.m3 = jest.fn();
+    testContext.emitter.on('m1', testContext.m1);
+    testContext.emitter.on('m2', testContext.m2);
+    testContext.emitter.on('m2', testContext.m3);
   });
 
-  it('should trigger one listener', function () {
-    this.emitter.emit('m1');
-    this.m1.should.be.called;
-    this.m2.should.not.be.called;
-    this.m3.should.not.be.called;
+  test('should not do anyghing there are no listeners', () => {
+    testContext.emitter.emit('mx');
+    expect(testContext.m1).not.toBeCalled();
+    expect(testContext.m2).not.toBeCalled();
+    expect(testContext.m3).not.toBeCalled();
   });
 
-  it('should trigger two listeners', function () {
-    this.emitter.emit('m2');
-    this.m1.should.not.be.called;
-    this.m2.should.be.called;
-    this.m3.should.be.called;
+  test('should trigger one listener', () => {
+    testContext.emitter.emit('m1');
+    expect(testContext.m1).toBeCalled();
+    expect(testContext.m2).not.toBeCalled();
+    expect(testContext.m3).not.toBeCalled();
+  });
+
+  test('should trigger two listeners', () => {
+    testContext.emitter.emit('m2');
+    expect(testContext.m1).not.toBeCalled();
+    expect(testContext.m2).toBeCalled();
+    expect(testContext.m3).toBeCalled();
   });
 });

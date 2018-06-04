@@ -1,9 +1,5 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import configureStore from 'redux-mock-store';
 import {
   createMiddleware,
@@ -11,9 +7,6 @@ import {
 import {
   DDP_ENQUEUE,
 } from '../../constants';
-
-chai.should();
-chai.use(sinonChai);
 
 const createInitialState = (queueId, queueState) => ({
   ddp: {
@@ -24,30 +17,36 @@ const createInitialState = (queueId, queueState) => ({
 });
 
 describe('Test module - queues - middleware', () => {
-  beforeEach(function () {
-    this.send = sinon.spy();
-    this.onError = sinon.spy();
-    this.middleware = createMiddleware();
-    this.mockStore = configureStore([
-      this.middleware,
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.send = jest.fn();
+    testContext.onError = jest.fn();
+    testContext.middleware = createMiddleware();
+    testContext.mockStore = configureStore([
+      testContext.middleware,
     ]);
   });
 
-  it('should pass an action without queue meta field', function () {
-    const store = this.mockStore();
+  test('should pass an action without queue meta field', () => {
+    const store = testContext.mockStore();
     const action = {
       type: 'no_meta_queue',
       payload: {},
       meta: {},
     };
     store.dispatch(action);
-    store.getActions().should.have.members([
+    expect(store.getActions()).toEqual(expect.arrayContaining([
       action,
-    ]);
+    ]));
   });
 
-  it('should enqueue action if priority is too low', function () {
-    const store = this.mockStore(createInitialState('1', {
+  test('should enqueue action if priority is too low', () => {
+    const store = testContext.mockStore(createInitialState('1', {
       pending: {
         1: 20,
         2: 30,
@@ -67,7 +66,7 @@ describe('Test module - queues - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([{
+    expect(store.getActions()).toEqual([{
       type: DDP_ENQUEUE,
       payload: action.payload,
       meta: {
@@ -77,8 +76,8 @@ describe('Test module - queues - middleware', () => {
     }]);
   });
 
-  it('should empty queue up to the computed threshold', function () {
-    const store = this.mockStore(createInitialState('1', {
+  test('should empty queue up to the computed threshold', () => {
+    const store = testContext.mockStore(createInitialState('1', {
       pending: {
         1: 10,
         2: 0,
@@ -129,7 +128,7 @@ describe('Test module - queues - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
       {
         type: 'action',

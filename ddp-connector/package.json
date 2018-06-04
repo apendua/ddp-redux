@@ -4,8 +4,9 @@
   "description": "Connect ddp-redux client to react components",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register 'src/**/*.test.*'",
-    "test-watch": "mocha --watch --compilers js:babel-core/register 'src/**/*.test.*'",
+    "test": "jest",
+    "test-watch": "jest --watch",
+    "coverage": "jest --coverage",
     "build": "babel src/ -d lib/",
     "build-watch": "watch 'npm run build' ./src",
     "prepublish": "npm run build"
@@ -52,6 +53,7 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^5.1.1",
     "eslint-plugin-react": "^7.1.0",
+    "jest": "^23.1.0",
     "watch": "^1.0.2"
   }
 }

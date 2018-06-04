@@ -1,8 +1,5 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinonChai from 'sinon-chai';
 import {
   createReducer,
 } from './reducer';
@@ -19,24 +16,27 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
-
-chai.should();
-chai.use(sinonChai);
+} from './testCommon';
 
 describe('Test module - connection - reducer', () => {
-  beforeEach(function () {
-    this.reducer = createReducer(DDPClient);
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({
+  beforeEach(() => {
+    testContext.reducer = createReducer(DDPClient);
+  });
+
+  test('should initialize state', () => {
+    expect(testContext.reducer(undefined, {})).toEqual({
       sockets: {},
     });
   });
 
-  it('should change state to "connecting"', function () {
-    this.reducer({
+  test('should change state to "connecting"', () => {
+    expect(testContext.reducer({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__DISCONNECTED,
@@ -48,7 +48,7 @@ describe('Test module - connection - reducer', () => {
       meta: {
         socketId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTING,
@@ -57,8 +57,8 @@ describe('Test module - connection - reducer', () => {
     });
   });
 
-  it('should change state to "connected"', function () {
-    this.reducer({
+  test('should change state to "connected"', () => {
+    expect(testContext.reducer({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTING,
@@ -70,7 +70,7 @@ describe('Test module - connection - reducer', () => {
       meta: {
         socketId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTED,
@@ -79,8 +79,8 @@ describe('Test module - connection - reducer', () => {
     });
   });
 
-  it('should change state to "disconnected"', function () {
-    this.reducer({
+  test('should change state to "disconnected"', () => {
+    expect(testContext.reducer({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTED,
@@ -93,7 +93,7 @@ describe('Test module - connection - reducer', () => {
       meta: {
         socketId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__DISCONNECTED,
@@ -103,8 +103,8 @@ describe('Test module - connection - reducer', () => {
     });
   });
 
-  it('should remove socket completely if there are no users', function () {
-    this.reducer({
+  test('should remove socket completely if there are no users', () => {
+    expect(testContext.reducer({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTED,
@@ -121,7 +121,7 @@ describe('Test module - connection - reducer', () => {
       meta: {
         socketId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       sockets: {
         2: {
           state: DDP_CONNECTION_STATE__CONNECTED,
@@ -131,8 +131,8 @@ describe('Test module - connection - reducer', () => {
     });
   });
 
-  it('should increase the number of users', function () {
-    this.reducer({
+  test('should increase the number of users', () => {
+    expect(testContext.reducer({
       sockets: {
         1: {
           id: '1',
@@ -151,7 +151,7 @@ describe('Test module - connection - reducer', () => {
       meta: {
         socketId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       sockets: {
         1: {
           id: '1',
@@ -164,8 +164,8 @@ describe('Test module - connection - reducer', () => {
     });
   });
 
-  it('should decrease the number of users', function () {
-    this.reducer({
+  test('should decrease the number of users', () => {
+    expect(testContext.reducer({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTED,
@@ -179,7 +179,7 @@ describe('Test module - connection - reducer', () => {
       meta: {
         socketId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       sockets: {
         1: {
           state: DDP_CONNECTION_STATE__CONNECTED,

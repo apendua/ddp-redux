@@ -1,10 +1,6 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinonChai from 'sinon-chai';
 import {
   createReducer,
 } from './reducer';
@@ -22,23 +18,25 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
-
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+} from './testCommon';
 
 describe('Test module - methods - reducer', () => {
-  beforeEach(function () {
-    this.reducer = createReducer(DDPClient);
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({});
+  beforeEach(() => {
+    testContext.reducer = createReducer(DDPClient);
   });
 
-  it('should add new method', function () {
-    this.reducer({}, {
+  test('should initialize state', () => {
+    expect(testContext.reducer(undefined, {})).toEqual({});
+  });
+
+  test('should add new method', () => {
+    expect(testContext.reducer({}, {
       type: DDP_METHOD,
       payload: {
         id: '1',
@@ -49,7 +47,7 @@ describe('Test module - methods - reducer', () => {
         methodId: '1',
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         name: 'methodA',
@@ -60,8 +58,8 @@ describe('Test module - methods - reducer', () => {
     });
   });
 
-  it('should add method in "queued" state', function () {
-    this.reducer({}, {
+  test('should add method in "queued" state', () => {
+    expect(testContext.reducer({}, {
       type: DDP_ENQUEUE,
       payload: {
       },
@@ -69,7 +67,7 @@ describe('Test module - methods - reducer', () => {
         type: DDP_METHOD,
         methodId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__QUEUED,
@@ -77,32 +75,35 @@ describe('Test module - methods - reducer', () => {
     });
   });
 
-  it('should switch state from "queued" to "pending" on DDP_METHOD', function () {
-    this.reducer({
-      1: {
-        state: DDP_METHOD_STATE__QUEUED,
-      },
-    }, {
-      type: DDP_METHOD,
-      payload: {
-        method: 'methodA',
-        params: [],
-      },
-      meta: {
-        methodId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        id: '1',
-        state: DDP_METHOD_STATE__PENDING,
-        name: 'methodA',
-        params: [],
-      },
-    });
-  });
+  test(
+    'should switch state from "queued" to "pending" on DDP_METHOD',
+    () => {
+      expect(testContext.reducer({
+        1: {
+          state: DDP_METHOD_STATE__QUEUED,
+        },
+      }, {
+        type: DDP_METHOD,
+        payload: {
+          method: 'methodA',
+          params: [],
+        },
+        meta: {
+          methodId: '1',
+        },
+      })).toEqual({
+        1: {
+          id: '1',
+          state: DDP_METHOD_STATE__PENDING,
+          name: 'methodA',
+          params: [],
+        },
+      });
+    }
+  );
 
-  it('should change method state to "returned"', function () {
-    this.reducer({
+  test('should change method state to "returned"', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__PENDING,
@@ -115,7 +116,7 @@ describe('Test module - methods - reducer', () => {
       meta: {
         methodId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__RETURNED,
@@ -125,8 +126,8 @@ describe('Test module - methods - reducer', () => {
     });
   });
 
-  it('should change method state to "updated"', function () {
-    this.reducer({
+  test('should change method state to "updated"', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__PENDING,
@@ -137,7 +138,7 @@ describe('Test module - methods - reducer', () => {
         methods: ['1'],
       },
       meta: {},
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__UPDATED,
@@ -145,8 +146,8 @@ describe('Test module - methods - reducer', () => {
     });
   });
 
-  it('should remove method if it is already updated', function () {
-    this.reducer({
+  test('should remove method if it is already updated', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__UPDATED,
@@ -159,11 +160,11 @@ describe('Test module - methods - reducer', () => {
       meta: {
         methodId: '1',
       },
-    }).should.deep.equal({});
+    })).toEqual({});
   });
 
-  it('should remove method if it already returned', function () {
-    this.reducer({
+  test('should remove method if it already returned', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__RETURNED,
@@ -173,11 +174,11 @@ describe('Test module - methods - reducer', () => {
       payload: {
         methods: ['1', '2'],
       },
-    }).should.deep.equal({});
+    })).toEqual({});
   });
 
-  it('should remove method if it is canceled', function () {
-    this.reducer({
+  test('should remove method if it is canceled', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_METHOD_STATE__PENDING,
@@ -187,6 +188,6 @@ describe('Test module - methods - reducer', () => {
       meta: {
         methodId: '1',
       },
-    }).should.deep.equal({});
+    })).toEqual({});
   });
 });

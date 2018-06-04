@@ -1,10 +1,5 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import configureStore from 'redux-mock-store';
 import {
   createMiddleware,
@@ -14,7 +9,7 @@ import {
 } from '../resources';
 import {
   DDPClient,
-} from './common.test';
+} from './testCommon';
 import * as thunk from '../thunk';
 import {
   DEFAULT_SOCKET_ID,
@@ -37,20 +32,24 @@ import {
   DDP_STATE__CANCELED,
 } from '../../constants';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+jest.useFakeTimers();
 
 describe('Test module - queries2 - middleware', () => {
-  beforeEach(function () {
-    this.send = sinon.spy();
-    this.onError = sinon.spy();
-    this.ddpClient = new DDPClient();
-    this.ddpClient.on('error', this.onError);
-    this.ddpClient.send = this.send;
-    this.middleware = createMiddleware(this.ddpClient);
-    this.resourcesMiddleware = createResourcesMiddleware(this.ddpClient);
-    this.methodsMiddleware = () => next => (action) => {
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.send = jest.fn();
+    testContext.onError = jest.fn();
+    testContext.ddpClient = new DDPClient();
+    testContext.ddpClient.on('error', testContext.onError);
+    testContext.ddpClient.send = testContext.send;
+    testContext.middleware = createMiddleware(testContext.ddpClient);
+    testContext.resourcesMiddleware = createResourcesMiddleware(testContext.ddpClient);
+    testContext.methodsMiddleware = () => next => (action) => {
       if (typeof action !== 'object') {
         return next(action);
       }
@@ -60,36 +59,28 @@ describe('Test module - queries2 - middleware', () => {
       }
       return next(action);
     };
-    this.mockStore = configureStore([
+    testContext.mockStore = configureStore([
       thunk.createMiddleware(),
-      this.resourcesMiddleware,
-      this.middleware,
-      this.methodsMiddleware,
+      testContext.resourcesMiddleware,
+      testContext.middleware,
+      testContext.methodsMiddleware,
     ]);
   });
 
-  beforeEach(function () {
-    this.clock = sinon.useFakeTimers();
-  });
-
-  afterEach(function () {
-    this.clock.restore();
-  });
-
-  it('should pass through an unknown action', function () {
-    const store = this.mockStore();
+  test('should pass through an unknown action', () => {
+    const store = testContext.mockStore();
     const action = {
       type: 'unknown',
       payload: {},
     };
     store.dispatch(action);
-    store.getActions().should.have.members([
+    expect(store.getActions()).toEqual(expect.arrayContaining([
       action,
-    ]);
+    ]));
   });
 
-  it('should return a newly create resourceId', function () {
-    const store = this.mockStore({
+  test('should return a newly create resourceId', () => {
+    const store = testContext.mockStore({
       ddp: {
         resources: {
         },
@@ -106,96 +97,15 @@ describe('Test module - queries2 - middleware', () => {
         },
       },
     };
-    store.dispatch(action).should.equal(DDPClient.defaultUniqueId);
+    expect(store.dispatch(action)).toBe(DDPClient.defaultUniqueId);
   });
 
-  it('should dispatch DDP_RESOURCE_CREATE and DDP_METHOD if query does not yet exist', function () {
-    const store = this.mockStore({
-      ddp: {
-        resources: {
-        },
-      },
-    });
-    const action = {
-      type: DDP_RESOURCE_REQUEST,
-      payload: {
-        name: 'aQuery',
-        params: [1, 2, 3],
-        properties: {
-          type: 'query',
-          socketId: 'socket/1',
-        },
-      },
-    };
-    const resourceId = store.dispatch(action);
-    store.getActions().should.deep.equal([
-      {
-        type: DDP_RESOURCE_CREATE,
-        payload: {
-          name: 'aQuery',
-          params: [1, 2, 3],
-          properties: {
-            type: 'query',
-            socketId: 'socket/1',
-          },
-        },
-        meta: {
-          resourceId: '1',
-        },
-      },
-      {
-        ...action,
-        meta: {
-          ...action.meta,
-          resourceId,
-        },
-      },
-      {
-        type: DDP_RESOURCE_FETCH,
-        payload: {
-          name: 'aQuery',
-          params: [1, 2, 3],
-          properties: {
-            type: 'query',
-            socketId: 'socket/1',
-          },
-        },
-        meta: {
-          resourceId: '1',
-        },
-      },
-      {
-        type: DDP_METHOD,
-        payload: {
-          method: 'aQuery',
-          params: [1, 2, 3],
-        },
-        meta: {
-          resourceId: '1',
-          socketId: 'socket/1',
-        },
-      },
-    ]);
-  });
-
-  [
-    DDP_STATE__CANCELED,
-    DDP_STATE__OBSOLETE,
-  ].forEach((state) => {
-    it(`should dispatch DDP_METHOD if query exists, but it is "${state}"`, function () {
-      const store = this.mockStore({
+  test(
+    'should dispatch DDP_RESOURCE_CREATE and DDP_METHOD if query does not yet exist',
+    () => {
+      const store = testContext.mockStore({
         ddp: {
           resources: {
-            1: {
-              id: '1',
-              name: 'aQuery',
-              params: [1, 2, 3],
-              properties: {
-                type: 'query',
-                socketId: 'socket/1',
-              },
-              state,
-            },
           },
         },
       });
@@ -211,7 +121,21 @@ describe('Test module - queries2 - middleware', () => {
         },
       };
       const resourceId = store.dispatch(action);
-      store.getActions().should.deep.equal([
+      expect(store.getActions()).toEqual([
+        {
+          type: DDP_RESOURCE_CREATE,
+          payload: {
+            name: 'aQuery',
+            params: [1, 2, 3],
+            properties: {
+              type: 'query',
+              socketId: 'socket/1',
+            },
+          },
+          meta: {
+            resourceId: '1',
+          },
+        },
         {
           ...action,
           meta: {
@@ -245,108 +169,187 @@ describe('Test module - queries2 - middleware', () => {
           },
         },
       ]);
-    });
-  });
+    }
+  );
 
-  it('should not dispatch DDP_RESOURCE_CREATE nor DDP_METHOD if query already exists', function () {
-    const store = this.mockStore({
-      ddp: {
-        resources: {
-          2: {
-            id: '2',
+  [
+    DDP_STATE__CANCELED,
+    DDP_STATE__OBSOLETE,
+  ].forEach((state) => {
+    test(
+      `should dispatch DDP_METHOD if query exists, but it is "${state}"`,
+      () => {
+        const store = testContext.mockStore({
+          ddp: {
+            resources: {
+              1: {
+                id: '1',
+                name: 'aQuery',
+                params: [1, 2, 3],
+                properties: {
+                  type: 'query',
+                  socketId: 'socket/1',
+                },
+                state,
+              },
+            },
+          },
+        });
+        const action = {
+          type: DDP_RESOURCE_REQUEST,
+          payload: {
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {
               type: 'query',
               socketId: 'socket/1',
             },
-            state: DDP_STATE__READY,
           },
-        },
-      },
-    });
-    const action = {
-      type: DDP_RESOURCE_REQUEST,
-      payload: {
-        name: 'aQuery',
-        params: [1, 2, 3],
-        properties: {
-          type: 'query',
-          socketId: 'socket/1',
-        },
-      },
-    };
-    const resourceId = store.dispatch(action);
-    resourceId.should.equal('2');
-    store.getActions().should.deep.equal([
-      {
-        ...action,
-        meta: {
-          resourceId,
-        },
-      },
-    ]);
+        };
+        const resourceId = store.dispatch(action);
+        expect(store.getActions()).toEqual([
+          {
+            ...action,
+            meta: {
+              ...action.meta,
+              resourceId,
+            },
+          },
+          {
+            type: DDP_RESOURCE_FETCH,
+            payload: {
+              name: 'aQuery',
+              params: [1, 2, 3],
+              properties: {
+                type: 'query',
+                socketId: 'socket/1',
+              },
+            },
+            meta: {
+              resourceId: '1',
+            },
+          },
+          {
+            type: DDP_METHOD,
+            payload: {
+              method: 'aQuery',
+              params: [1, 2, 3],
+            },
+            meta: {
+              resourceId: '1',
+              socketId: 'socket/1',
+            },
+          },
+        ]);
+      }
+    );
   });
 
-  it('should add "entities" into the payload on DDP_RESOURCE_UPDATE', function () {
-    const store = this.mockStore({
-      ddp: {
-        resources: {
-          1: {
-            id: '1',
+  test(
+    'should not dispatch DDP_RESOURCE_CREATE nor DDP_METHOD if query already exists',
+    () => {
+      const store = testContext.mockStore({
+        ddp: {
+          resources: {
+            2: {
+              id: '2',
+              name: 'aQuery',
+              params: [1, 2, 3],
+              properties: {
+                type: 'query',
+                socketId: 'socket/1',
+              },
+              state: DDP_STATE__READY,
+            },
+          },
+        },
+      });
+      const action = {
+        type: DDP_RESOURCE_REQUEST,
+        payload: {
+          name: 'aQuery',
+          params: [1, 2, 3],
+          properties: {
+            type: 'query',
+            socketId: 'socket/1',
+          },
+        },
+      };
+      const resourceId = store.dispatch(action);
+      expect(resourceId).toBe('2');
+      expect(store.getActions()).toEqual([
+        {
+          ...action,
+          meta: {
+            resourceId,
+          },
+        },
+      ]);
+    }
+  );
+
+  test(
+    'should add "entities" into the payload on DDP_RESOURCE_UPDATE',
+    () => {
+      const store = testContext.mockStore({
+        ddp: {
+          resources: {
+            1: {
+              id: '1',
+              name: 'aQuery',
+              params: [1, 2, 3],
+              properties: {
+                type: 'query',
+              },
+              state: DDP_STATE__PENDING,
+              entities: {},
+            },
+          },
+        },
+      });
+      const action = {
+        type: DDP_RESOURCE_UPDATE,
+        payload: {
+          result: {
+            entities: {
+              col1: {
+                1: { id: '1' },
+              },
+            },
+          },
+        },
+        meta: {
+          resourceId: '1',
+        },
+      };
+      store.dispatch(action);
+      expect(store.getActions()).toEqual([
+        {
+          ...action,
+          payload: {
+            ...action.payload,
             name: 'aQuery',
             params: [1, 2, 3],
             properties: {
               type: 'query',
             },
-            state: DDP_STATE__PENDING,
-            entities: {},
-          },
-        },
-      },
-    });
-    const action = {
-      type: DDP_RESOURCE_UPDATE,
-      payload: {
-        result: {
-          entities: {
-            col1: {
-              1: { id: '1' },
+            entities: {
+              col1: {
+                1: { id: '1' },
+              },
             },
+            oldEntities: {},
+          },
+          meta: {
+            resourceId: '1',
           },
         },
-      },
-      meta: {
-        resourceId: '1',
-      },
-    };
-    store.dispatch(action);
-    store.getActions().should.deep.equal([
-      {
-        ...action,
-        payload: {
-          ...action.payload,
-          name: 'aQuery',
-          params: [1, 2, 3],
-          properties: {
-            type: 'query',
-          },
-          entities: {
-            col1: {
-              1: { id: '1' },
-            },
-          },
-          oldEntities: {},
-        },
-        meta: {
-          resourceId: '1',
-        },
-      },
-    ]);
-  });
+      ]);
+    }
+  );
 
-  it('should do nothing if relase is called on unknown id', function () {
-    const store = this.mockStore({
+  test('should do nothing if relase is called on unknown id', () => {
+    const store = testContext.mockStore({
       ddp: {
         resources: {
         },
@@ -359,13 +362,13 @@ describe('Test module - queries2 - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
   });
 
-  it('should dispatch DDP_RESOURCE_DELETE on query release', function () {
-    const store = this.mockStore({
+  test('should dispatch DDP_RESOURCE_DELETE on query release', () => {
+    const store = testContext.mockStore({
       ddp: {
         resources: {
           1: {
@@ -389,12 +392,12 @@ describe('Test module - queries2 - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
 
-    this.clock.tick(30000);
-    store.getActions().should.deep.equal([
+    jest.advanceTimersByTime(30000);
+    expect(store.getActions()).toEqual([
       action,
       {
         type: DDP_RESOURCE_DELETE,
@@ -413,91 +416,97 @@ describe('Test module - queries2 - middleware', () => {
     ]);
   });
 
-  it('should not dispatch DDP_RESOURCE_DELETE on release if it is requested again', function () {
-    const store = this.mockStore({
-      ddp: {
-        resources: {
-          1: {
-            id: '1',
-            state: DDP_STATE__READY,
-            name: 'aQuery',
-            params: [1, 2, 3],
-            properties: {
-              type: 'query',
-              socketId: DEFAULT_SOCKET_ID,
+  test(
+    'should not dispatch DDP_RESOURCE_DELETE on release if it is requested again',
+    () => {
+      const store = testContext.mockStore({
+        ddp: {
+          resources: {
+            1: {
+              id: '1',
+              state: DDP_STATE__READY,
+              name: 'aQuery',
+              params: [1, 2, 3],
+              properties: {
+                type: 'query',
+                socketId: DEFAULT_SOCKET_ID,
+              },
+              users: 1,
             },
-            users: 1,
           },
         },
-      },
-    });
-    const action1 = {
-      type: DDP_RESOURCE_RELEASE,
-      meta: {
-        resourceId: '1',
-      },
-    };
-    const action2 = {
-      type: DDP_RESOURCE_REQUEST,
-      payload: {
-        name: 'aQuery',
-        params: [1, 2, 3],
-        properties: {
-          type: 'query',
-          socketId: DEFAULT_SOCKET_ID,
+      });
+      const action1 = {
+        type: DDP_RESOURCE_RELEASE,
+        meta: {
+          resourceId: '1',
         },
-      },
-      meta: {
-        resourceId: '1',
-      },
-    };
-    store.dispatch(action1);
-    store.dispatch(action2);
-    store.getActions().should.deep.equal([
-      action1,
-      action2,
-    ]);
-
-    this.clock.tick(30000);
-    store.getActions().should.deep.equal([
-      action1,
-      action2,
-    ]);
-  });
-
-  it('should not dispatch DDP_RESOURCE_DELETE if there are many users', function () {
-    const store = this.mockStore({
-      ddp: {
-        resources: {
-          1: {
-            id: '1',
-            state: DDP_STATE__READY,
-            name: 'aQuery',
-            params: [1, 2, 3],
-            users: 2,
+      };
+      const action2 = {
+        type: DDP_RESOURCE_REQUEST,
+        payload: {
+          name: 'aQuery',
+          params: [1, 2, 3],
+          properties: {
+            type: 'query',
+            socketId: DEFAULT_SOCKET_ID,
           },
         },
-      },
-    });
-    const action = {
-      type: DDP_RESOURCE_RELEASE,
-      meta: {
-        resourceId: '1',
-      },
-    };
-    store.dispatch(action);
-    store.getActions().should.deep.equal([
-      action,
-    ]);
+        meta: {
+          resourceId: '1',
+        },
+      };
+      store.dispatch(action1);
+      store.dispatch(action2);
+      expect(store.getActions()).toEqual([
+        action1,
+        action2,
+      ]);
 
-    this.clock.tick(30000);
-    store.getActions().should.deep.equal([
-      action,
-    ]);
-  });
+      jest.advanceTimersByTime(30000);
+      expect(store.getActions()).toEqual([
+        action1,
+        action2,
+      ]);
+    }
+  );
 
-  it('should re-fetch resources on re-connect', function () {
-    const store = this.mockStore({
+  test(
+    'should not dispatch DDP_RESOURCE_DELETE if there are many users',
+    () => {
+      const store = testContext.mockStore({
+        ddp: {
+          resources: {
+            1: {
+              id: '1',
+              state: DDP_STATE__READY,
+              name: 'aQuery',
+              params: [1, 2, 3],
+              users: 2,
+            },
+          },
+        },
+      });
+      const action = {
+        type: DDP_RESOURCE_RELEASE,
+        meta: {
+          resourceId: '1',
+        },
+      };
+      store.dispatch(action);
+      expect(store.getActions()).toEqual([
+        action,
+      ]);
+
+      jest.advanceTimersByTime(30000);
+      expect(store.getActions()).toEqual([
+        action,
+      ]);
+    }
+  );
+
+  test('should re-fetch resources on re-connect', () => {
+    const store = testContext.mockStore({
       ddp: {
         resources: {
           1: {
@@ -544,7 +553,7 @@ describe('Test module - queries2 - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
       {
         type: DDP_RESOURCE_REFETCH,
@@ -574,8 +583,8 @@ describe('Test module - queries2 - middleware', () => {
     ]);
   });
 
-  it('should dispatch method call on DDP_RESOURCE_REFETCH', function () {
-    const store = this.mockStore({
+  test('should dispatch method call on DDP_RESOURCE_REFETCH', () => {
+    const store = testContext.mockStore({
       ddp: {
         resources: {
           1: {
@@ -599,7 +608,7 @@ describe('Test module - queries2 - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         ...action,
         payload: {
@@ -625,33 +634,36 @@ describe('Test module - queries2 - middleware', () => {
     ]);
   });
 
-  it('should not dispatch method call on DDP_RESOURCE_DEPRECATE if query has no users', function () {
-    const store = this.mockStore({
-      ddp: {
-        resources: {
-          1: {
-            id: '1',
-            state: DDP_STATE__READY,
-            name: 'aQuery',
-            params: [1, 2, 3],
-            properties: {
-              type: 'query',
-              socketId: 'socket/1',
+  test(
+    'should not dispatch method call on DDP_RESOURCE_DEPRECATE if query has no users',
+    () => {
+      const store = testContext.mockStore({
+        ddp: {
+          resources: {
+            1: {
+              id: '1',
+              state: DDP_STATE__READY,
+              name: 'aQuery',
+              params: [1, 2, 3],
+              properties: {
+                type: 'query',
+                socketId: 'socket/1',
+              },
+              users: 0,
             },
-            users: 0,
           },
         },
-      },
-    });
-    const action = {
-      type: DDP_RESOURCE_DEPRECATE,
-      meta: {
-        resourceId: '1',
-      },
-    };
-    store.dispatch(action);
-    store.getActions().should.deep.equal([
-      action,
-    ]);
-  });
+      });
+      const action = {
+        type: DDP_RESOURCE_DEPRECATE,
+        meta: {
+          resourceId: '1',
+        },
+      };
+      store.dispatch(action);
+      expect(store.getActions()).toEqual([
+        action,
+      ]);
+    }
+  );
 });

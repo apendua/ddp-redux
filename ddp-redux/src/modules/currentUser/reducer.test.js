@@ -1,8 +1,5 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinonChai from 'sinon-chai';
 import {
   createReducer,
 } from './reducer';
@@ -18,50 +15,53 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
-
-chai.should();
-chai.use(sinonChai);
+} from './testCommon';
 
 describe('Test module - currentUser - reducer', () => {
-  beforeEach(function () {
-    this.reducer = createReducer(DDPClient);
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({});
+  beforeEach(() => {
+    testContext.reducer = createReducer(DDPClient);
   });
 
-  it('should create a new entry on login', function () {
-    this.reducer({}, {
+  test('should initialize state', () => {
+    expect(testContext.reducer(undefined, {})).toEqual({});
+  });
+
+  test('should create a new entry on login', () => {
+    expect(testContext.reducer({}, {
       type: DDP_LOGIN,
       payload: {
       },
       meta: {
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       'socket/1': {
         state: DDP_USER_STATE__LOGGING_IN,
       },
     });
   });
 
-  it('should set state to "logginIn" on logout', function () {
-    this.reducer({}, {
+  test('should set state to "logginIn" on logout', () => {
+    expect(testContext.reducer({}, {
       type: DDP_LOGOUT,
       meta: {
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       'socket/1': {
         state: DDP_USER_STATE__LOGGING_IN,
       },
     });
   });
 
-  it('should set user id on logged in', function () {
-    this.reducer({}, {
+  test('should set user id on logged in', () => {
+    expect(testContext.reducer({}, {
       type: DDP_LOGGED_IN,
       payload: {
         id: '1234',
@@ -69,7 +69,7 @@ describe('Test module - currentUser - reducer', () => {
       meta: {
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       'socket/1': {
         state: DDP_USER_STATE__LOGGED_IN,
         userId: '1234',
@@ -77,8 +77,8 @@ describe('Test module - currentUser - reducer', () => {
     });
   });
 
-  it('should remove an entry on logged out', function () {
-    this.reducer({
+  test('should remove an entry on logged out', () => {
+    expect(testContext.reducer({
       'socket/1': {
         userId: '1234',
       },
@@ -92,15 +92,15 @@ describe('Test module - currentUser - reducer', () => {
       meta: {
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       'socker/2': {
         userId: '1234',
       },
     });
   });
 
-  it('should remove an entry on disconnected', function () {
-    this.reducer({
+  test('should remove an entry on disconnected', () => {
+    expect(testContext.reducer({
       'socket/1': {
         userId: '1234',
       },
@@ -114,7 +114,7 @@ describe('Test module - currentUser - reducer', () => {
       meta: {
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       'socker/2': {
         userId: '1234',
       },

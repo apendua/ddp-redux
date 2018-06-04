@@ -1,9 +1,5 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import configureStore from 'redux-mock-store';
 import {
   createMiddleware,
@@ -23,45 +19,42 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
+} from './testCommon';
 
-chai.should();
-chai.use(sinonChai);
+jest.useFakeTimers();
 
 describe('Test module - subscriptions - middleware', () => {
-  beforeEach(function () {
-    this.clock = sinon.useFakeTimers();
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  afterEach(function () {
-    this.clock.restore();
-  });
-
-  beforeEach(function () {
-    this.send = sinon.spy();
-    this.ddpClient = new DDPClient();
-    this.ddpClient.socket.send = this.send;
-    this.ddpClient.nextUniqueId = () => '1';
-    this.middleware = createMiddleware(this.ddpClient);
-    this.mockStore = configureStore([
-      this.middleware,
+  beforeEach(() => {
+    testContext.send = jest.fn();
+    testContext.ddpClient = new DDPClient();
+    testContext.ddpClient.socket.send = testContext.send;
+    testContext.ddpClient.nextUniqueId = () => '1';
+    testContext.middleware = createMiddleware(testContext.ddpClient);
+    testContext.mockStore = configureStore([
+      testContext.middleware,
     ]);
   });
 
-  it('should pass through an unknown action', function () {
-    const store = this.mockStore();
+  test('should pass through an unknown action', () => {
+    const store = testContext.mockStore();
     const action = {
       type: 'unknown',
       payload: {},
     };
     store.dispatch(action);
-    store.getActions().should.have.members([
+    expect(store.getActions()).toEqual(expect.arrayContaining([
       action,
-    ]);
+    ]));
   });
 
-  it('should dispatch SUB if not yet subscribed', function () {
-    const store = this.mockStore({
+  test('should dispatch SUB if not yet subscribed', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
         },
@@ -78,7 +71,7 @@ describe('Test module - subscriptions - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         type: DDP_SUB,
         payload: {
@@ -105,8 +98,8 @@ describe('Test module - subscriptions - middleware', () => {
     ]);
   });
 
-  it('should attach subId to metadata on DDP_SUB', function () {
-    const store = this.mockStore({
+  test('should attach subId to metadata on DDP_SUB', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
         },
@@ -118,7 +111,7 @@ describe('Test module - subscriptions - middleware', () => {
         id: '1',
       },
     });
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         type: DDP_SUB,
         payload: {
@@ -131,8 +124,8 @@ describe('Test module - subscriptions - middleware', () => {
     ]);
   });
 
-  it('should attach subId to metadata on DDP_ENQUEUE', function () {
-    const store = this.mockStore({
+  test('should attach subId to metadata on DDP_ENQUEUE', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
         },
@@ -147,7 +140,7 @@ describe('Test module - subscriptions - middleware', () => {
         type: DDP_SUB,
       },
     });
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         type: DDP_ENQUEUE,
         payload: {
@@ -161,8 +154,8 @@ describe('Test module - subscriptions - middleware', () => {
     ]);
   });
 
-  it('should not dispatch SUB if already subscribed', function () {
-    const store = this.mockStore({
+  test('should not dispatch SUB if already subscribed', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
           1: {
@@ -184,7 +177,7 @@ describe('Test module - subscriptions - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         ...action,
         payload: {
@@ -199,8 +192,8 @@ describe('Test module - subscriptions - middleware', () => {
     ]);
   });
 
-  it('should do nothing if unsubscribe on unknown id', function () {
-    const store = this.mockStore({
+  test('should do nothing if unsubscribe on unknown id', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
         },
@@ -213,13 +206,13 @@ describe('Test module - subscriptions - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
   });
 
-  it('should dispatch UNSUB on unsubscribe', function () {
-    const store = this.mockStore({
+  test('should dispatch UNSUB on unsubscribe', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
           1: {
@@ -239,12 +232,12 @@ describe('Test module - subscriptions - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
 
-    this.clock.tick(30000);
-    store.getActions().should.deep.equal([
+    jest.advanceTimersByTime(30000);
+    expect(store.getActions()).toEqual([
       action,
       {
         type: DDP_UNSUB,
@@ -258,66 +251,69 @@ describe('Test module - subscriptions - middleware', () => {
     ]);
   });
 
-  it('should not dispatch UNSUB on unsubscribe then subscribe again', function () {
-    const store = this.mockStore({
-      ddp: {
-        subscriptions: {
-          1: {
-            id: '1',
-            state: DDP_SUBSCRIPTION_STATE__READY,
-            name: 'aSubscription',
-            params: [1, 2, 3],
-            users: 1,
-            socketId: DEFAULT_SOCKET_ID,
+  test(
+    'should not dispatch UNSUB on unsubscribe then subscribe again',
+    () => {
+      const store = testContext.mockStore({
+        ddp: {
+          subscriptions: {
+            1: {
+              id: '1',
+              state: DDP_SUBSCRIPTION_STATE__READY,
+              name: 'aSubscription',
+              params: [1, 2, 3],
+              users: 1,
+              socketId: DEFAULT_SOCKET_ID,
+            },
           },
         },
-      },
-    });
-    const action1 = {
-      type: DDP_UNSUBSCRIBE,
-      meta: {
-        subId: '1',
-      },
-    };
-    const action2 = {
-      type: DDP_SUBSCRIBE,
-      payload: {
-        id: '1',
-        name: 'aSubscription',
-        params: [1, 2, 3],
-      },
-      meta: {
-        socketId: DEFAULT_SOCKET_ID,
-      },
-    };
-    store.dispatch(action1);
-    store.dispatch(action2);
-    store.getActions().should.deep.equal([
-      action1,
-      {
-        ...action2,
+      });
+      const action1 = {
+        type: DDP_UNSUBSCRIBE,
         meta: {
-          ...action2.meta,
           subId: '1',
         },
-      },
-    ]);
-
-    this.clock.tick(30000);
-    store.getActions().should.deep.equal([
-      action1,
-      {
-        ...action2,
-        meta: {
-          ...action2.meta,
-          subId: '1',
+      };
+      const action2 = {
+        type: DDP_SUBSCRIBE,
+        payload: {
+          id: '1',
+          name: 'aSubscription',
+          params: [1, 2, 3],
         },
-      },
-    ]);
-  });
+        meta: {
+          socketId: DEFAULT_SOCKET_ID,
+        },
+      };
+      store.dispatch(action1);
+      store.dispatch(action2);
+      expect(store.getActions()).toEqual([
+        action1,
+        {
+          ...action2,
+          meta: {
+            ...action2.meta,
+            subId: '1',
+          },
+        },
+      ]);
 
-  it('should not dispatch UNSUB if there are many users', function () {
-    const store = this.mockStore({
+      jest.advanceTimersByTime(30000);
+      expect(store.getActions()).toEqual([
+        action1,
+        {
+          ...action2,
+          meta: {
+            ...action2.meta,
+            subId: '1',
+          },
+        },
+      ]);
+    }
+  );
+
+  test('should not dispatch UNSUB if there are many users', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
           1: {
@@ -337,18 +333,18 @@ describe('Test module - subscriptions - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
 
-    this.clock.tick(30000);
-    store.getActions().should.deep.equal([
+    jest.advanceTimersByTime(30000);
+    expect(store.getActions()).toEqual([
       action,
     ]);
   });
 
-  it('should re-subscribe on re-connect', function () {
-    const store = this.mockStore({
+  test('should re-subscribe on re-connect', () => {
+    const store = testContext.mockStore({
       ddp: {
         subscriptions: {
           1: {
@@ -378,7 +374,7 @@ describe('Test module - subscriptions - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
       {
         type: DDP_SUB,

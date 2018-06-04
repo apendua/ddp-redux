@@ -1,13 +1,6 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import DDPSocket from './DDPSocket';
-
-chai.should();
-chai.use(sinonChai);
 
 class Socket {
   constructor(endpoint) {
@@ -39,45 +32,51 @@ class Socket {
 }
 
 describe('Test DDPSocket', () => {
-  beforeEach(function () {
-    this.socket = new DDPSocket({
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.socket = new DDPSocket({
       endpoint: 'ws://example.com',
       SocketConstructor: Socket,
     });
-    this.onMessage = sinon.spy();
-    this.onClose = sinon.spy();
-    this.onOpen = sinon.spy();
-    this.socket.on('message', this.onMessage);
-    this.socket.on('close', this.onClose);
-    this.socket.on('open', this.onOpen);
-    this.socket.open('ws://example.com');
+    testContext.onMessage = jest.fn();
+    testContext.onClose = jest.fn();
+    testContext.onOpen = jest.fn();
+    testContext.socket.on('message', testContext.onMessage);
+    testContext.socket.on('close', testContext.onClose);
+    testContext.socket.on('open', testContext.onOpen);
+    testContext.socket.open('ws://example.com');
   });
 
-  it('should trigger onOpen callback', function () {
-    this.socket.rawSocket.triggerOpen();
-    this.onOpen.should.have.been.called;
+  test('should trigger onOpen callback', () => {
+    testContext.socket.rawSocket.triggerOpen();
+    expect(testContext.onOpen).toBeCalled();
   });
 
-  it('should trigger onClose callback', function () {
-    this.socket.close();
-    this.onClose.should.have.been.called;
+  test('should trigger onClose callback', () => {
+    testContext.socket.close();
+    expect(testContext.onClose).toBeCalled();
   });
 
-  it('should connect to the right endpoint', function () {
-    this.socket.rawSocket.endpoint.should.equal('ws://example.com');
+  test('should connect to the right endpoint', () => {
+    expect(testContext.socket.rawSocket.endpoint).toBe('ws://example.com');
   });
 
-  it('should send a stringified DDP message', function () {
-    this.socket.send({
+  test('should send a stringified DDP message', () => {
+    testContext.socket.send({
       msg: 'connect',
     });
-    this.socket.rawSocket.messages.should.have.members([
+    expect(testContext.socket.rawSocket.messages).toEqual(expect.arrayContaining([
       '{"msg":"connect"}',
-    ]);
+    ]));
   });
 
-  it('should receive a parsed DDP message', function () {
-    this.socket.rawSocket.triggerMessage('{"msg":"ping"}');
-    this.onMessage.should.have.been.calledWith({ msg: 'ping' });
+  test('should receive a parsed DDP message', () => {
+    testContext.socket.rawSocket.triggerMessage('{"msg":"ping"}');
+    expect(testContext.onMessage).toBeCalledWith({ msg: 'ping' });
   });
 });

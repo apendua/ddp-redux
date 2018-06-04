@@ -1,9 +1,6 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import chai from 'chai';
-import sinonChai from 'sinon-chai';
 import {
   createReducer,
 } from './reducer';
@@ -28,22 +25,25 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
-
-chai.should();
-chai.use(sinonChai);
+} from './testCommon';
 
 describe('Test module - subscriptions - reducer', () => {
-  beforeEach(function () {
-    this.reducer = createReducer(DDPClient);
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({});
+  beforeEach(() => {
+    testContext.reducer = createReducer(DDPClient);
   });
 
-  it('should create a new subscription', function () {
-    this.reducer({}, {
+  test('should initialize state', () => {
+    expect(testContext.reducer(undefined, {})).toEqual({});
+  });
+
+  test('should create a new subscription', () => {
+    expect(testContext.reducer({}, {
       type: DDP_SUBSCRIBE,
       payload: {
         id: '1',
@@ -54,7 +54,7 @@ describe('Test module - subscriptions - reducer', () => {
         subId: '1',
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__INITIAL,
@@ -66,25 +66,28 @@ describe('Test module - subscriptions - reducer', () => {
     });
   });
 
-  it('should switch state from "initial" to "pending" on DDP_SUB', function () {
-    this.reducer({
-      1: {
-        state: DDP_SUBSCRIPTION_STATE__INITIAL,
-      },
-    }, {
-      type: DDP_SUB,
-      meta: {
-        subId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        state: DDP_SUBSCRIPTION_STATE__PENDING,
-      },
-    });
-  });
+  test(
+    'should switch state from "initial" to "pending" on DDP_SUB',
+    () => {
+      expect(testContext.reducer({
+        1: {
+          state: DDP_SUBSCRIPTION_STATE__INITIAL,
+        },
+      }, {
+        type: DDP_SUB,
+        meta: {
+          subId: '1',
+        },
+      })).toEqual({
+        1: {
+          state: DDP_SUBSCRIPTION_STATE__PENDING,
+        },
+      });
+    }
+  );
 
-  it('should switch state from "queued" to "pending" on DDP_SUB', function () {
-    this.reducer({
+  test('should switch state from "queued" to "pending" on DDP_SUB', () => {
+    expect(testContext.reducer({
       1: {
         state: DDP_SUBSCRIPTION_STATE__QUEUED,
       },
@@ -93,15 +96,15 @@ describe('Test module - subscriptions - reducer', () => {
       meta: {
         subId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         state: DDP_SUBSCRIPTION_STATE__PENDING,
       },
     });
   });
 
-  it('should not change "restoring" state on DDP_SUB', function () {
-    this.reducer({
+  test('should not change "restoring" state on DDP_SUB', () => {
+    expect(testContext.reducer({
       1: {
         state: DDP_SUBSCRIPTION_STATE__RESTORING,
       },
@@ -110,59 +113,65 @@ describe('Test module - subscriptions - reducer', () => {
       meta: {
         subId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         state: DDP_SUBSCRIPTION_STATE__RESTORING,
       },
     });
   });
 
-  it('should switch subscription state from "initial" to "queued"', function () {
-    this.reducer({
-      1: {
-        id: '1',
-        state: DDP_SUBSCRIPTION_STATE__INITIAL,
-      },
-    }, {
-      type: DDP_ENQUEUE,
-      payload: {
-      },
-      meta: {
-        type: DDP_SUB,
-        subId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        id: '1',
-        state: DDP_SUBSCRIPTION_STATE__QUEUED,
-      },
-    });
-  });
+  test(
+    'should switch subscription state from "initial" to "queued"',
+    () => {
+      expect(testContext.reducer({
+        1: {
+          id: '1',
+          state: DDP_SUBSCRIPTION_STATE__INITIAL,
+        },
+      }, {
+        type: DDP_ENQUEUE,
+        payload: {
+        },
+        meta: {
+          type: DDP_SUB,
+          subId: '1',
+        },
+      })).toEqual({
+        1: {
+          id: '1',
+          state: DDP_SUBSCRIPTION_STATE__QUEUED,
+        },
+      });
+    }
+  );
 
-  it('should not switch subscription state from "restoring" to "queued"', function () {
-    this.reducer({
-      1: {
-        id: '1',
-        state: DDP_SUBSCRIPTION_STATE__RESTORING,
-      },
-    }, {
-      type: DDP_ENQUEUE,
-      payload: {
-      },
-      meta: {
-        type: DDP_SUB,
-        subId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        id: '1',
-        state: DDP_SUBSCRIPTION_STATE__RESTORING,
-      },
-    });
-  });
+  test(
+    'should not switch subscription state from "restoring" to "queued"',
+    () => {
+      expect(testContext.reducer({
+        1: {
+          id: '1',
+          state: DDP_SUBSCRIPTION_STATE__RESTORING,
+        },
+      }, {
+        type: DDP_ENQUEUE,
+        payload: {
+        },
+        meta: {
+          type: DDP_SUB,
+          subId: '1',
+        },
+      })).toEqual({
+        1: {
+          id: '1',
+          state: DDP_SUBSCRIPTION_STATE__RESTORING,
+        },
+      });
+    }
+  );
 
-  it('should set default socket id if missing', function () {
-    this.reducer({}, {
+  test('should set default socket id if missing', () => {
+    expect(testContext.reducer({}, {
       type: DDP_SUBSCRIBE,
       payload: {
         id: '1',
@@ -172,7 +181,7 @@ describe('Test module - subscriptions - reducer', () => {
       meta: {
         subId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__INITIAL,
@@ -184,8 +193,8 @@ describe('Test module - subscriptions - reducer', () => {
     });
   });
 
-  it('should update subscription state to ready', function () {
-    this.reducer({
+  test('should update subscription state to ready', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__PENDING,
@@ -198,7 +207,7 @@ describe('Test module - subscriptions - reducer', () => {
         msg: 'ready',
         subs: ['1'],
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__READY,
@@ -208,18 +217,21 @@ describe('Test module - subscriptions - reducer', () => {
     });
   });
 
-  it('should omit subscription that might have been deleted in the meantime', function () {
-    this.reducer({}, {
-      type: DDP_READY,
-      payload: {
-        msg: 'ready',
-        subs: ['1'],
-      },
-    }).should.deep.equal({});
-  });
+  test(
+    'should omit subscription that might have been deleted in the meantime',
+    () => {
+      expect(testContext.reducer({}, {
+        type: DDP_READY,
+        payload: {
+          msg: 'ready',
+          subs: ['1'],
+        },
+      })).toEqual({});
+    }
+  );
 
-  it('should update subscription state to error', function () {
-    this.reducer({
+  test('should update subscription state to error', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__PENDING,
@@ -238,7 +250,7 @@ describe('Test module - subscriptions - reducer', () => {
       meta: {
         subId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__READY,
@@ -251,18 +263,21 @@ describe('Test module - subscriptions - reducer', () => {
     });
   });
 
-  it('should omit subscription that might have been deleted in the meantime', function () {
-    this.reducer({}, {
-      type: DDP_NOSUB,
-      payload: {
-        msg: 'nosub',
-        id: '1',
-      },
-    }).should.deep.equal({});
-  });
+  test(
+    'should omit subscription that might have been deleted in the meantime',
+    () => {
+      expect(testContext.reducer({}, {
+        type: DDP_NOSUB,
+        payload: {
+          msg: 'nosub',
+          id: '1',
+        },
+      })).toEqual({});
+    }
+  );
 
-  it('should increase the number of users', function () {
-    this.reducer({
+  test('should increase the number of users', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__PENDING,
@@ -281,7 +296,7 @@ describe('Test module - subscriptions - reducer', () => {
         subId: '1',
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__PENDING,
@@ -293,8 +308,8 @@ describe('Test module - subscriptions - reducer', () => {
     });
   });
 
-  it('should decrease the number of users', function () {
-    this.reducer({
+  test('should decrease the number of users', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__READY,
@@ -310,7 +325,7 @@ describe('Test module - subscriptions - reducer', () => {
       meta: {
         subId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__READY,
@@ -321,8 +336,8 @@ describe('Test module - subscriptions - reducer', () => {
     });
   });
 
-  it('should delete subscription', function () {
-    this.reducer({
+  test('should delete subscription', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__READY,
@@ -342,7 +357,7 @@ describe('Test module - subscriptions - reducer', () => {
       meta: {
         subId: '2',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__READY,
@@ -353,8 +368,8 @@ describe('Test module - subscriptions - reducer', () => {
     });
   });
 
-  it('should put subscription in restoring state', function () {
-    this.reducer({
+  test('should put subscription in restoring state', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__READY,
@@ -382,7 +397,7 @@ describe('Test module - subscriptions - reducer', () => {
       meta: {
         socketId: 'socket/1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_SUBSCRIPTION_STATE__RESTORING,

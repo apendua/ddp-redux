@@ -1,11 +1,6 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import configureStore from 'redux-mock-store';
 import {
   createMiddleware,
@@ -23,11 +18,7 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
-
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+} from './testCommon';
 
 const createInitialState = (methodId, methodState) => ({
   ddp: {
@@ -38,32 +29,38 @@ const createInitialState = (methodId, methodState) => ({
 });
 
 describe('Test module - methods - middleware', () => {
-  beforeEach(function () {
-    this.send = sinon.spy();
-    this.onError = sinon.spy();
-    this.ddpClient = new DDPClient();
-    this.ddpClient.on('error', this.onError);
-    this.ddpClient.send = this.send;
-    this.middleware = createMiddleware(this.ddpClient);
-    this.mockStore = configureStore([
-      this.middleware,
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.send = jest.fn();
+    testContext.onError = jest.fn();
+    testContext.ddpClient = new DDPClient();
+    testContext.ddpClient.on('error', testContext.onError);
+    testContext.ddpClient.send = testContext.send;
+    testContext.middleware = createMiddleware(testContext.ddpClient);
+    testContext.mockStore = configureStore([
+      testContext.middleware,
     ]);
   });
 
-  it('should pass through an unknown action', function () {
-    const store = this.mockStore();
+  test('should pass through an unknown action', () => {
+    const store = testContext.mockStore();
     const action = {
       type: 'unknown',
       payload: {},
     };
     store.dispatch(action);
-    store.getActions().should.have.members([
+    expect(store.getActions()).toEqual(expect.arrayContaining([
       action,
-    ]);
+    ]));
   });
 
-  it('should attach method details to metadata on DDP_UPDATED', function () {
-    const store = this.mockStore(createInitialState('1', {
+  test('should attach method details to metadata on DDP_UPDATED', () => {
+    const store = testContext.mockStore(createInitialState('1', {
       id: '1',
       state: DDP_METHOD_STATE__PENDING,
       socketId: '1',
@@ -74,7 +71,7 @@ describe('Test module - methods - middleware', () => {
         methods: ['1', '2'],
       },
     });
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         type: DDP_UPDATED,
         payload: {
@@ -94,8 +91,8 @@ describe('Test module - methods - middleware', () => {
     ]);
   });
 
-  it('should attach methodId to metadata on DDP_METHOD', function () {
-    const store = this.mockStore({
+  test('should attach methodId to metadata on DDP_METHOD', () => {
+    const store = testContext.mockStore({
       ddp: {
         methods: {
         },
@@ -107,7 +104,7 @@ describe('Test module - methods - middleware', () => {
         id: '1',
       },
     });
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         type: DDP_METHOD,
         payload: {
@@ -120,8 +117,8 @@ describe('Test module - methods - middleware', () => {
     ]);
   });
 
-  it('should attach methodId to metadata on DDP_ENQUEUE', function () {
-    const store = this.mockStore(createInitialState('1', {
+  test('should attach methodId to metadata on DDP_ENQUEUE', () => {
+    const store = testContext.mockStore(createInitialState('1', {
       id: '1',
     }));
     store.dispatch({
@@ -133,7 +130,7 @@ describe('Test module - methods - middleware', () => {
         type: DDP_METHOD,
       },
     });
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       {
         type: DDP_ENQUEUE,
         payload: {
@@ -147,8 +144,8 @@ describe('Test module - methods - middleware', () => {
     ]);
   });
 
-  it('should cancel pending methods if connection is lost', function () {
-    const store = this.mockStore(createInitialState('1', {
+  test('should cancel pending methods if connection is lost', () => {
+    const store = testContext.mockStore(createInitialState('1', {
       state: DDP_METHOD_STATE__PENDING,
       name: 'A',
       socketId: '1',
@@ -162,7 +159,7 @@ describe('Test module - methods - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
       {
         type: DDP_CANCEL,
@@ -184,8 +181,8 @@ describe('Test module - methods - middleware', () => {
     ]);
   });
 
-  it('should not cancel pending methods if retry flag is set', function () {
-    const store = this.mockStore(createInitialState('1', {
+  test('should not cancel pending methods if retry flag is set', () => {
+    const store = testContext.mockStore(createInitialState('1', {
       state: DDP_METHOD_STATE__PENDING,
       name: 'A',
       retry: true,
@@ -200,13 +197,13 @@ describe('Test module - methods - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
     ]);
   });
 
-  it('should retry methods when connection is restored', function () {
-    const store = this.mockStore(createInitialState('1', {
+  test('should retry methods when connection is restored', () => {
+    const store = testContext.mockStore(createInitialState('1', {
       state: DDP_METHOD_STATE__PENDING,
       name: 'A',
       socketId: '1',
@@ -221,7 +218,7 @@ describe('Test module - methods - middleware', () => {
       },
     };
     store.dispatch(action);
-    store.getActions().should.deep.equal([
+    expect(store.getActions()).toEqual([
       action,
       {
         type: DDP_METHOD,

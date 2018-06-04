@@ -1,10 +1,6 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 import configureStore from 'redux-mock-store';
 import {
   createMiddleware,
@@ -20,40 +16,37 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
+} from './testCommon';
 
-chai.should();
-chai.use(sinonChai);
+jest.useFakeTimers();
 
 describe('Test module - collections - middleware', () => {
-  beforeEach(function () {
-    this.clock = sinon.useFakeTimers();
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  afterEach(function () {
-    this.clock.restore();
-  });
-
-  beforeEach(function () {
-    this.send = sinon.spy();
-    this.ddpClient = new DDPClient();
-    this.ddpClient.socket.send = this.send;
-    this.middleware = createMiddleware(this.ddpClient);
-    this.mockStore = configureStore([
-      this.middleware,
+  beforeEach(() => {
+    testContext.send = jest.fn();
+    testContext.ddpClient = new DDPClient();
+    testContext.ddpClient.socket.send = testContext.send;
+    testContext.middleware = createMiddleware(testContext.ddpClient);
+    testContext.mockStore = configureStore([
+      testContext.middleware,
     ]);
   });
 
-  it('should pass through an unknown action', function () {
-    const store = this.mockStore();
+  test('should pass through an unknown action', () => {
+    const store = testContext.mockStore();
     const action = {
       type: 'unknown',
       payload: {},
     };
     store.dispatch(action);
-    store.getActions().should.have.members([
+    expect(store.getActions()).toEqual(expect.arrayContaining([
       action,
-    ]);
+    ]));
   });
 
   [
@@ -61,8 +54,8 @@ describe('Test module - collections - middleware', () => {
     DDP_CHANGED,
     DDP_REMOVED,
   ].forEach((type) => {
-    it(`should schedule dispatching ${DDP_FLUSH} after ${type}`, function () {
-      const store = this.mockStore({
+    test(`should schedule dispatching ${DDP_FLUSH} after ${type}`, () => {
+      const store = testContext.mockStore({
         ddp: {
           collections: {
             col1: {
@@ -80,13 +73,13 @@ describe('Test module - collections - middleware', () => {
         },
       };
       store.dispatch(action);
-      store.getActions().should.deep.equal([
+      expect(store.getActions()).toEqual([
         action,
       ]);
 
-      this.clock.tick(1000);
+      jest.advanceTimersByTime(1000);
 
-      store.getActions().should.deep.equal([
+      expect(store.getActions()).toEqual([
         action,
         {
           type: DDP_FLUSH,
@@ -99,8 +92,8 @@ describe('Test module - collections - middleware', () => {
     DDP_READY,
     DDP_UPDATED,
   ].forEach((type) => {
-    it(`should dispatch ${DDP_FLUSH} right before ${type}`, function () {
-      const store = this.mockStore({
+    test(`should dispatch ${DDP_FLUSH} right before ${type}`, () => {
+      const store = testContext.mockStore({
         ddp: {
           collections: {
             col1: {
@@ -115,7 +108,7 @@ describe('Test module - collections - middleware', () => {
         },
       };
       store.dispatch(action);
-      store.getActions().should.deep.equal([
+      expect(store.getActions()).toEqual([
         {
           type: DDP_FLUSH,
         },

@@ -1,43 +1,41 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinonChai from 'sinon-chai';
 import configureStore from 'redux-mock-store';
 import DDPClient from './DDPClient';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
-
 describe('Test DDPClient', () => {
-  beforeEach(function () {
-    this.ddpClient = new DDPClient();
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.ddpClient = new DDPClient();
   });
 
   describe('Given I have a ddp middleware', () => {
-    beforeEach(function () {
-      this.middleware = this.ddpClient.middleware();
-      this.mockStore = configureStore([
-        this.middleware,
+    beforeEach(() => {
+      testContext.middleware = testContext.ddpClient.middleware();
+      testContext.mockStore = configureStore([
+        testContext.middleware,
       ]);
     });
 
-    it('should accept function as an action', function () {
-      const store = this.mockStore();
+    test('should accept function as an action', () => {
+      const store = testContext.mockStore();
       store.dispatch((dispatch) => {
         dispatch({
           type: 'test_action',
         });
       });
-      store.getActions().should.have.deep.members([
+      expect(store.getActions()).toEqual(expect.arrayContaining([
         { type: 'test_action' },
-      ]);
+      ]));
     });
   });
 
-  it('should be ok', function () {
-    this.ddpClient.should.be.ok;
+  test('should be ok', () => {
+    expect(testContext.ddpClient).toBeTruthy();
   });
 });

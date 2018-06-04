@@ -1,9 +1,6 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import chai from 'chai';
-import sinonChai from 'sinon-chai';
 import {
   createReducer,
 } from './reducer';
@@ -20,15 +17,18 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
-
-chai.should();
-chai.use(sinonChai);
+} from './testCommon';
 
 describe('Test module - collections - reducer', () => {
-  beforeEach(function () {
-    this.reducer = createReducer(DDPClient);
-    this.referenceState1 = {
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.reducer = createReducer(DDPClient);
+    testContext.referenceState1 = {
       col1: {
         needsUpdate: true,
         nextById: {
@@ -58,7 +58,7 @@ describe('Test module - collections - reducer', () => {
         },
       },
     };
-    this.referenceState2 = {
+    testContext.referenceState2 = {
       col1: {
         needsUpdate: true,
         nextById: {
@@ -97,14 +97,14 @@ describe('Test module - collections - reducer', () => {
         },
       },
     };
-    this.referenceState3 = {
-      ...this.referenceState2,
+    testContext.referenceState3 = {
+      ...testContext.referenceState2,
       col2: {
-        ...this.referenceState2.col2,
+        ...testContext.referenceState2.col2,
         nextById: {
-          ...this.referenceState2.col2.nextById,
+          ...testContext.referenceState2.col2.nextById,
           1: {
-            ...this.referenceState2.col2.nextById['1'],
+            ...testContext.referenceState2.col2.nextById['1'],
             queries: {
               'query/1': {
                 a: 2,
@@ -115,14 +115,14 @@ describe('Test module - collections - reducer', () => {
         },
       },
     };
-    this.referenceState4 = {
-      ...this.referenceState2,
+    testContext.referenceState4 = {
+      ...testContext.referenceState2,
       col2: {
-        ...this.referenceState2.col2,
+        ...testContext.referenceState2.col2,
         nextById: {
-          ...this.referenceState2.col2.nextById,
+          ...testContext.referenceState2.col2.nextById,
           1: {
-            ...this.referenceState2.col2.nextById['1'],
+            ...testContext.referenceState2.col2.nextById['1'],
             methods: {
               'method/1': {
                 a: 2,
@@ -143,27 +143,27 @@ describe('Test module - collections - reducer', () => {
     };
   });
 
-  it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({});
+  test('should initialize state', () => {
+    expect(testContext.reducer(undefined, {})).toEqual({});
   });
 
-  it('should flush recent updates', function () {
-    this.reducer(this.referenceState1, {
+  test('should flush recent updates', () => {
+    expect(testContext.reducer(testContext.referenceState1, {
       type: DDP_FLUSH,
-    }).should.deep.equal({
+    })).toEqual({
       col1: {
-        byId: this.referenceState1.col1.nextById,
-        nextById: this.referenceState1.col1.nextById,
+        byId: testContext.referenceState1.col1.nextById,
+        nextById: testContext.referenceState1.col1.nextById,
       },
       col2: {
-        byId: this.referenceState1.col2.nextById,
-        nextById: this.referenceState1.col2.nextById,
+        byId: testContext.referenceState1.col2.nextById,
+        nextById: testContext.referenceState1.col2.nextById,
       },
     });
   });
 
-  it('should add an entity to an empty collection', function () {
-    const state = this.reducer({
+  test('should add an entity to an empty collection', () => {
+    const state = testContext.reducer({
       col2: {
         needsUpdate: true,
         nextById: {
@@ -189,41 +189,44 @@ describe('Test module - collections - reducer', () => {
         socketId: 'socket/1',
       },
     });
-    state.should.deep.equal(this.referenceState1);
+    expect(state).toEqual(testContext.referenceState1);
   });
 
-  it('should add an entity to an empty collection (using added before)', function () {
-    const state = this.reducer({
-      col2: {
-        needsUpdate: true,
-        nextById: {
-          1: {
-            current: {
-              'socket/1': {
-                _id: '1',
-                a: 1,
-                b: 2,
+  test(
+    'should add an entity to an empty collection (using added before)',
+    () => {
+      const state = testContext.reducer({
+        col2: {
+          needsUpdate: true,
+          nextById: {
+            1: {
+              current: {
+                'socket/1': {
+                  _id: '1',
+                  a: 1,
+                  b: 2,
+                },
               },
             },
           },
         },
-      },
-    }, {
-      type: DDP_ADDED_BEFORE,
-      payload: {
-        id: '1',
-        fields: { a: 1, b: 2 },
-        collection: 'col1',
-      },
-      meta: {
-        socketId: 'socket/1',
-      },
-    });
-    state.should.deep.equal(this.referenceState1);
-  });
+      }, {
+        type: DDP_ADDED_BEFORE,
+        payload: {
+          id: '1',
+          fields: { a: 1, b: 2 },
+          collection: 'col1',
+        },
+        meta: {
+          socketId: 'socket/1',
+        },
+      });
+      expect(state).toEqual(testContext.referenceState1);
+    }
+  );
 
-  it('should add another entity', function () {
-    const state = this.reducer(this.referenceState1, {
+  test('should add another entity', () => {
+    const state = testContext.reducer(testContext.referenceState1, {
       type: DDP_ADDED,
       payload: {
         id: '2',
@@ -234,11 +237,11 @@ describe('Test module - collections - reducer', () => {
         socketId: 'socket/1',
       },
     });
-    state.should.deep.equal(this.referenceState2);
+    expect(state).toEqual(testContext.referenceState2);
   });
 
-  it('should update existing entity', function () {
-    const state = this.reducer(this.referenceState2, {
+  test('should update existing entity', () => {
+    const state = testContext.reducer(testContext.referenceState2, {
       type: DDP_CHANGED,
       payload: {
         id: '1',
@@ -250,7 +253,7 @@ describe('Test module - collections - reducer', () => {
         socketId: 'socket/1',
       },
     });
-    state.should.deep.equal({
+    expect(state).toEqual({
       col1: {
         needsUpdate: true,
         nextById: {
@@ -290,8 +293,8 @@ describe('Test module - collections - reducer', () => {
     });
   });
 
-  it('should remove an entity', function () {
-    const state = this.reducer(this.referenceState2, {
+  test('should remove an entity', () => {
+    const state = testContext.reducer(testContext.referenceState2, {
       type: DDP_REMOVED,
       payload: {
         id: '1',
@@ -301,7 +304,7 @@ describe('Test module - collections - reducer', () => {
         socketId: 'socket/1',
       },
     });
-    state.should.deep.equal({
+    expect(state).toEqual({
       col1: {
         needsUpdate: true,
         nextById: {
@@ -333,8 +336,8 @@ describe('Test module - collections - reducer', () => {
     });
   });
 
-  it('should update query results', function () {
-    const state = this.reducer(this.referenceState3, {
+  test('should update query results', () => {
+    const state = testContext.reducer(testContext.referenceState3, {
       type: DDP_QUERY_UPDATE,
       payload: {
         entities: {
@@ -348,8 +351,8 @@ describe('Test module - collections - reducer', () => {
         queryId: 'query/2',
       },
     });
-    state.should.deep.equal({
-      ...this.referenceState3,
+    expect(state).toEqual({
+      ...testContext.referenceState3,
       col2: {
         needsUpdate: true,
         nextById: {
@@ -378,8 +381,8 @@ describe('Test module - collections - reducer', () => {
     });
   });
 
-  it('should replace old query results', function () {
-    const state = this.reducer(this.referenceState3, {
+  test('should replace old query results', () => {
+    const state = testContext.reducer(testContext.referenceState3, {
       type: DDP_QUERY_UPDATE,
       payload: {
         entities: {
@@ -398,8 +401,8 @@ describe('Test module - collections - reducer', () => {
         queryId: 'query/1',
       },
     });
-    state.should.deep.equal({
-      ...this.referenceState3,
+    expect(state).toEqual({
+      ...testContext.referenceState3,
       col2: {
         needsUpdate: true,
         nextById: {
@@ -427,8 +430,8 @@ describe('Test module - collections - reducer', () => {
     });
   });
 
-  it('should completely remove query results', function () {
-    const state = this.reducer(this.referenceState3, {
+  test('should completely remove query results', () => {
+    const state = testContext.reducer(testContext.referenceState3, {
       type: DDP_QUERY_DELETE,
       payload: {
         entities: {
@@ -441,8 +444,8 @@ describe('Test module - collections - reducer', () => {
         queryId: 'query/1',
       },
     });
-    state.should.deep.equal({
-      ...this.referenceState3,
+    expect(state).toEqual({
+      ...testContext.referenceState3,
       col2: {
         needsUpdate: true,
         nextById: {
@@ -460,8 +463,8 @@ describe('Test module - collections - reducer', () => {
     });
   });
 
-  it('should insert optimistic changes', function () {
-    const state = this.reducer(this.referenceState3, {
+  test('should insert optimistic changes', () => {
+    const state = testContext.reducer(testContext.referenceState3, {
       type: DDP_METHOD,
       meta: {
         methodId: 'method/2',
@@ -473,8 +476,8 @@ describe('Test module - collections - reducer', () => {
         },
       },
     });
-    state.should.deep.equal({
-      ...this.referenceState3,
+    expect(state).toEqual({
+      ...testContext.referenceState3,
       col2: {
         needsUpdate: true,
         nextById: {
@@ -506,8 +509,8 @@ describe('Test module - collections - reducer', () => {
     });
   });
 
-  it('should remove optimistic changes', function () {
-    const state = this.reducer(this.referenceState4, {
+  test('should remove optimistic changes', () => {
+    const state = testContext.reducer(testContext.referenceState4, {
       type: DDP_UPDATED,
       meta: {
         methods: [
@@ -523,8 +526,8 @@ describe('Test module - collections - reducer', () => {
         ],
       },
     });
-    state.should.deep.equal({
-      ...this.referenceState4,
+    expect(state).toEqual({
+      ...testContext.referenceState4,
       col2: {
         needsUpdate: true,
         nextById: {

@@ -1,5 +1,4 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
 import createValuesMappingSelector from './createValuesMappingSelector';
 
@@ -7,54 +6,66 @@ const constant = x => () => x;
 const identity = x => x;
 
 describe('Test utility - createValuesMappingSelector', () => {
-  beforeEach(function () {
-    this.object = {};
-    this.identity = createValuesMappingSelector(identity, identity);
-    this.constant = createValuesMappingSelector(identity, constant(this.object));
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
+  });
+
+  beforeEach(() => {
+    testContext.object = {};
+    testContext.identity = createValuesMappingSelector(identity, identity);
+    testContext.constant = createValuesMappingSelector(identity, constant(testContext.object));
   });
 
   describe('Given an empty object', () => {
-    it('should not be changed by identity mapping', function () {
+    test('should not be changed by identity mapping', () => {
       const x = {};
-      this.identity(x).should.equal(x);
+      expect(testContext.identity(x)).toBe(x);
     });
 
-    it('should not be changed by constant mapping', function () {
+    test('should not be changed by constant mapping', () => {
       const x = {};
-      this.constant(x).should.equal(x);
+      expect(testContext.constant(x)).toBe(x);
     });
 
-    it('should return the same result when called with similar argument', function () {
-      const x = {};
-      const y = {};
-      this.constant(x).should.equal(this.constant(y));
-    });
+    test(
+      'should return the same result when called with similar argument',
+      () => {
+        const x = {};
+        const y = {};
+        expect(testContext.constant(x)).toBe(testContext.constant(y));
+      }
+    );
   });
 
   describe('Given a non-empty object', () => {
-    it('should not be changed by identity mapping', function () {
+    test('should not be changed by identity mapping', () => {
       const x = {
         a: {},
         b: {},
       };
-      this.identity(x).should.equal(x);
+      expect(testContext.identity(x)).toBe(x);
     });
-    it('should be changed by constant mapping', function () {
+    test('should be changed by constant mapping', () => {
       const x = {
         a: {},
         b: {},
       };
-      this.constant(x).should.not.equal(x);
+      expect(testContext.constant(x)).not.toBe(x);
     });
-    it('should return the same result when called with similar argument', function () {
-      const x = {
-        a: {},
-        b: {},
-      };
-      const y = {
-        ...x,
-      };
-      this.constant(x).should.equal(this.constant(y));
-    });
+    test(
+      'should return the same result when called with similar argument',
+      () => {
+        const x = {
+          a: {},
+          b: {},
+        };
+        const y = {
+          ...x,
+        };
+        expect(testContext.constant(x)).toBe(testContext.constant(y));
+      }
+    );
   });
 });

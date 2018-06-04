@@ -1,10 +1,6 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinonChai from 'sinon-chai';
 import {
   createReducer,
 } from './reducer';
@@ -27,21 +23,23 @@ import {
   DDP_DISCONNECTED,
 } from '../../constants';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
-
 describe('Test module - resources - reducer', () => {
-  beforeEach(function () {
-    this.reducer = createReducer();
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({});
+  beforeEach(() => {
+    testContext.reducer = createReducer();
   });
 
-  it('should increase number of resource users', function () {
-    this.reducer({
+  test('should initialize state', () => {
+    expect(testContext.reducer(undefined, {})).toEqual({});
+  });
+
+  test('should increase number of resource users', () => {
+    expect(testContext.reducer({
       1: {
         name: 'A',
       },
@@ -50,7 +48,7 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         name: 'A',
         users: 1,
@@ -58,8 +56,8 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should decrease number of resource users', function () {
-    this.reducer({
+  test('should decrease number of resource users', () => {
+    expect(testContext.reducer({
       1: {
         name: 'A',
         users: 1,
@@ -69,7 +67,7 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         name: 'A',
         users: 0,
@@ -77,42 +75,48 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should not change resource state on DDP_RESOURCE_DEPRECATE if number of users is positive', function () {
-    this.reducer({
-      1: {
-        name: 'A',
-        users: 1,
-      },
-    }, {
-      type: DDP_RESOURCE_DEPRECATE,
-      meta: {
-        resourceId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        name: 'A',
-        users: 1,
-      },
-    });
-  });
+  test(
+    'should not change resource state on DDP_RESOURCE_DEPRECATE if number of users is positive',
+    () => {
+      expect(testContext.reducer({
+        1: {
+          name: 'A',
+          users: 1,
+        },
+      }, {
+        type: DDP_RESOURCE_DEPRECATE,
+        meta: {
+          resourceId: '1',
+        },
+      })).toEqual({
+        1: {
+          name: 'A',
+          users: 1,
+        },
+      });
+    }
+  );
 
-  it('should change state to "obsolete" on DDP_RESOURCE_DEPRECATE if there are no users', function () {
-    this.reducer({
-      1: {
-        name: 'A',
-      },
-    }, {
-      type: DDP_RESOURCE_DEPRECATE,
-      meta: {
-        resourceId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        name: 'A',
-        state: DDP_STATE__OBSOLETE,
-      },
-    });
-  });
+  test(
+    'should change state to "obsolete" on DDP_RESOURCE_DEPRECATE if there are no users',
+    () => {
+      expect(testContext.reducer({
+        1: {
+          name: 'A',
+        },
+      }, {
+        type: DDP_RESOURCE_DEPRECATE,
+        meta: {
+          resourceId: '1',
+        },
+      })).toEqual({
+        1: {
+          name: 'A',
+          state: DDP_STATE__OBSOLETE,
+        },
+      });
+    }
+  );
 
   [
     {
@@ -123,24 +127,27 @@ describe('Test module - resources - reducer', () => {
       from: DDP_STATE__INITIAL,
       to: DDP_STATE__PENDING,
     },
-  ].forEach(({ from, to }) => it(`should change resource state from ${from} to ${to} on DDP_RESOURCE_FETCH with no payload`, function () {
-    this.reducer({
-      1: {
-        state: from,
-        name: 'A',
-      },
-    }, {
-      type: DDP_RESOURCE_FETCH,
-      meta: {
-        resourceId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        name: 'A',
-        state: to,
-      },
-    });
-  }));
+  ].forEach(({ from, to }) => test(
+    `should change resource state from ${from} to ${to} on DDP_RESOURCE_FETCH with no payload`,
+    () => {
+      expect(testContext.reducer({
+        1: {
+          state: from,
+          name: 'A',
+        },
+      }, {
+        type: DDP_RESOURCE_FETCH,
+        meta: {
+          resourceId: '1',
+        },
+      })).toEqual({
+        1: {
+          name: 'A',
+          state: to,
+        },
+      });
+    }
+  ));
 
   [
     {
@@ -159,27 +166,30 @@ describe('Test module - resources - reducer', () => {
     { from: DDP_STATE__INITIAL },
     { from: DDP_STATE__CANCELED },
     { from: DDP_STATE__OBSOLETE },
-  ].forEach(({ from, to = from }) => it(`should change state from ${from} to ${to} on DDP_DISCONNECTED`, function () {
-    this.reducer({
-      1: {
-        state: from,
-        name: 'A',
-      },
-    }, {
-      type: DDP_DISCONNECTED,
-      meta: {
-        resourceId: '1',
-      },
-    }).should.deep.equal({
-      1: {
-        name: 'A',
-        state: to,
-      },
-    });
-  }));
+  ].forEach(({ from, to = from }) => test(
+    `should change state from ${from} to ${to} on DDP_DISCONNECTED`,
+    () => {
+      expect(testContext.reducer({
+        1: {
+          state: from,
+          name: 'A',
+        },
+      }, {
+        type: DDP_DISCONNECTED,
+        meta: {
+          resourceId: '1',
+        },
+      })).toEqual({
+        1: {
+          name: 'A',
+          state: to,
+        },
+      });
+    }
+  ));
 
-  it('should delete one resource', function () {
-    this.reducer({
+  test('should delete one resource', () => {
+    expect(testContext.reducer({
       1: {
         name: 'A',
       },
@@ -191,15 +201,15 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '2',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         name: 'A',
       },
     });
   });
 
-  it('should create a new resource', function () {
-    this.reducer({
+  test('should create a new resource', () => {
+    expect(testContext.reducer({
       1: {
         name: 'A',
       },
@@ -215,7 +225,7 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '2',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         name: 'A',
       },
@@ -231,8 +241,8 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should switch resource state from "initial" to "pending"', function () {
-    this.reducer({
+  test('should switch resource state from "initial" to "pending"', () => {
+    expect(testContext.reducer({
       1: {
         id: '1',
         state: DDP_STATE__INITIAL,
@@ -244,7 +254,7 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         id: '1',
         state: DDP_STATE__PENDING,
@@ -252,8 +262,8 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should update an existing resource', function () {
-    this.reducer({
+  test('should update an existing resource', () => {
+    expect(testContext.reducer({
       1: {
         name: 'A',
       },
@@ -271,7 +281,7 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         name: 'A',
         state: DDP_STATE__READY,
@@ -286,8 +296,8 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should store result on DDP_RESOURCE_UPDATE', function () {
-    this.reducer({
+  test('should store result on DDP_RESOURCE_UPDATE', () => {
+    expect(testContext.reducer({
       1: {
         name: 'A',
       },
@@ -299,7 +309,7 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         name: 'A',
         result: 123,
@@ -308,8 +318,8 @@ describe('Test module - resources - reducer', () => {
     });
   });
 
-  it('should store error on DDP_RESOURCE_UPDATE', function () {
-    this.reducer({
+  test('should store error on DDP_RESOURCE_UPDATE', () => {
+    expect(testContext.reducer({
       1: {
         name: 'A',
       },
@@ -323,7 +333,7 @@ describe('Test module - resources - reducer', () => {
       meta: {
         resourceId: '1',
       },
-    }).should.deep.equal({
+    })).toEqual({
       1: {
         name: 'A',
         error: {

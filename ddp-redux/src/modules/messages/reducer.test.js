@@ -1,8 +1,5 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 
-import chai from 'chai';
-import sinonChai from 'sinon-chai';
 import {
   createSocketReducer,
 } from './reducer';
@@ -17,18 +14,21 @@ import {
 } from '../../constants';
 import {
   DDPClient,
-} from './common.test';
-
-chai.should();
-chai.use(sinonChai);
+} from './testCommon';
 
 describe('Test module - messages - reducer', () => {
-  beforeEach(function () {
-    this.reducer = createSocketReducer(DDPClient);
+  let testContext;
+
+  beforeEach(() => {
+    testContext = {};
   });
 
-  it('should initialize state', function () {
-    this.reducer(undefined, {}).should.deep.equal({
+  beforeEach(() => {
+    testContext.reducer = createSocketReducer(DDPClient);
+  });
+
+  test('should initialize state', () => {
+    expect(testContext.reducer(undefined, {})).toEqual({
       pending: {
         '[connect]': 100,
       },
@@ -36,15 +36,15 @@ describe('Test module - messages - reducer', () => {
     });
   });
 
-  it('should reset pending on conection close', function () {
-    this.reducer({
+  test('should reset pending on conection close', () => {
+    expect(testContext.reducer({
       queue: [],
       pending: {
         1: 1,
       },
     }, {
       type: DDP_DISCONNECTED,
-    }).should.deep.equal({
+    })).toEqual({
       pending: {
         '[connect]': 100,
       },
@@ -52,8 +52,8 @@ describe('Test module - messages - reducer', () => {
     });
   });
 
-  it('should enqueue element if queue is empty', function () {
-    this.reducer({
+  test('should enqueue element if queue is empty', () => {
+    expect(testContext.reducer({
       queue: [],
       pending: {},
     }, {
@@ -63,7 +63,7 @@ describe('Test module - messages - reducer', () => {
         type: DDP_METHOD,
         priority: 0,
       },
-    }).should.deep.equal({
+    })).toEqual({
       pending: {},
       queue: [{
         type: DDP_METHOD,
@@ -75,78 +75,84 @@ describe('Test module - messages - reducer', () => {
     });
   });
 
-  it('should enqueue element at the end of queue if priority is lower', function () {
-    this.reducer({
-      queue: [{
-        type: DDP_METHOD,
-        payload: 1,
-        meta: {
-          priority: 10,
-        },
-      }],
-      pending: {},
-    }, {
-      type: DDP_ENQUEUE,
-      payload: 2,
-      meta: {
-        type: DDP_METHOD,
-        priority: 5,
-      },
-    }).should.deep.equal({
-      pending: {},
-      queue: [{
-        type: DDP_METHOD,
-        payload: 1,
-        meta: {
-          priority: 10,
-        },
+  test(
+    'should enqueue element at the end of queue if priority is lower',
+    () => {
+      expect(testContext.reducer({
+        queue: [{
+          type: DDP_METHOD,
+          payload: 1,
+          meta: {
+            priority: 10,
+          },
+        }],
+        pending: {},
       }, {
-        type: DDP_METHOD,
+        type: DDP_ENQUEUE,
         payload: 2,
         meta: {
+          type: DDP_METHOD,
           priority: 5,
         },
-      }],
-    });
-  });
+      })).toEqual({
+        pending: {},
+        queue: [{
+          type: DDP_METHOD,
+          payload: 1,
+          meta: {
+            priority: 10,
+          },
+        }, {
+          type: DDP_METHOD,
+          payload: 2,
+          meta: {
+            priority: 5,
+          },
+        }],
+      });
+    }
+  );
 
-  it('should enqueue element at the beginning of queue if priority is higher', function () {
-    this.reducer({
-      queue: [{
-        type: DDP_METHOD,
+  test(
+    'should enqueue element at the beginning of queue if priority is higher',
+    () => {
+      expect(testContext.reducer({
+        queue: [{
+          type: DDP_METHOD,
+          meta: {
+            priority: 10,
+          },
+          payload: 1,
+        }],
+        pending: {},
+      }, {
+        type: DDP_ENQUEUE,
+        payload: 2,
         meta: {
-          priority: 10,
-        },
-        payload: 1,
-      }],
-      pending: {},
-    }, {
-      type: DDP_ENQUEUE,
-      payload: 2,
-      meta: {
-        type: DDP_METHOD,
-        priority: 15,
-      },
-    }).should.deep.equal({
-      pending: {},
-      queue: [{
-        type: DDP_METHOD,
-        meta: {
+          type: DDP_METHOD,
           priority: 15,
         },
-        payload: 2,
-      }, {
-        type: DDP_METHOD,
-        meta: {
-          priority: 10,
-        },
-        payload: 1,
-      }],
-    });
-  });
+      })).toEqual({
+        pending: {},
+        queue: [{
+          type: DDP_METHOD,
+          meta: {
+            priority: 15,
+          },
+          payload: 2,
+        }, {
+          type: DDP_METHOD,
+          meta: {
+            priority: 10,
+          },
+          payload: 1,
+        }],
+      });
+    }
+  );
 
-  it('should enqueue element in the middle of the queue', function () {
-    this.reducer({
+  test('should enqueue element in the middle of the queue', () => {
+    expect(testContext.reducer({
       queue: [{
         type: DDP_METHOD,
         meta: {
@@ -168,7 +174,7 @@ describe('Test module - messages - reducer', () => {
         type: DDP_METHOD,
         priority: 15,
       },
-    }).should.deep.equal({
+    })).toEqual({
       pending: {},
       queue: [{
         type: DDP_METHOD,
@@ -192,7 +198,7 @@ describe('Test module - messages - reducer', () => {
     });
   });
 
-  it('should remove method from queue when method is emited', function () {
+  test('should remove method from queue when method is emited', () => {
     const action = {
       type: DDP_METHOD,
       payload: {
@@ -203,14 +209,14 @@ describe('Test module - messages - reducer', () => {
         priority: 0,
       },
     };
-    this.reducer({
+    expect(testContext.reducer({
       queue: [{
         type: DDP_METHOD,
         payload: action.payload,
         meta: action.meta,
       }],
       pending: {},
-    }, action).should.deep.equal({
+    }, action)).toEqual({
       pending: {
         1: 0,
       },
@@ -218,20 +224,20 @@ describe('Test module - messages - reducer', () => {
     });
   });
 
-  it('should remove pending item on method result', function () {
+  test('should remove pending item on method result', () => {
     const action = {
       type: DDP_RESULT,
       payload: {
         id: '1',
       },
     };
-    this.reducer({
+    expect(testContext.reducer({
       queue: [],
       pending: {
         1: 0,
         2: 0,
       },
-    }, action).should.deep.equal({
+    }, action)).toEqual({
       pending: {
         2: 0,
       },
@@ -239,17 +245,17 @@ describe('Test module - messages - reducer', () => {
     });
   });
 
-  it('should remove all pending items on connected', function () {
+  test('should remove all pending items on connected', () => {
     const action = {
       type: DDP_CONNECTED,
     };
-    this.reducer({
+    expect(testContext.reducer({
       queue: [],
       pending: {
         1: 0,
         2: 0,
       },
-    }, action).should.deep.equal({
+    }, action)).toEqual({
       pending: {},
       queue: [],
     });

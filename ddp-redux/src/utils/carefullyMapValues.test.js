@@ -1,11 +1,10 @@
-/* eslint-env mocha */
-/* eslint no-unused-expressions: "off" */
+/* eslint-env jest */
 import carefullyMapValues from './carefullyMapValues';
 
 // TODO: Implement more tests.
 describe('Test utility - carefullyMapValues', () => {
-  it('should remove and map at the same time', () => {
-    carefullyMapValues({
+  test('should remove and map at the same time', () => {
+    expect(carefullyMapValues({
       1: 1,
       2: 2,
       3: 3,
@@ -15,7 +14,7 @@ describe('Test utility - carefullyMapValues', () => {
         return remove(key);
       }
       return value + 1;
-    }).should.deep.equal({
+    })).toEqual({
       1: 2,
       3: 4,
     });
