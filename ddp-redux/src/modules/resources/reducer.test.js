@@ -1,9 +1,7 @@
 /* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import {
-  createReducer,
-} from './reducer';
+import { createReducer } from './reducer';
 import {
   DDP_RESOURCE_CREATE,
   DDP_RESOURCE_DELETE,
@@ -94,7 +92,7 @@ describe('Test module - resources - reducer', () => {
           users: 1,
         },
       });
-    }
+    },
   );
 
   test(
@@ -115,7 +113,7 @@ describe('Test module - resources - reducer', () => {
           state: DDP_STATE__OBSOLETE,
         },
       });
-    }
+    },
   );
 
   [
@@ -146,7 +144,7 @@ describe('Test module - resources - reducer', () => {
           state: to,
         },
       });
-    }
+    },
   ));
 
   [
@@ -185,7 +183,7 @@ describe('Test module - resources - reducer', () => {
           state: to,
         },
       });
-    }
+    },
   ));
 
   test('should delete one resource', () => {

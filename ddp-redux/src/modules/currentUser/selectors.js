@@ -1,13 +1,9 @@
-import {
-  createSelector,
-} from 'reselect';
+import { createSelector } from 'reselect';
 import {
   DEFAULT_SOCKET_ID,
   DDP_USER_STATE__LOGGING_IN,
 } from '../../constants';
-import {
-  createCollectionSelectors,
-} from '../collections/selectors';
+import { createCollectionSelectors } from '../collections/selectors';
 
 const constant = x => () => x;
 const identity = x => x;
@@ -42,9 +38,7 @@ export const createCurrentUserSelectors = (Model, collection, {
   );
 
   const selectCurrent = userSelectorCreators
-    ? userSelectorCreators.one(
-      selectCurrentUserId,
-    )
+    ? userSelectorCreators.one(selectCurrentUserId)
     : noModelSpecified;
 
   const selectIsLoggingIn = createSelector(

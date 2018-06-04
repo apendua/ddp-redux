@@ -1,9 +1,7 @@
 /* eslint-env jest */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
+import { createMiddleware } from './middleware';
 import * as thunk from '../thunk';
 import {
   DEFAULT_SOCKET_ID,
@@ -114,7 +112,7 @@ describe('Test module - resources - middleware', () => {
           },
         },
       ]);
-    }
+    },
   );
 
   [
@@ -173,7 +171,7 @@ describe('Test module - resources - middleware', () => {
             },
           },
         ]);
-      }
+      },
     );
   });
 
@@ -215,7 +213,7 @@ describe('Test module - resources - middleware', () => {
           },
         },
       ]);
-    }
+    },
   );
 
   test('should do nothing if relase is called on unknown id', () => {
@@ -334,7 +332,7 @@ describe('Test module - resources - middleware', () => {
         action1,
         action2,
       ]);
-    }
+    },
   );
 
   test(
@@ -368,7 +366,7 @@ describe('Test module - resources - middleware', () => {
       expect(store.getActions()).toEqual([
         action,
       ]);
-    }
+    },
   );
 
   test('should deprecate resources on re-connect', () => {
@@ -476,7 +474,7 @@ describe('Test module - resources - middleware', () => {
           },
         },
       ]);
-    }
+    },
   );
 
   test(
@@ -508,6 +506,6 @@ describe('Test module - resources - middleware', () => {
       expect(store.getActions()).toEqual([
         action,
       ]);
-    }
+    },
   );
 });

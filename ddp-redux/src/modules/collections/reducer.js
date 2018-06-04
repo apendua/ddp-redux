@@ -107,9 +107,11 @@ export const createReducer = () => (state = {}, action) => {
       });
     case DDP_QUERY_UPDATE:
       return (() => {
-        const queryId = action.meta.queryId;
-        const entities = action.payload.entities;
-        const oldEntities = action.payload.oldEntities;
+        const { queryId } = action.meta;
+        const {
+          entities,
+          oldEntities,
+        } = action.payload;
         return insertQueries(
           removeQueries(
             state,
@@ -122,8 +124,8 @@ export const createReducer = () => (state = {}, action) => {
       })();
     case DDP_QUERY_DELETE:
       return (() => {
-        const queryId = action.meta.queryId;
-        const entities = action.payload.entities;
+        const { queryId } = action.meta;
+        const { entities } = action.payload;
         return removeQueries(
           state,
           queryId,

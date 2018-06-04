@@ -1,12 +1,8 @@
 /* eslint-env jest */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
-import {
-  DDPClient,
-} from './testCommon';
+import { createMiddleware } from './middleware';
+import { DDPClient } from './testCommon';
 
 jest.useFakeTimers();
 

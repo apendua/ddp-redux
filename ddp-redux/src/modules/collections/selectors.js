@@ -5,9 +5,7 @@ import mapValues from 'lodash/mapValues';
 import values from 'lodash/values';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
-import {
-  createSelector,
-} from 'reselect';
+import { createSelector } from 'reselect';
 import createValuesMappingSelector from '../../utils/createValuesMappingSelector';
 
 const identity = x => x;

@@ -117,9 +117,9 @@ describe('Test module - queues - reducer', () => {
             },
           }],
         });
-      }
+      },
     );
-  
+
     test(
       'should enqueue element at the beginning of queue if priority is higher',
       () => {
@@ -163,9 +163,9 @@ describe('Test module - queues - reducer', () => {
             payload: 1,
           }],
         });
-      }
+      },
     );
-  
+
     test('should enqueue element in the middle of the queue', () => {
       expect(testContext.reducer({
         elements: [{
@@ -281,7 +281,7 @@ describe('Test module - queues - reducer', () => {
           },
           elements: [],
         });
-      }
+      },
     );
   });
 });

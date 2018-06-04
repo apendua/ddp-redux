@@ -1,8 +1,6 @@
 /* eslint-env jest */
 
-import {
-  createReducer,
-} from './reducer';
+import { createReducer } from './reducer';
 import {
   DDP_CONNECTION_STATE__DISCONNECTED,
   DDP_CONNECTION_STATE__CONNECTING,
@@ -14,9 +12,7 @@ import {
   DDP_OPEN,
   DDP_CLOSE,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 describe('Test module - connection - reducer', () => {
   let testContext;

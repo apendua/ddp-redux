@@ -1,8 +1,6 @@
 import max from 'lodash/max';
 import values from 'lodash/values';
-import {
-  DDP_ENQUEUE,
-} from '../../constants';
+import { DDP_ENQUEUE } from '../../constants';
 
 /**
  * Return the maximal priority of the current pending actions.

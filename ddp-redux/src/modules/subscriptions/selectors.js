@@ -1,7 +1,5 @@
 import find from 'lodash/find';
-import {
-  createSelector,
-} from 'reselect';
+import { createSelector } from 'reselect';
 import stableMap from '../../utils/stableMap';
 import EJSON from '../../ejson';
 import {
@@ -31,15 +29,14 @@ export const createSubscriptionsSelector = ({
   state => state.ddp && state.ddp.subscriptions,
   (subscriptions, connectionId, state) => (connectionId
     ? stableMap(subscriptions, y => (y
-        ? find(
-            state,
-            x => x.socketId === connectionId &&
+      ? find(
+        state,
+        x => x.socketId === connectionId &&
                  x.name === y.name &&
                  EJSON.equals(x.params, y.params),
-          )
-        : emptyState
-      ),
-    )
+      )
+      : emptyState
+    ))
     : stableMap(subscriptions, constant(null))
   ),
 );

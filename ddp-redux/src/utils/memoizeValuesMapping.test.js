@@ -34,7 +34,7 @@ describe('Test utility - memoizeValuesMapping', () => {
         const x = {};
         const y = {};
         expect(testContext.constant(x)).toBe(testContext.constant(y));
-      }
+      },
     );
   });
 

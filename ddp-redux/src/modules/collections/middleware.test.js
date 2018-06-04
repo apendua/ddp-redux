@@ -2,9 +2,7 @@
 /* eslint no-invalid-this: "off" */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
+import { createMiddleware } from './middleware';
 import {
   DDP_FLUSH,
   DDP_READY,
@@ -14,9 +12,7 @@ import {
   DDP_CHANGED,
   DDP_REMOVED,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 jest.useFakeTimers();
 

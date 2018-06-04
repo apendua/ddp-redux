@@ -16,12 +16,8 @@ import {
   DDP_STATE__CANCELED,
 } from '../../constants';
 import createDelayedTask from '../../utils/createDelayedTask';
-import {
-  findQuery,
-} from './selectors';
-import {
-  queryRefetch,
-} from '../../actions';
+import { findQuery } from './selectors';
+import { queryRefetch } from '../../actions';
 
 const setQueryId = (action, queryId) => ({
   ...action,
@@ -132,29 +128,25 @@ export const createMiddleware = ddpClient => (store) => {
         if (!query ||
              query.state === DDP_STATE__OBSOLETE ||
              query.state === DDP_STATE__CANCELED) {
-          store.dispatch(
-            ddpClient.fetch(name, params, {
-              ...properties,
-              queryId,
-            }),
-          );
+          store.dispatch(ddpClient.fetch(name, params, {
+            ...properties,
+            queryId,
+          }));
         }
         return queryId;
       }
       case DDP_QUERY_REFETCH: {
         const result = next(action);
-        const queryId = action.meta.queryId;
+        const { queryId } = action.meta;
         const state = store.getState();
         const query = state.ddp.queries[queryId];
         // NOTE: If query has no users, the reducer will set the query state to "obsolete",
         //       and the next time it will be requested it will force re-fetch.
         if (query && query.users > 0) {
-          store.dispatch(
-            ddpClient.fetch(query.name, query.params, {
-              ...query.properties,
-              queryId,
-            }),
-          );
+          store.dispatch(ddpClient.fetch(query.name, query.params, {
+            ...query.properties,
+            queryId,
+          }));
         }
         return result;
       }

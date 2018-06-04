@@ -1,11 +1,7 @@
 /* eslint-env jest */
 
-import {
-  createSelectors,
-} from './selectors';
-import {
-  DDPClient,
-} from './testCommon';
+import { createSelectors } from './selectors';
+import { DDPClient } from './testCommon';
 
 const constant = x => () => x;
 

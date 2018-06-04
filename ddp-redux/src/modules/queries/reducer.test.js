@@ -1,9 +1,7 @@
 /* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import {
-  createReducer,
-} from './reducer';
+import { createReducer } from './reducer';
 import {
   DDP_ENQUEUE,
   DDP_METHOD,
@@ -25,9 +23,7 @@ import {
   DDP_STATE__RESTORING,
   DDP_DISCONNECTED,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 describe('Test module - queries - reducer', () => {
   let testContext;
@@ -100,7 +96,7 @@ describe('Test module - queries - reducer', () => {
           users: 1,
         },
       });
-    }
+    },
   );
 
   test(
@@ -121,7 +117,7 @@ describe('Test module - queries - reducer', () => {
           state: DDP_STATE__OBSOLETE,
         },
       });
-    }
+    },
   );
 
 
@@ -157,7 +153,7 @@ describe('Test module - queries - reducer', () => {
           state: to,
         },
       });
-    }
+    },
   ));
 
   [
@@ -197,7 +193,7 @@ describe('Test module - queries - reducer', () => {
           state: to,
         },
       });
-    }
+    },
   ));
 
   test('should delete one query', () => {

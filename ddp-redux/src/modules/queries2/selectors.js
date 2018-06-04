@@ -1,7 +1,5 @@
 import find from 'lodash/find';
-import {
-  createSelector,
-} from 'reselect';
+import { createSelector } from 'reselect';
 import stableMap from '../../utils/stableMap';
 import EJSON from '../../ejson';
 import {

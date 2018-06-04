@@ -124,11 +124,11 @@ export const MSG_CONNECTED = 'connected';
 export const MSG_FAILED = 'failed';
 
 export const MESSAGE_TO_ACTION = {
-  [MSG_READY]:        DDP_READY,
-  [MSG_NOSUB]:        DDP_NOSUB,
-  [MSG_ADDED]:        DDP_ADDED,
-  [MSG_REMOVED]:      DDP_REMOVED,
-  [MSG_CHANGED]:      DDP_CHANGED,
+  [MSG_READY]: DDP_READY,
+  [MSG_NOSUB]: DDP_NOSUB,
+  [MSG_ADDED]: DDP_ADDED,
+  [MSG_REMOVED]: DDP_REMOVED,
+  [MSG_CHANGED]: DDP_CHANGED,
   // NOTE: These two are not supported at the moment;
   //       as a fallback, we interpret "added before"
   //       as "added", so ordering will be ignored
@@ -136,28 +136,28 @@ export const MESSAGE_TO_ACTION = {
   // [MSG_ADDED_BEFORE]: DDP_ADDED_BEFORE,
   // [MSG_MOVED_BEFORE]: DDP_MOVED_BEFORE,
   [MSG_ADDED_BEFORE]: DDP_ADDED,
-  [MSG_UPDATED]:      DDP_UPDATED,
-  [MSG_RESULT]:       DDP_RESULT,
-  [MSG_PING]:         DDP_PING,
-  [MSG_ERROR]:        DDP_ERROR,
-  [MSG_CONNECTED]:    DDP_CONNECTED,
-  [MSG_FAILED]:       DDP_FAILED,
+  [MSG_UPDATED]: DDP_UPDATED,
+  [MSG_RESULT]: DDP_RESULT,
+  [MSG_PING]: DDP_PING,
+  [MSG_ERROR]: DDP_ERROR,
+  [MSG_CONNECTED]: DDP_CONNECTED,
+  [MSG_FAILED]: DDP_FAILED,
 };
 
 export const ACTION_TO_MESSAGE = {
-  [DDP_SUB]:          MSG_SUB,
-  [DDP_UNSUB]:        MSG_UNSUB,
-  [DDP_METHOD]:       MSG_METHOD,
-  [DDP_CONNECT]:      MSG_CONNECT,
-  [DDP_PONG]:         MSG_PONG,
+  [DDP_SUB]: MSG_SUB,
+  [DDP_UNSUB]: MSG_UNSUB,
+  [DDP_METHOD]: MSG_METHOD,
+  [DDP_CONNECT]: MSG_CONNECT,
+  [DDP_PONG]: MSG_PONG,
 };
 
 export const ACTION_TO_PRIORITY = {
-  [DDP_SUB]:          10,
-  [DDP_UNSUB]:        10,
-  [DDP_METHOD]:       0,
-  [DDP_CONNECT]:      100,
-  [DDP_PONG]:         10,
+  [DDP_SUB]: 10,
+  [DDP_UNSUB]: 10,
+  [DDP_METHOD]: 0,
+  [DDP_CONNECT]: 100,
+  [DDP_PONG]: 10,
 };
 
 // NOTE: It's important that the value is smaller than DDP_CONNECT priority,

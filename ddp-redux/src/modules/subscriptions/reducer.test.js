@@ -1,9 +1,7 @@
 /* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import {
-  createReducer,
-} from './reducer';
+import { createReducer } from './reducer';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -23,9 +21,7 @@ import {
   DDP_NOSUB,
   DDP_CONNECT,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 describe('Test module - subscriptions - reducer', () => {
   let testContext;
@@ -83,7 +79,7 @@ describe('Test module - subscriptions - reducer', () => {
           state: DDP_SUBSCRIPTION_STATE__PENDING,
         },
       });
-    }
+    },
   );
 
   test('should switch state from "queued" to "pending" on DDP_SUB', () => {
@@ -142,7 +138,7 @@ describe('Test module - subscriptions - reducer', () => {
           state: DDP_SUBSCRIPTION_STATE__QUEUED,
         },
       });
-    }
+    },
   );
 
   test(
@@ -167,7 +163,7 @@ describe('Test module - subscriptions - reducer', () => {
           state: DDP_SUBSCRIPTION_STATE__RESTORING,
         },
       });
-    }
+    },
   );
 
   test('should set default socket id if missing', () => {
@@ -227,7 +223,7 @@ describe('Test module - subscriptions - reducer', () => {
           subs: ['1'],
         },
       })).toEqual({});
-    }
+    },
   );
 
   test('should update subscription state to error', () => {
@@ -273,7 +269,7 @@ describe('Test module - subscriptions - reducer', () => {
           id: '1',
         },
       })).toEqual({});
-    }
+    },
   );
 
   test('should increase the number of users', () => {

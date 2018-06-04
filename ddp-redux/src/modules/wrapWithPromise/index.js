@@ -1,5 +1,3 @@
 import { createMiddleware } from './middleware';
 
-export {
-  createMiddleware,
-};
+export { createMiddleware };

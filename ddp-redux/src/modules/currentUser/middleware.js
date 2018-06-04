@@ -13,9 +13,7 @@ import {
 
   LOGIN_ACTION_PRIORITY,
 } from '../../constants';
-import {
-  callMethod,
-} from '../../actions';
+import { callMethod } from '../../actions';
 
 /**
  * Create middleware for the given ddpClient.
@@ -47,7 +45,7 @@ export const createMiddleware = ddpClient => (store) => {
     switch (action.type) {
       case DDP_CONNECTED:
         return ((result) => {
-          const socketId = action.meta.socketId;
+          const { socketId } = action.meta;
           const socket = getSocket(socketId);
           ddpClient
             .getResumeToken(socket)
@@ -82,12 +80,10 @@ export const createMiddleware = ddpClient => (store) => {
           const socketId = (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID;
           const method = (action.meta && action.meta.method) || DEFAULT_LOGIN_METHOD_NAME;
           next(action);
-          const result = store.dispatch(
-            callMethod(method, action.payload, {
-              ...action.meta,
-              priority: LOGIN_ACTION_PRIORITY,
-            }),
-          );
+          const result = store.dispatch(callMethod(method, action.payload, {
+            ...action.meta,
+            priority: LOGIN_ACTION_PRIORITY,
+          }));
           if (result instanceof Promise) {
             result.then(({ id, token }) => store.dispatch({
               type: DDP_LOGGED_IN,
@@ -105,12 +101,10 @@ export const createMiddleware = ddpClient => (store) => {
       case DDP_LOGOUT:
         return (() => {
           next(action);
-          const result = store.dispatch(
-            callMethod(DEFAULT_LOGOUT_METHOD_NAME, [], {
-              ...action.meta,
-              priority: LOGIN_ACTION_PRIORITY,
-            }),
-          );
+          const result = store.dispatch(callMethod(DEFAULT_LOGOUT_METHOD_NAME, [], {
+            ...action.meta,
+            priority: LOGIN_ACTION_PRIORITY,
+          }));
           if (result instanceof Promise) {
             result
               .then(() => store.dispatch({

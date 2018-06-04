@@ -1,7 +1,7 @@
 /** @module utils/storage */
 
 const items = new WeakMap();
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+const { hasOwnProperty } = Object.prototype;
 const has = (obj, key) => hasOwnProperty.call(obj, key);
 
 /**
@@ -59,7 +59,7 @@ class Storage {
   get(key) {
     const obj = items.get(this);
     if (!has(obj, key)) {
-      return Promise.reject(`No such key: ${key}`);
+      return Promise.reject(new Error(`No such key: ${key}`));
     }
     return Promise.resolve(obj[key]);
   }

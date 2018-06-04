@@ -22,7 +22,7 @@ const initialPending = {
 };
 
 export const createSocketReducer = () => (state = {
-  queue:   [],
+  queue: [],
   pending: initialPending,
 }, action) => {
   switch (action.type) {

@@ -1,6 +1,4 @@
-import {
-  defaultMemoize,
-} from 'reselect';
+import { defaultMemoize } from 'reselect';
 import memoizeValuesMapping from './memoizeValuesMapping';
 
 const defaultIsEqual = (a, b) => a === b;

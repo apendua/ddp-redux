@@ -1,9 +1,7 @@
 /* eslint-env jest */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
+import { createMiddleware } from './middleware';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -21,9 +19,7 @@ import {
   DDP_CLOSE,
 } from '../../constants';
 // import DDPError from '../../DDPError';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 const createInitialState = (socketId, socketState) => ({
   ddp: {
@@ -229,7 +225,7 @@ describe('Test module - connection - middleware', () => {
         },
       ]);
       expect(testContext.ddpClient.sockets).toEqual({});
-    }
+    },
   );
 
   test('should close connection if there is only one user', () => {

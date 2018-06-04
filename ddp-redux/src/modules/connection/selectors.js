@@ -1,11 +1,7 @@
 import find from 'lodash/find';
-import {
-  createSelector,
-} from 'reselect';
+import { createSelector } from 'reselect';
 import EJSON from '../../ejson';
-import {
-  DEFAULT_SOCKET_ID,
-} from '../../constants';
+import { DEFAULT_SOCKET_ID } from '../../constants';
 
 export const createConnectionSelector = ({
   selectDeclaredConnection,

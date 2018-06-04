@@ -75,8 +75,7 @@ export const createMiddleware = ddpClient => (store) => {
               error: action.payload ||
               new DDPError(DDPError.ERROR_CANCELED, 'Method was canceled by user', action),
             }
-            : { result: action.payload },
-          );
+            : { result: action.payload });
           return next(action);
         })();
       case DDP_ENQUEUE:

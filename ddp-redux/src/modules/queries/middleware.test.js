@@ -1,12 +1,8 @@
 /* eslint-env jest */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
-import {
-  DDPClient,
-} from './testCommon';
+import { createMiddleware } from './middleware';
+import { DDPClient } from './testCommon';
 import * as thunk from '../thunk';
 import {
   DEFAULT_SOCKET_ID,
@@ -115,7 +111,7 @@ describe('Test module - queries - middleware', () => {
           },
         },
       ]);
-    }
+    },
   );
 
   [
@@ -172,7 +168,7 @@ describe('Test module - queries - middleware', () => {
             },
           },
         ]);
-      }
+      },
     );
   });
 
@@ -214,7 +210,7 @@ describe('Test module - queries - middleware', () => {
           },
         },
       ]);
-    }
+    },
   );
 
   test(
@@ -266,7 +262,7 @@ describe('Test module - queries - middleware', () => {
           },
         },
       ]);
-    }
+    },
   );
 
   test('should do nothing if relase is called on unknown id', () => {
@@ -379,7 +375,7 @@ describe('Test module - queries - middleware', () => {
         action1,
         action2,
       ]);
-    }
+    },
   );
 
   test(
@@ -413,7 +409,7 @@ describe('Test module - queries - middleware', () => {
       expect(store.getActions()).toEqual([
         action,
       ]);
-    }
+    },
   );
 
   test('should re-fetch queries on re-connect', () => {
@@ -552,6 +548,6 @@ describe('Test module - queries - middleware', () => {
       expect(store.getActions()).toEqual([
         action,
       ]);
-    }
+    },
   );
 });

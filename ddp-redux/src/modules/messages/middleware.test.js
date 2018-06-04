@@ -1,9 +1,7 @@
 /* eslint-env jest */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
+import { createMiddleware } from './middleware';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -33,9 +31,7 @@ import {
   ACTION_TO_MESSAGE,
   ACTION_TO_PRIORITY,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 const createInitialState = (socketId, socketState) => ({
   ddp: {

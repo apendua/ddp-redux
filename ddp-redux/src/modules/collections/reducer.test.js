@@ -1,9 +1,7 @@
 /* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import {
-  createReducer,
-} from './reducer';
+import { createReducer } from './reducer';
 import {
   DDP_FLUSH,
   DDP_ADDED,
@@ -15,9 +13,7 @@ import {
   DDP_METHOD,
   DDP_UPDATED,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 describe('Test module - collections - reducer', () => {
   let testContext;
@@ -222,7 +218,7 @@ describe('Test module - collections - reducer', () => {
         },
       });
       expect(state).toEqual(testContext.referenceState1);
-    }
+    },
   );
 
   test('should add another entity', () => {

@@ -52,9 +52,9 @@ export const createReducer = (DDPClient) => {
               ...state.sockets,
               [socketId]: {
                 ...state.sockets[socketId],
-                id:       socketId,
-                users:    ((state.sockets[socketId] && state.sockets[socketId].users) || 0) + 1,
-                params:   action.payload.params,
+                id: socketId,
+                users: ((state.sockets[socketId] && state.sockets[socketId].users) || 0) + 1,
+                params: action.payload.params,
                 endpoint: action.payload.endpoint,
               },
             },

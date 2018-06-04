@@ -1,7 +1,5 @@
 import DDPEmitter from '../../DDPEmitter';
-import {
-  DEFAULT_SOCKET_ID,
-} from '../../constants';
+import { DEFAULT_SOCKET_ID } from '../../constants';
 
 export class DDPClient extends DDPEmitter {
   constructor() {

@@ -25,7 +25,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-const newBinary = function (len) {
+function newBinary(len) {
   if (typeof Uint8Array === 'undefined' || typeof ArrayBuffer === 'undefined') {
     const ret = [];
     for (let i = 0; i < len; i += 1) {
@@ -35,6 +35,6 @@ const newBinary = function (len) {
     return ret;
   }
   return new Uint8Array(new ArrayBuffer(len));
-};
+}
 
 export default newBinary;

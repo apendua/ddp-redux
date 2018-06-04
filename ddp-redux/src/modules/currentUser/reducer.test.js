@@ -1,8 +1,6 @@
 /* eslint-env jest */
 
-import {
-  createReducer,
-} from './reducer';
+import { createReducer } from './reducer';
 import {
   DDP_USER_STATE__LOGGING_IN,
   DDP_USER_STATE__LOGGED_IN,
@@ -13,9 +11,7 @@ import {
   DDP_LOGGED_OUT,
   DDP_DISCONNECTED,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 describe('Test module - currentUser - reducer', () => {
   let testContext;

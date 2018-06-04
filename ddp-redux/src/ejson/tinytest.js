@@ -1,3 +1,4 @@
+/* eslint import/no-extraneous-dependencies: "off" */
 import chai from 'chai';
 
 const test = {

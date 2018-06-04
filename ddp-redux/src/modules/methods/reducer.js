@@ -11,9 +11,7 @@ import {
   DDP_UPDATED,
   DDP_ENQUEUE,
 } from '../../constants';
-import {
-  extractMetadata,
-} from './helpers';
+import { extractMetadata } from './helpers';
 import carefullyMapValues from '../../utils/carefullyMapValues';
 
 export const createReducer = () => (state = {}, action) => {
@@ -28,7 +26,7 @@ export const createReducer = () => (state = {}, action) => {
       });
     case DDP_ENQUEUE: {
       if (action.meta.methodId) {
-        const methodId = action.meta.methodId;
+        const { methodId } = action.meta;
         return {
           ...state,
           [methodId]: {
@@ -46,9 +44,9 @@ export const createReducer = () => (state = {}, action) => {
         [id]: {
           ...state[id],
           id,
-          state:    DDP_METHOD_STATE__PENDING,
-          name:     action.payload.method,
-          params:   action.payload.params,
+          state: DDP_METHOD_STATE__PENDING,
+          name: action.payload.method,
+          params: action.payload.params,
           ...extractMetadata(action.meta),
         },
       };
@@ -58,9 +56,9 @@ export const createReducer = () => (state = {}, action) => {
           ...state,
           [id]: {
             ...state[id],
-            state:  DDP_METHOD_STATE__RETURNED,
+            state: DDP_METHOD_STATE__RETURNED,
             result: action.payload.result,
-            error:  action.payload.error,
+            error: action.payload.error,
           },
         }
         : omit(state, id);

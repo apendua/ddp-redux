@@ -58,7 +58,7 @@ export const queueReducer = (state = {
       if (index < 0) {
         return state;
       }
-      const pendingValue = state.elements[index].meta.queue.pendingValue;
+      const { pendingValue } = state.elements[index].meta.queue;
       return {
         ...state,
         ...pendingValue !== undefined && {

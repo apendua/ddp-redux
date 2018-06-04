@@ -1,7 +1,5 @@
 import DDPEmitter from '../../DDPEmitter';
-import {
-  callMethod,
-} from '../../actions';
+import { callMethod } from '../../actions';
 
 export class DDPClient extends DDPEmitter {
   getCleanupTimeout() {

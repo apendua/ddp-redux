@@ -18,9 +18,7 @@ import {
   DDP_RESOURCE_DEPRECATE,
 } from '../../constants';
 import createDelayedTask from '../../utils/createDelayedTask';
-import {
-  findResource,
-} from './selectors';
+import { findResource } from './selectors';
 import {
   createResource,
   deleteResource,
@@ -73,13 +71,11 @@ export const createMiddleware = ddpClient => (store) => {
             params,
             properties,
           } = resource;
-          store.dispatch(
-            refetchResource(resourceId, {
-              name,
-              params,
-              properties,
-            }),
-          );
+          store.dispatch(refetchResource(resourceId, {
+            name,
+            params,
+            properties,
+          }));
         }
       });
       return result;
@@ -126,12 +122,10 @@ export const createMiddleware = ddpClient => (store) => {
       }
       case DDP_RESOURCE_CREATE: {
         const resourceId = ddpClient.nextUniqueId();
-        next(
-          setResourceId(
-            action,
-            resourceId,
-          ),
-        );
+        next(setResourceId(
+          action,
+          resourceId,
+        ));
         return resourceId;
       }
       case DDP_RESOURCE_REQUEST: {
@@ -156,23 +150,19 @@ export const createMiddleware = ddpClient => (store) => {
           resourceId = store.dispatch(createResource(name, params, properties));
         }
 
-        next(
-          setResourceId(
-            action,
-            resourceId,
-          ),
-        );
+        next(setResourceId(
+          action,
+          resourceId,
+        ));
 
         if (!resource ||
              resource.state === DDP_STATE__OBSOLETE ||
              resource.state === DDP_STATE__CANCELED) {
-          store.dispatch(
-            fetchResource(resourceId, {
-              name,
-              params,
-              properties,
-            }),
-          );
+          store.dispatch(fetchResource(resourceId, {
+            name,
+            params,
+            properties,
+          }));
         }
         return resourceId;
       }
@@ -189,13 +179,11 @@ export const createMiddleware = ddpClient => (store) => {
               params,
               properties,
             } = resource;
-            store.dispatch(
-              refetchResource(resourceId, {
-                name,
-                params,
-                properties,
-              }),
-            );
+            store.dispatch(refetchResource(resourceId, {
+              name,
+              params,
+              properties,
+            }));
           }
         }
         return result;

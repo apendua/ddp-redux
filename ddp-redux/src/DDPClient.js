@@ -5,9 +5,7 @@ import DDPError from './DDPError';
 import Storage from './utils/Storage';
 import carefullyMapValues from './utils/carefullyMapValues';
 
-import {
-  DEFAULT_SOCKET_ID,
-} from './constants';
+import { DEFAULT_SOCKET_ID } from './constants';
 
 import * as collections from './modules/collections';
 import * as connection from './modules/connection';
@@ -220,12 +218,10 @@ class DDPClient extends DDPEmitter {
     } = properties;
     return (dispatch) => {
       dispatch(queryUpdate(queryId, null));
-      dispatch(
-        callMethod(name, params, {
-          queryId,
-          socketId,
-        }),
-      ).then((result) => {
+      dispatch(callMethod(name, params, {
+        queryId,
+        socketId,
+      })).then((result) => {
         dispatch(queryUpdate(queryId, { result }));
       }).catch((error) => {
         dispatch(queryUpdate(queryId, { error }));

@@ -13,107 +13,99 @@ import {
  * Create middleware for the given ddpClient.
  * @param {DDPClient} ddpClient
  */
-export const createMiddleware = ddpClient => (store) => {
-  return next => (action) => {
-    if (!action ||
+export const createMiddleware = ddpClient => store => next => (action) => {
+  if (!action ||
         typeof action !== 'object' ||
         !action.payload ||
         !action.meta) {
-      return next(action);
-    }
-    switch (action.type) {
-      case DDP_RESOURCE_FETCH:
-      case DDP_RESOURCE_REFETCH:
-      case DDP_RESOURCE_DELETE:
-      case DDP_RESOURCE_UPDATE: {
-        const type = action.payload.properties &&
+    return next(action);
+  }
+  switch (action.type) {
+    case DDP_RESOURCE_FETCH:
+    case DDP_RESOURCE_REFETCH:
+    case DDP_RESOURCE_DELETE:
+    case DDP_RESOURCE_UPDATE: {
+      const type = action.payload.properties &&
                      action.payload.properties.type;
-        if (type !== 'query') {
-          return next(action);
-        }
-        break;
-      }
-      default:
+      if (type !== 'query') {
         return next(action);
+      }
+      break;
     }
-    const {
-      name,
-      params,
-      properties,
-    } = action.payload;
-    const {
-      resourceId,
-    } = action.meta;
+    default:
+      return next(action);
+  }
+  const {
+    name,
+    params,
+    properties,
+  } = action.payload;
+  const {
+    resourceId,
+  } = action.meta;
 
-    switch (action.type) {
-      case DDP_RESOURCE_FETCH:
-      case DDP_RESOURCE_REFETCH: {
-        const {
-          socketId,
-        } = properties;
-        const nextResult = next(action);
+  switch (action.type) {
+    case DDP_RESOURCE_FETCH:
+    case DDP_RESOURCE_REFETCH: {
+      const {
+        socketId,
+      } = properties;
+      const nextResult = next(action);
 
-        store.dispatch(
-          callMethod(name, params, {
-            resourceId,
-            socketId,
-          }),
-        ).then((result) => {
-          store.dispatch(
-            updateResource(resourceId, { result }),
-          );
-        }).catch((error) => {
-          store.dispatch(
-            updateResource(resourceId, { error }),
-          );
-        });
+      store.dispatch(callMethod(name, params, {
+        resourceId,
+        socketId,
+      })).then((result) => {
+        store.dispatch(updateResource(resourceId, { result }));
+      }).catch((error) => {
+        store.dispatch(updateResource(resourceId, { error }));
+      });
 
-        return nextResult;
+      return nextResult;
+    }
+    case DDP_RESOURCE_DELETE: {
+      const state = store.getState();
+      const resource = resourceId && state.ddp.resources[resourceId];
+      if (!resource) {
+        return next(action);
       }
-      case DDP_RESOURCE_DELETE: {
-        const state = store.getState();
-        const resource = resourceId && state.ddp.resources[resourceId];
-        if (!resource) {
-          return next(action);
-        }
-        return next({
-          ...action,
-          payload: {
-            entities: resource.entities,
-            ...action.payload,
-          },
-        });
+      return next({
+        ...action,
+        payload: {
+          entities: resource.entities,
+          ...action.payload,
+        },
+      });
+    }
+    case DDP_RESOURCE_UPDATE: {
+      const state = store.getState();
+      const resource = resourceId && state.ddp.resources[resourceId];
+      if (!resource) {
+        return next(action);
       }
-      case DDP_RESOURCE_UPDATE: {
-        const state = store.getState();
-        const resource = resourceId && state.ddp.resources[resourceId];
-        if (!resource) {
-          return next(action);
-        }
-        const newAction = {
-          ...action,
-          payload: {
-            ...action.payload,
-            oldEntities: resource.entities,
-          },
-        };
-        if (action.payload &&
+      const newAction = {
+        ...action,
+        payload: {
+          ...action.payload,
+          oldEntities: resource.entities,
+        },
+      };
+      if (action.payload &&
             action.payload.result &&
             typeof action.payload.result === 'object'
-        ) {
-          newAction.payload.entities = ddpClient.extractEntities(
-            action.payload.result,
-            {
-              name,
-              params,
-              properties,
-            },
-          );
-        }
-        return next(newAction);
+      ) {
+        newAction.payload.entities = ddpClient.extractEntities(
+          action.payload.result,
+          {
+            name,
+            params,
+            properties,
+          },
+        );
       }
-      default:
-        return next(action);
+      return next(newAction);
     }
-  };
+    default:
+      return next(action);
+  }
 };

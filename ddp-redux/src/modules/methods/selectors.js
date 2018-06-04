@@ -1,10 +1,6 @@
 import map from 'lodash/map';
-import {
-  createSelector,
-} from 'reselect';
-import {
-  DDP_METHOD_STATE__READY,
-} from '../../constants';
+import { createSelector } from 'reselect';
+import { DDP_METHOD_STATE__READY } from '../../constants';
 
 /**
  * Create a selector that returns a list representing

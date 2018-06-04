@@ -9,6 +9,7 @@
     "coverage": "jest --coverage",
     "build": "babel src/ -d lib/",
     "build-watch": "watch 'npm run build' ./src",
+    "lint": "eslint src/",
     "prepublish": "npm run build"
   },
   "repository": {
@@ -38,11 +39,11 @@
     "babel-preset-stage-3": "^6.24.1",
     "chai": "^4.1.2",
     "eslint": "^4.19.1",
-    "eslint-config-airbnb": "^15.1.0",
+    "eslint-config-airbnb": "^16.1.0",
     "eslint-import-resolver-meteor": "^0.4.0",
     "eslint-plugin-import": "^2.12.0",
-    "eslint-plugin-jsx-a11y": "^5.1.1",
-    "eslint-plugin-react": "^7.1.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.9.1",
     "jest": "^23.1.0",
     "redux": "^3.7.2",
     "redux-mock-store": "^1.2.3",

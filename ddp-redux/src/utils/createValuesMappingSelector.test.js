@@ -35,7 +35,7 @@ describe('Test utility - createValuesMappingSelector', () => {
         const x = {};
         const y = {};
         expect(testContext.constant(x)).toBe(testContext.constant(y));
-      }
+      },
     );
   });
 
@@ -65,7 +65,7 @@ describe('Test utility - createValuesMappingSelector', () => {
           ...x,
         };
         expect(testContext.constant(x)).toBe(testContext.constant(y));
-      }
+      },
     );
   });
 });

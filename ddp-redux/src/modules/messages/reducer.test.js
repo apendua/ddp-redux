@@ -1,8 +1,6 @@
 /* eslint-env jest */
 
-import {
-  createSocketReducer,
-} from './reducer';
+import { createSocketReducer } from './reducer';
 import {
   DDP_METHOD,
   DDP_CONNECTED,
@@ -12,9 +10,7 @@ import {
 
   MSG_METHOD,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 describe('Test module - messages - reducer', () => {
   let testContext;
@@ -110,7 +106,7 @@ describe('Test module - messages - reducer', () => {
           },
         }],
       });
-    }
+    },
   );
 
   test(
@@ -148,7 +144,7 @@ describe('Test module - messages - reducer', () => {
           payload: 1,
         }],
       });
-    }
+    },
   );
 
   test('should enqueue element in the middle of the queue', () => {

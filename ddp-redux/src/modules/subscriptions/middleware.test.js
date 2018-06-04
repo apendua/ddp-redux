@@ -1,9 +1,7 @@
 /* eslint-env jest */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
+import { createMiddleware } from './middleware';
 import {
   DEFAULT_SOCKET_ID,
 
@@ -17,9 +15,7 @@ import {
   DDP_CONNECT,
   DDP_ENQUEUE,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 jest.useFakeTimers();
 
@@ -309,7 +305,7 @@ describe('Test module - subscriptions - middleware', () => {
           },
         },
       ]);
-    }
+    },
   );
 
   test('should not dispatch UNSUB if there are many users', () => {

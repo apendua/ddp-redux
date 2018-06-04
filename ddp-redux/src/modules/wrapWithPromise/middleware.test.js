@@ -2,9 +2,7 @@
 /* eslint no-invalid-this: "off" */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
+import { createMiddleware } from './middleware';
 import {
   DDP_METHOD,
   DDP_UPDATED,
@@ -15,9 +13,7 @@ import {
   DDP_METHOD_STATE__UPDATED,
   DDP_METHOD_STATE__RETURNED,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 const createInitialState = (methodId, methodState) => ({
   ddp: {
@@ -138,7 +134,7 @@ describe('Test module - wrapWithPromise - middleware', () => {
         },
       });
       return assertion;
-    }
+    },
   );
 
   test(

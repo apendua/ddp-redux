@@ -2,9 +2,7 @@
 /* eslint no-invalid-this: "off" */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
+import { createMiddleware } from './middleware';
 import DDPError from '../../DDPError';
 import {
   DDP_METHOD,
@@ -16,9 +14,7 @@ import {
 
   DDP_METHOD_STATE__PENDING,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 const createInitialState = (methodId, methodState) => ({
   ddp: {

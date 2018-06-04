@@ -1,12 +1,8 @@
 /* eslint-env jest */
 
 import configureStore from 'redux-mock-store';
-import {
-  createMiddleware,
-} from './middleware';
-import {
-  DDP_ENQUEUE,
-} from '../../constants';
+import { createMiddleware } from './middleware';
+import { DDP_ENQUEUE } from '../../constants';
 
 const createInitialState = (queueId, queueState) => ({
   ddp: {

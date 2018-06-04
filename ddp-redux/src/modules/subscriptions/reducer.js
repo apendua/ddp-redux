@@ -27,11 +27,11 @@ export const createReducer = () => (state = {}, action) => {
         return {
           ...state,
           [action.meta.subId]: {
-            id:       (sub && sub.id) || action.meta.subId,
-            state:    (sub && sub.state) || DDP_SUBSCRIPTION_STATE__INITIAL,
-            name:     (sub && sub.name) || action.payload.name,
-            params:   (sub && sub.params) || action.payload.params,
-            users:    ((sub && sub.users) || 0) + 1,
+            id: (sub && sub.id) || action.meta.subId,
+            state: (sub && sub.state) || DDP_SUBSCRIPTION_STATE__INITIAL,
+            name: (sub && sub.name) || action.payload.name,
+            params: (sub && sub.params) || action.payload.params,
+            users: ((sub && sub.users) || 0) + 1,
             socketId: (sub && sub.socketId) || (action.meta && action.meta.socketId) || DEFAULT_SOCKET_ID,
           },
         };
@@ -47,7 +47,7 @@ export const createReducer = () => (state = {}, action) => {
         }
         : state;
     case DDP_ENQUEUE: {
-      const subId = action.meta.subId;
+      const { subId } = action.meta;
       if (subId) {
         const sub = state[subId];
         if (sub) {
@@ -69,7 +69,7 @@ export const createReducer = () => (state = {}, action) => {
     }
     case DDP_SUB: {
       if (action.meta.subId) {
-        const subId = action.meta.subId;
+        const { subId } = action.meta;
         const query = state[subId];
         if (query) {
           switch (query.state) {

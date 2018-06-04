@@ -1,9 +1,7 @@
 /* eslint-env jest */
 /* eslint no-invalid-this: "off" */
 
-import {
-  createReducer,
-} from './reducer';
+import { createReducer } from './reducer';
 import {
   DDP_ENQUEUE,
   DDP_METHOD,
@@ -16,9 +14,7 @@ import {
   DDP_METHOD_STATE__UPDATED,
   DDP_METHOD_STATE__RETURNED,
 } from '../../constants';
-import {
-  DDPClient,
-} from './testCommon';
+import { DDPClient } from './testCommon';
 
 describe('Test module - methods - reducer', () => {
   let testContext;
@@ -99,7 +95,7 @@ describe('Test module - methods - reducer', () => {
           params: [],
         },
       });
-    }
+    },
   );
 
   test('should change method state to "returned"', () => {
